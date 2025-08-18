@@ -1,0 +1,390 @@
+{
+	"info": {
+		"_postman_id": "sigelic-api-tests",
+		"name": "SIGELIC - Sistema de Licencias",
+		"description": "Colección de pruebas para la API REST de SIGELIC",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080/api",
+			"type": "string"
+		},
+		{
+			"key": "titularId",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "tramiteId",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "turnoId",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "pagoId",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "licenciaId",
+			"value": "1",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Titulares",
+			"item": [
+				{
+					"name": "Crear Titular",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"Juan Carlos\",\n  \"apellido\": \"Pérez\",\n  \"dni\": \"12345678\",\n  \"fechaNacimiento\": \"1990-05-15\",\n  \"domicilio\": \"Av. San Martín 1234, Santa Fe\",\n  \"email\": \"juan.perez@email.com\",\n  \"telefono\": \"+54 342 123-4567\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/titulares",
+							"host": ["{{baseUrl}}"],
+							"path": ["titulares"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Titular por ID",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/titulares/{{titularId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["titulares", "{{titularId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Buscar Titular por DNI",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/titulares/dni/12345678",
+							"host": ["{{baseUrl}}"],
+							"path": ["titulares", "dni", "12345678"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Listar Todos los Titulares",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/titulares",
+							"host": ["{{baseUrl}}"],
+							"path": ["titulares"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar Titular",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"Juan Carlos\",\n  \"apellido\": \"Pérez López\",\n  \"dni\": \"12345678\",\n  \"fechaNacimiento\": \"1990-05-15\",\n  \"domicilio\": \"Av. San Martín 1234, Piso 2A, Santa Fe\",\n  \"email\": \"juan.perez.lopez@email.com\",\n  \"telefono\": \"+54 342 123-4567\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/titulares/{{titularId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["titulares", "{{titularId}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Trámites",
+			"item": [
+				{
+					"name": "Iniciar Trámite",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"titularId\": {{titularId}},\n  \"tipo\": \"PRIMERA_LICENCIA\",\n  \"claseSolicitada\": \"CLASE_B\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/tramites",
+							"host": ["{{baseUrl}}"],
+							"path": ["tramites"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Trámite por ID",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/tramites/{{tramiteId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["tramites", "{{tramiteId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Validar Documentación",
+					"request": {
+						"method": "PATCH",
+						"url": {
+							"raw": "{{baseUrl}}/tramites/{{tramiteId}}/validar-documentacion?agente=AGENTE_001",
+							"host": ["{{baseUrl}}"],
+							"path": ["tramites", "{{tramiteId}}", "validar-documentacion"],
+							"query": [
+								{
+									"key": "agente",
+									"value": "AGENTE_001"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Emitir Licencia",
+					"request": {
+						"method": "POST",
+						"url": {
+							"raw": "{{baseUrl}}/tramites/{{tramiteId}}/emitir-licencia",
+							"host": ["{{baseUrl}}"],
+							"path": ["tramites", "{{tramiteId}}", "emitir-licencia"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Turnos",
+			"item": [
+				{
+					"name": "Reservar Turno",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"titularId\": {{titularId}},\n  \"tipo\": \"EXAMEN_TEORICO\",\n  \"inicio\": \"2025-08-25T09:00:00\",\n  \"fin\": \"2025-08-25T10:00:00\",\n  \"recursoId\": 1,\n  \"tramiteId\": {{tramiteId}}\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/turnos",
+							"host": ["{{baseUrl}}"],
+							"path": ["turnos"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Turno por ID",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/turnos/{{turnoId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["turnos", "{{turnoId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Confirmar Turno",
+					"request": {
+						"method": "PATCH",
+						"url": {
+							"raw": "{{baseUrl}}/turnos/{{turnoId}}/confirmar",
+							"host": ["{{baseUrl}}"],
+							"path": ["turnos", "{{turnoId}}", "confirmar"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Completar Turno",
+					"request": {
+						"method": "PATCH",
+						"url": {
+							"raw": "{{baseUrl}}/turnos/{{turnoId}}/completar?observaciones=Examen aprobado",
+							"host": ["{{baseUrl}}"],
+							"path": ["turnos", "{{turnoId}}", "completar"],
+							"query": [
+								{
+									"key": "observaciones",
+									"value": "Examen aprobado"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Pagos",
+			"item": [
+				{
+					"name": "Crear Orden de Pago",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"tramiteId\": {{tramiteId}},\n  \"metodoPago\": \"TARJETA_CREDITO\",\n  \"observaciones\": \"Pago online\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/pagos/orden",
+							"host": ["{{baseUrl}}"],
+							"path": ["pagos", "orden"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Confirmar Pago",
+					"request": {
+						"method": "PATCH",
+						"url": {
+							"raw": "{{baseUrl}}/pagos/{{pagoId}}/confirmar?numeroTransaccion=TXN123456",
+							"host": ["{{baseUrl}}"],
+							"path": ["pagos", "{{pagoId}}", "confirmar"],
+							"query": [
+								{
+									"key": "numeroTransaccion",
+									"value": "TXN123456"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Licencias",
+			"item": [
+				{
+					"name": "Obtener Licencia por ID",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/licencias/{{licenciaId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["licencias", "{{licenciaId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Licencias de Titular",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/licencias/titular/{{titularId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["licencias", "titular", "{{titularId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Licencias Próximas a Vencer",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/licencias/proximas-vencer?dias=30",
+							"host": ["{{baseUrl}}"],
+							"path": ["licencias", "proximas-vencer"],
+							"query": [
+								{
+									"key": "dias",
+									"value": "30"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Script de pre-request global",
+					"console.log('Ejecutando prueba en: ' + pm.request.url);"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Scripts de test globales",
+					"pm.test('Status code es 2xx', function () {",
+					"    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+					"});",
+					"",
+					"pm.test('Response time es menor a 1000ms', function () {",
+					"    pm.expect(pm.response.responseTime).to.be.below(1000);",
+					"});",
+					"",
+					"// Guardar IDs de las respuestas para usar en siguientes requests",
+					"if (pm.response.json() && pm.response.json().id) {",
+					"    pm.collectionVariables.set('lastCreatedId', pm.response.json().id);",
+					"}"
+				]
+			}
+		}
+	]
+}

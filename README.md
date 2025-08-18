@@ -38,13 +38,13 @@ SIGELIC automatiza todo el proceso de gestión de licencias de conducir, desde l
 git clone [repository-url]
 cd sigelic
 
-# 2. Crear base de datos MySQL
+# 2. Configurar variables de entorno
+cp .env.example .env
+# Editar .env con tus credenciales reales
+
+# 3. Crear base de datos MySQL
 mysql -u root -p
 CREATE DATABASE sigelic CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
-# 3. Configurar credenciales en src/main/resources/application.properties
-spring.datasource.username=tu_usuario
-spring.datasource.password=tu_password
 
 # 4. Ejecutar aplicación
 mvn spring-boot:run

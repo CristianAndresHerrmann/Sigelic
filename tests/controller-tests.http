@@ -1,0 +1,319 @@
+###
+# SIGELIC - Pruebas por Controlador
+# Archivo de pruebas organizadas por controlador específico
+###
+
+@baseUrl = http://localhost:8080/api
+
+###############################################################################
+# TITULAR CONTROLLER - Todas las pruebas
+###############################################################################
+
+### TitularController - Crear titular válido
+POST {{baseUrl}}/titulares
+Content-Type: application/json
+
+{
+  "nombre": "Ana",
+  "apellido": "López",
+  "dni": "11223344",
+  "fechaNacimiento": "1992-08-15",
+  "domicilio": "Av. Freyre 1500, Santa Fe",
+  "email": "ana.lopez@gmail.com",
+  "telefono": "342-4567890"
+}
+
+### TitularController - Obtener titular por ID
+GET {{baseUrl}}/titulares/1
+
+### TitularController - Buscar por DNI
+GET {{baseUrl}}/titulares/dni/11223344
+
+### TitularController - Listar todos los titulares
+GET {{baseUrl}}/titulares
+
+### TitularController - Actualizar titular
+PUT {{baseUrl}}/titulares/1
+Content-Type: application/json
+
+{
+  "nombre": "Ana María",
+  "apellido": "López García",
+  "dni": "11223344",
+  "fechaNacimiento": "1992-08-15",
+  "domicilio": "Av. Freyre 1500, Depto 4B, Santa Fe",
+  "email": "ana.lopez.garcia@gmail.com",
+  "telefono": "342-4567890"
+}
+
+### TitularController - Verificar si puede tramitar
+GET {{baseUrl}}/titulares/1/puede-tramitar
+
+### TitularController - Eliminar titular
+DELETE {{baseUrl}}/titulares/1
+
+###############################################################################
+# TRAMITE CONTROLLER - Todas las pruebas
+###############################################################################
+
+### TramiteController - Iniciar trámite Primera Licencia
+POST {{baseUrl}}/tramites
+Content-Type: application/json
+
+{
+  "titularId": 1,
+  "tipo": "PRIMERA_LICENCIA",
+  "claseSolicitada": "CLASE_B",
+  "observaciones": "Primera solicitud de licencia"
+}
+
+### TramiteController - Obtener trámite por ID
+GET {{baseUrl}}/tramites/1
+
+### TramiteController - Validar documentación
+PATCH {{baseUrl}}/tramites/1/validar-documentacion?agente=AGT001
+
+### TramiteController - Rechazar trámite
+PATCH {{baseUrl}}/tramites/1/rechazar?motivo=Documentación incompleta
+
+### TramiteController - Emitir licencia
+POST {{baseUrl}}/tramites/1/emitir-licencia
+
+### TramiteController - Obtener trámites por estado
+GET {{baseUrl}}/tramites/estado/PENDIENTE_DOCUMENTACION
+
+### TramiteController - Obtener trámites de titular
+GET {{baseUrl}}/tramites/titular/1
+
+### TramiteController - Obtener trámite activo
+GET {{baseUrl}}/tramites/titular/1/activo
+
+### TramiteController - Contador por estado
+GET {{baseUrl}}/tramites/contador/estado/PENDIENTE_DOCUMENTACION
+
+### TramiteController - Contador por tipo en período
+GET {{baseUrl}}/tramites/contador/tipo/PRIMERA_LICENCIA?desde=2025-08-01T00:00:00&hasta=2025-08-31T23:59:59
+
+###############################################################################
+# TURNO CONTROLLER - Todas las pruebas
+###############################################################################
+
+### TurnoController - Reservar turno examen teórico
+POST {{baseUrl}}/turnos
+Content-Type: application/json
+
+{
+  "titularId": 1,
+  "tipo": "EXAMEN_TEORICO",
+  "inicio": "2025-08-25T09:00:00",
+  "fin": "2025-08-25T10:00:00",
+  "recursoId": 1,
+  "tramiteId": 1,
+  "observaciones": "Primera vez"
+}
+
+### TurnoController - Obtener turno por ID
+GET {{baseUrl}}/turnos/1
+
+### TurnoController - Obtener turnos de titular
+GET {{baseUrl}}/turnos/titular/1
+
+### TurnoController - Obtener turnos por fecha
+GET {{baseUrl}}/turnos/fecha/2025-08-25
+
+### TurnoController - Obtener turnos disponibles
+GET {{baseUrl}}/turnos/disponibles?tipo=EXAMEN_TEORICO&fecha=2025-08-25
+
+### TurnoController - Confirmar turno
+PATCH {{baseUrl}}/turnos/1/confirmar
+
+### TurnoController - Completar turno
+PATCH {{baseUrl}}/turnos/1/completar?observaciones=Examen aprobado 95 puntos
+
+### TurnoController - Cancelar turno
+PATCH {{baseUrl}}/turnos/1/cancelar?motivo=Reprogramación solicitada
+
+### TurnoController - Actualizar turno
+PUT {{baseUrl}}/turnos/1
+Content-Type: application/json
+
+{
+  "titularId": 1,
+  "tipo": "EXAMEN_TEORICO",
+  "inicio": "2025-08-25T10:00:00",
+  "fin": "2025-08-25T11:00:00",
+  "recursoId": 1,
+  "tramiteId": 1,
+  "observaciones": "Turno reprogramado"
+}
+
+###############################################################################
+# PAGO CONTROLLER - Todas las pruebas
+###############################################################################
+
+### PagoController - Crear orden de pago
+POST {{baseUrl}}/pagos/orden
+Content-Type: application/json
+
+{
+  "tramiteId": 1,
+  "metodoPago": "TARJETA_CREDITO",
+  "observaciones": "Pago online"
+}
+
+### PagoController - Crear pago manual
+POST {{baseUrl}}/pagos/manual
+Content-Type: application/json
+
+{
+  "tramiteId": 1,
+  "monto": 15000.00,
+  "metodoPago": "EFECTIVO",
+  "numeroRecibo": "REC001",
+  "observaciones": "Pago en ventanilla"
+}
+
+### PagoController - Obtener pago por ID
+GET {{baseUrl}}/pagos/1
+
+### PagoController - Obtener pagos de trámite
+GET {{baseUrl}}/pagos/tramite/1
+
+### PagoController - Confirmar pago
+PATCH {{baseUrl}}/pagos/1/confirmar?numeroTransaccion=TXN123456
+
+### PagoController - Anular pago
+PATCH {{baseUrl}}/pagos/1/anular?motivo=Error en el monto
+
+### PagoController - Obtener costo de trámite
+GET {{baseUrl}}/pagos/costo/PRIMERA_LICENCIA
+
+### PagoController - Estadísticas de pagos
+GET {{baseUrl}}/pagos/estadisticas?desde=2025-08-01&hasta=2025-08-31
+
+###############################################################################
+# LICENCIA CONTROLLER - Todas las pruebas
+###############################################################################
+
+### LicenciaController - Obtener licencia por ID
+GET {{baseUrl}}/licencias/1
+
+### LicenciaController - Buscar por número
+GET {{baseUrl}}/licencias/numero/LIC-2025-001
+
+### LicenciaController - Obtener licencias de titular
+GET {{baseUrl}}/licencias/titular/1
+
+### LicenciaController - Obtener licencias vigentes
+GET {{baseUrl}}/licencias/titular/1/vigentes
+
+### LicenciaController - Licencias próximas a vencer
+GET {{baseUrl}}/licencias/proximas-vencer?dias=30
+
+### LicenciaController - Licencias vencidas
+GET {{baseUrl}}/licencias/vencidas
+
+### LicenciaController - Suspender licencia
+PATCH {{baseUrl}}/licencias/1/suspender?motivo=Infracciones graves
+
+### LicenciaController - Inhabilitar licencia
+PATCH {{baseUrl}}/licencias/1/inhabilitar?motivo=Aptitud médica vencida
+
+### LicenciaController - Actualizar domicilio
+PATCH {{baseUrl}}/licencias/1/actualizar-domicilio?nuevoDomicilio=Nueva dirección 123, Santa Fe
+
+### LicenciaController - Actualizar licencias vencidas
+POST {{baseUrl}}/licencias/actualizar-vencidas
+
+### LicenciaController - Contador de licencias emitidas
+GET {{baseUrl}}/licencias/contador/emitidas?desde=2025-08-01&hasta=2025-08-31
+
+###############################################################################
+# PRUEBAS DE VALIDACIÓN Y ERRORES
+###############################################################################
+
+### Error 400 - Datos inválidos en titular
+POST {{baseUrl}}/titulares
+Content-Type: application/json
+
+{
+  "nombre": "",
+  "apellido": "Test",
+  "dni": "123",
+  "fechaNacimiento": "2030-01-01",
+  "email": "email-invalido"
+}
+
+### Error 404 - Titular no encontrado
+GET {{baseUrl}}/titulares/99999
+
+### Error 400 - Turno con fecha pasada
+POST {{baseUrl}}/turnos
+Content-Type: application/json
+
+{
+  "titularId": 1,
+  "tipo": "EXAMEN_TEORICO",
+  "inicio": "2020-01-01T10:00:00",
+  "fin": "2020-01-01T11:00:00",
+  "recursoId": 1,
+  "tramiteId": 1
+}
+
+### Error 400 - Trámite sin titular válido
+POST {{baseUrl}}/tramites
+Content-Type: application/json
+
+{
+  "titularId": 99999,
+  "tipo": "PRIMERA_LICENCIA",
+  "claseSolicitada": "CLASE_B"
+}
+
+### Error 400 - Pago con monto negativo
+POST {{baseUrl}}/pagos/manual
+Content-Type: application/json
+
+{
+  "tramiteId": 1,
+  "monto": -100.00,
+  "metodoPago": "EFECTIVO",
+  "numeroRecibo": "REC001"
+}
+
+###############################################################################
+# PRUEBAS DE RENDIMIENTO (ejecutar múltiples veces)
+###############################################################################
+
+### Prueba de carga - Crear múltiples titulares
+POST {{baseUrl}}/titulares
+Content-Type: application/json
+
+{
+  "nombre": "Usuario{{$randomInt}}",
+  "apellido": "Test{{$randomInt}}",
+  "dni": "{{$randomInt}}",
+  "fechaNacimiento": "1990-01-01",
+  "domicilio": "Dirección Test {{$randomInt}}",
+  "email": "test{{$randomInt}}@email.com",
+  "telefono": "342{{$randomInt}}"
+}
+
+### Prueba de consulta masiva
+GET {{baseUrl}}/titulares
+
+###############################################################################
+# CONFIGURACIÓN PARA DIFERENTES ENTORNOS
+###############################################################################
+
+# Para desarrollo local
+# @baseUrl = http://localhost:8080/api
+
+# Para testing
+# @baseUrl = http://localhost:8081/api
+
+# Para staging
+# @baseUrl = https://sigelic-staging.example.com/api
+
+# Para producción
+# @baseUrl = https://sigelic.example.com/api

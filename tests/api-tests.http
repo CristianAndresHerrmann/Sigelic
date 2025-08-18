@@ -1,0 +1,420 @@
+###
+# SIGELIC - Sistema Integral de Gestión de Licencias de Conducir
+# Pruebas de API REST
+# 
+# Asegúrate de que la aplicación esté corriendo en http://localhost:8080
+# Para ejecutar estas pruebas, puedes usar VS Code con la extensión "REST Client"
+# o cualquier cliente HTTP como Postman, Insomnia, etc.
+###
+
+@baseUrl = http://localhost:8080/api
+
+###############################################################################
+# TITULARES - Gestión de ciudadanos
+###############################################################################
+
+### 1. Crear un nuevo titular
+POST {{baseUrl}}/titulares
+Content-Type: application/json
+
+{
+  "nombre": "Juan Carlos",
+  "apellido": "Pérez",
+  "dni": "12345678",
+  "fechaNacimiento": "1990-05-15",
+  "domicilio": "Av. San Martín 1234, Santa Fe",
+  "email": "juan.perez@email.com",
+  "telefono": "+54 342 123-4567"
+}
+
+### 2. Crear otro titular para pruebas
+POST {{baseUrl}}/titulares
+Content-Type: application/json
+
+{
+  "nombre": "María Elena",
+  "apellido": "González",
+  "dni": "87654321",
+  "fechaNacimiento": "1985-12-20",
+  "domicilio": "Calle Corrientes 567, Santa Fe",
+  "email": "maria.gonzalez@email.com",
+  "telefono": "+54 342 987-6543"
+}
+
+### 3. Obtener un titular por ID (ajusta el ID según la respuesta anterior)
+GET {{baseUrl}}/titulares/1
+
+### 4. Buscar titular por DNI
+GET {{baseUrl}}/titulares/dni/12345678
+
+### 5. Obtener todos los titulares
+GET {{baseUrl}}/titulares
+
+### 6. Actualizar titular
+PUT {{baseUrl}}/titulares/1
+Content-Type: application/json
+
+{
+  "nombre": "Juan Carlos",
+  "apellido": "Pérez López",
+  "dni": "12345678",
+  "fechaNacimiento": "1990-05-15",
+  "domicilio": "Av. San Martín 1234, Piso 2A, Santa Fe",
+  "email": "juan.perez.lopez@email.com",
+  "telefono": "+54 342 123-4567"
+}
+
+### 7. Verificar si titular puede tramitar licencia
+GET {{baseUrl}}/titulares/1/puede-tramitar
+
+###############################################################################
+# TRÁMITES - Gestión de aplicaciones de licencias
+###############################################################################
+
+### 8. Iniciar un trámite de primera licencia
+POST {{baseUrl}}/tramites
+Content-Type: application/json
+
+{
+  "titularId": 1,
+  "tipo": "PRIMERA_LICENCIA",
+  "claseSolicitada": "CLASE_B"
+}
+
+### 9. Iniciar trámite de renovación
+POST {{baseUrl}}/tramites
+Content-Type: application/json
+
+{
+  "titularId": 2,
+  "tipo": "RENOVACION",
+  "claseSolicitada": "CLASE_A"
+}
+
+### 10. Obtener trámite por ID
+GET {{baseUrl}}/tramites/1
+
+### 11. Obtener trámites de un titular
+GET {{baseUrl}}/tramites/titular/1
+
+### 12. Obtener trámite activo de un titular
+GET {{baseUrl}}/tramites/titular/1/activo
+
+### 13. Validar documentación de un trámite
+PATCH {{baseUrl}}/tramites/1/validar-documentacion?agente=AGENTE_001
+
+### 14. Obtener trámites por estado
+GET {{baseUrl}}/tramites/estado/PENDIENTE_DOCUMENTACION
+
+### 15. Obtener conteo de trámites por estado
+GET {{baseUrl}}/tramites/contador/estado/PENDIENTE_DOCUMENTACION
+
+### 16. Rechazar un trámite
+PATCH {{baseUrl}}/tramites/2/rechazar?motivo=Documentación incompleta
+
+### 17. Emitir licencia (cuando el trámite esté completo)
+POST {{baseUrl}}/tramites/1/emitir-licencia
+
+###############################################################################
+# TURNOS - Gestión de citas
+###############################################################################
+
+### 18. Reservar turno para examen teórico
+POST {{baseUrl}}/turnos
+Content-Type: application/json
+
+{
+  "titularId": 1,
+  "tipo": "EXAMEN_TEORICO",
+  "inicio": "2025-08-25T09:00:00",
+  "fin": "2025-08-25T10:00:00",
+  "recursoId": 1,
+  "tramiteId": 1,
+  "observaciones": "Primera vez tomando el examen"
+}
+
+### 19. Reservar turno para examen práctico
+POST {{baseUrl}}/turnos
+Content-Type: application/json
+
+{
+  "titularId": 1,
+  "tipo": "EXAMEN_PRACTICO",
+  "inicio": "2025-08-26T14:00:00",
+  "fin": "2025-08-26T15:00:00",
+  "recursoId": 2,
+  "tramiteId": 1
+}
+
+### 20. Reservar turno médico
+POST {{baseUrl}}/turnos
+Content-Type: application/json
+
+{
+  "titularId": 2,
+  "tipo": "APTO_MEDICO",
+  "inicio": "2025-08-27T11:00:00",
+  "fin": "2025-08-27T11:30:00",
+  "recursoId": 3,
+  "tramiteId": 2
+}
+
+### 21. Obtener turno por ID
+GET {{baseUrl}}/turnos/1
+
+### 22. Obtener turnos de un titular
+GET {{baseUrl}}/turnos/titular/1
+
+### 23. Obtener turnos por fecha
+GET {{baseUrl}}/turnos/fecha/2025-08-25
+
+### 24. Obtener turnos disponibles para un tipo y fecha
+GET {{baseUrl}}/turnos/disponibles?tipo=EXAMEN_TEORICO&fecha=2025-08-25
+
+### 25. Confirmar un turno
+PATCH {{baseUrl}}/turnos/1/confirmar
+
+### 26. Completar un turno
+PATCH {{baseUrl}}/turnos/1/completar?observaciones=Examen aprobado exitosamente
+
+### 27. Cancelar un turno
+PATCH {{baseUrl}}/turnos/2/cancelar?motivo=Solicitud del ciudadano
+
+###############################################################################
+# PAGOS - Gestión de pagos y costos
+###############################################################################
+
+### 28. Crear orden de pago para un trámite
+POST {{baseUrl}}/pagos/orden
+Content-Type: application/json
+
+{
+  "tramiteId": 1,
+  "metodoPago": "TARJETA_CREDITO",
+  "observaciones": "Pago online mediante tarjeta"
+}
+
+### 29. Crear pago manual (ventanilla)
+POST {{baseUrl}}/pagos/manual
+Content-Type: application/json
+
+{
+  "tramiteId": 2,
+  "monto": 15000.00,
+  "metodoPago": "EFECTIVO",
+  "numeroRecibo": "REC-2025-001",
+  "observaciones": "Pago en ventanilla"
+}
+
+### 30. Obtener pago por ID
+GET {{baseUrl}}/pagos/1
+
+### 31. Obtener pagos de un trámite
+GET {{baseUrl}}/pagos/tramite/1
+
+### 32. Confirmar pago
+PATCH {{baseUrl}}/pagos/1/confirmar?numeroTransaccion=TXN-123456789
+
+### 33. Obtener costo de un tipo de trámite
+GET {{baseUrl}}/pagos/costo/PRIMERA_LICENCIA
+
+### 34. Obtener estadísticas de pagos en período
+GET {{baseUrl}}/pagos/estadisticas?desde=2025-08-01&hasta=2025-08-31
+
+###############################################################################
+# LICENCIAS - Consulta de licencias emitidas
+###############################################################################
+
+### 35. Obtener licencia por ID
+GET {{baseUrl}}/licencias/1
+
+### 36. Buscar licencia por número
+GET {{baseUrl}}/licencias/numero/LIC-2025-001
+
+### 37. Obtener licencias de un titular
+GET {{baseUrl}}/licencias/titular/1
+
+### 38. Obtener licencias vigentes de un titular
+GET {{baseUrl}}/licencias/titular/1/vigentes
+
+### 39. Obtener licencias próximas a vencer (30 días)
+GET {{baseUrl}}/licencias/proximas-vencer
+
+### 40. Obtener licencias próximas a vencer (90 días)
+GET {{baseUrl}}/licencias/proximas-vencer?dias=90
+
+### 41. Obtener licencias vencidas
+GET {{baseUrl}}/licencias/vencidas
+
+### 42. Suspender una licencia
+PATCH {{baseUrl}}/licencias/1/suspender?motivo=Infracciones de tránsito graves
+
+### 43. Inhabilitar una licencia
+PATCH {{baseUrl}}/licencias/1/inhabilitar?motivo=Problema médico
+
+### 44. Actualizar domicilio en licencia
+PATCH {{baseUrl}}/licencias/1/actualizar-domicilio?nuevoDomicilio=Nueva Dirección 456, Santa Fe
+
+### 45. Ejecutar actualización masiva de licencias vencidas
+POST {{baseUrl}}/licencias/actualizar-vencidas
+
+### 46. Obtener contador de licencias emitidas en período
+GET {{baseUrl}}/licencias/contador/emitidas?desde=2025-08-01&hasta=2025-08-31
+
+###############################################################################
+# FLUJO COMPLETO DE PRUEBA
+# Ejecuta estos endpoints en orden para simular el flujo completo
+###############################################################################
+
+### PASO 1: Crear titular
+POST {{baseUrl}}/titulares
+Content-Type: application/json
+
+{
+  "nombre": "Carlos",
+  "apellido": "Martínez",
+  "dni": "33445566",
+  "fechaNacimiento": "1995-03-10",
+  "domicilio": "Bv. Pellegrini 890, Santa Fe",
+  "email": "carlos.martinez@email.com",
+  "telefono": "+54 342 555-0123"
+}
+
+### PASO 2: Iniciar trámite
+POST {{baseUrl}}/tramites
+Content-Type: application/json
+
+{
+  "titularId": 3,
+  "tipo": "PRIMERA_LICENCIA",
+  "claseSolicitada": "CLASE_B"
+}
+
+### PASO 3: Validar documentación
+PATCH {{baseUrl}}/tramites/3/validar-documentacion?agente=AGENTE_002
+
+### PASO 4: Reservar turno médico
+POST {{baseUrl}}/turnos
+Content-Type: application/json
+
+{
+  "titularId": 3,
+  "tipo": "APTO_MEDICO",
+  "inicio": "2025-08-28T10:00:00",
+  "fin": "2025-08-28T10:30:00",
+  "recursoId": 3,
+  "tramiteId": 3
+}
+
+### PASO 5: Completar turno médico
+PATCH {{baseUrl}}/turnos/4/completar?observaciones=Apto médico aprobado
+
+### PASO 6: Reservar turno para examen teórico
+POST {{baseUrl}}/turnos
+Content-Type: application/json
+
+{
+  "titularId": 3,
+  "tipo": "EXAMEN_TEORICO",
+  "inicio": "2025-08-29T15:00:00",
+  "fin": "2025-08-29T16:00:00",
+  "recursoId": 1,
+  "tramiteId": 3
+}
+
+### PASO 7: Completar examen teórico
+PATCH {{baseUrl}}/turnos/5/completar?observaciones=Examen teórico aprobado - 85 puntos
+
+### PASO 8: Reservar turno para examen práctico
+POST {{baseUrl}}/turnos
+Content-Type: application/json
+
+{
+  "titularId": 3,
+  "tipo": "EXAMEN_PRACTICO",
+  "inicio": "2025-08-30T11:00:00",
+  "fin": "2025-08-30T12:00:00",
+  "recursoId": 2,
+  "tramiteId": 3
+}
+
+### PASO 9: Completar examen práctico
+PATCH {{baseUrl}}/turnos/6/completar?observaciones=Examen práctico aprobado
+
+### PASO 10: Crear orden de pago
+POST {{baseUrl}}/pagos/orden
+Content-Type: application/json
+
+{
+  "tramiteId": 3,
+  "metodoPago": "TARJETA_DEBITO",
+  "observaciones": "Pago mediante homebanking"
+}
+
+### PASO 11: Confirmar pago
+PATCH {{baseUrl}}/pagos/3/confirmar?numeroTransaccion=HB-987654321
+
+### PASO 12: Emitir licencia
+POST {{baseUrl}}/tramites/3/emitir-licencia
+
+### PASO 13: Verificar licencia emitida
+GET {{baseUrl}}/licencias/titular/3
+
+###############################################################################
+# PRUEBAS DE ERROR Y VALIDACIÓN
+###############################################################################
+
+### Error: Titular con DNI duplicado
+POST {{baseUrl}}/titulares
+Content-Type: application/json
+
+{
+  "nombre": "Pedro",
+  "apellido": "Ramírez",
+  "dni": "12345678",
+  "fechaNacimiento": "1988-07-22",
+  "domicilio": "Calle Falsa 123",
+  "email": "pedro@email.com"
+}
+
+### Error: Datos inválidos en titular
+POST {{baseUrl}}/titulares
+Content-Type: application/json
+
+{
+  "nombre": "",
+  "apellido": "Test",
+  "dni": "123",
+  "fechaNacimiento": "2030-01-01",
+  "email": "email-invalido"
+}
+
+### Error: Turno en el pasado
+POST {{baseUrl}}/turnos
+Content-Type: application/json
+
+{
+  "titularId": 1,
+  "tipo": "EXAMEN_TEORICO",
+  "inicio": "2020-01-01T10:00:00",
+  "fin": "2020-01-01T11:00:00",
+  "recursoId": 1,
+  "tramiteId": 1
+}
+
+### Error: Buscar titular inexistente
+GET {{baseUrl}}/titulares/99999
+
+### Error: Buscar trámite inexistente
+GET {{baseUrl}}/tramites/99999
+
+###############################################################################
+# NOTAS DE USO:
+#
+# 1. Asegúrate de que la aplicación Spring Boot esté corriendo
+# 2. Ajusta los IDs en las pruebas según las respuestas que obtengas
+# 3. Los turnos deben tener fechas futuras
+# 4. Algunos endpoints requieren que se complete un flujo previo
+# 5. Para usar con VS Code, instala la extensión "REST Client"
+# 6. Los datos de prueba están diseñados para ser realistas
+###############################################################################
