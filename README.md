@@ -35,7 +35,7 @@ SIGELIC automatiza todo el proceso de gestión de licencias de conducir, desde l
 
 ```bash
 # 1. Clonar repositorio
-git clone [repository-url]
+git clone https://github.com/CristianAndresHerrmann/Sigelic.git
 cd sigelic
 
 # 2. Configurar variables de entorno
