@@ -295,4 +295,53 @@ public class ReporteService {
         
         return reporte;
     }
+
+    /**
+     * Obtiene lista de pagos con detalles para reporte
+     */
+    public List<Pago> getPagosParaReporte(LocalDateTime desde, LocalDateTime hasta) {
+        return pagoRepository.findPagosAcreditadosEnPeriodo(desde, hasta);
+    }
+
+    /**
+     * Obtiene lista de trámites para reporte
+     */
+    public List<Tramite> getTramitesParaReporte(LocalDateTime desde, LocalDateTime hasta) {
+        return tramiteRepository.findTramitesEnPeriodo(desde, hasta);
+    }
+
+    /**
+     * Obtiene lista de licencias para reporte
+     */
+    public List<Licencia> getLicenciasParaReporte(LocalDate desde, LocalDate hasta) {
+        return licenciaRepository.findLicenciasEmitidasEnPeriodo(desde, hasta);
+    }
+
+    /**
+     * Obtiene lista de exámenes teóricos para reporte
+     */
+    public List<ExamenTeorico> getExamenesTeoricosPararReporte(LocalDateTime desde, LocalDateTime hasta) {
+        return examenTeoricoRepository.findExamenesEnPeriodo(desde, hasta);
+    }
+
+    /**
+     * Obtiene lista de exámenes prácticos para reporte
+     */
+    public List<ExamenPractico> getExamenesPracticosParaReporte(LocalDateTime desde, LocalDateTime hasta) {
+        return examenPracticoRepository.findExamenesEnPeriodo(desde, hasta);
+    }
+
+    /**
+     * Obtiene lista de turnos para reporte
+     */
+    public List<Turno> getTurnosParaReporte(LocalDateTime desde, LocalDateTime hasta) {
+        return turnoRepository.findTurnosEnPeriodo(desde, hasta);
+    }
+
+    /**
+     * Obtiene lista de inhabilitaciones activas
+     */
+    public List<Inhabilitacion> getInhabilitacionesParaReporte() {
+        return inhabilitacionRepository.findInhabilitacionesActivas();
+    }
 }

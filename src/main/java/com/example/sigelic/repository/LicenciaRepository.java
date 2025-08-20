@@ -47,4 +47,7 @@ public interface LicenciaRepository extends JpaRepository<Licencia, Long> {
     
     @Query("SELECT COUNT(l) FROM Licencia l WHERE l.fechaVencimiento > :fecha AND l.estado = 'VIGENTE'")
     Long countByFechaVencimientoAfter(@Param("fecha") LocalDate fecha);
+    
+    @Query("SELECT l FROM Licencia l WHERE l.fechaEmision BETWEEN :desde AND :hasta ORDER BY l.fechaEmision DESC")
+    List<Licencia> findLicenciasEmitidasEnPeriodo(@Param("desde") LocalDate desde, @Param("hasta") LocalDate hasta);
 }
