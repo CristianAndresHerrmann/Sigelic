@@ -20,6 +20,9 @@ import com.example.sigelic.model.Tramite;
 @Repository
 public interface TramiteRepository extends JpaRepository<Tramite, Long> {
     
+    @Query("SELECT t FROM Tramite t LEFT JOIN FETCH t.titular ORDER BY t.fechaCreacion DESC")
+    List<Tramite> findAllWithTitular();
+    
     List<Tramite> findByTitular(Titular titular);
     
     List<Tramite> findByEstado(EstadoTramite estado);

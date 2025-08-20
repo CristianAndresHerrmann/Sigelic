@@ -1,5 +1,8 @@
 package com.example.sigelic.views;
 
+import com.example.sigelic.model.Pago;
+import com.example.sigelic.model.EstadoPago;
+import com.example.sigelic.service.PagoService;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
@@ -8,13 +11,22 @@ import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.provider.ListDataProvider;
+import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.annotation.security.RolesAllowed;
+import lombok.extern.slf4j.Slf4j;
+
+import java.text.NumberFormat;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Locale;
 
 /**
  * Vista para gestión de pagos y tasas
@@ -22,18 +34,25 @@ import jakarta.annotation.security.RolesAllowed;
 @Route(value = "pagos", layout = MainLayout.class)
 @PageTitle("Pagos | SIGELIC")
 @RolesAllowed({"ADMINISTRADOR", "SUPERVISOR", "CAJERO", "AUDITOR"})
+@Slf4j
 public class PagosView extends VerticalLayout {
 
-    private Grid<String> grid; // Placeholder hasta implementar entidad Pago
+    private final PagoService pagoService;
+    private Grid<Pago> grid;
     private TextField searchField;
+    private ListDataProvider<Pago> dataProvider;
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+    private static final NumberFormat CURRENCY_FORMAT = NumberFormat.getCurrencyInstance(Locale.of("es", "AR"));
 
-    public PagosView() {
+    public PagosView(PagoService pagoService) {
+        this.pagoService = pagoService;
         addClassName("pagos-view");
         setSizeFull();
 
         createHeader();
         createSearchBar();
         createGrid();
+        loadPagos();
     }
 
     private void createHeader() {
@@ -56,34 +75,130 @@ public class PagosView extends VerticalLayout {
 
     private void createSearchBar() {
         searchField = new TextField();
-        searchField.setPlaceholder("Buscar pagos...");
+        searchField.setPlaceholder("Buscar pagos por trámite, comprobante o transacción...");
         searchField.setPrefixComponent(new Icon(VaadinIcon.SEARCH));
         searchField.setWidthFull();
         searchField.setMaxWidth("400px");
+        searchField.setValueChangeMode(ValueChangeMode.LAZY);
+        searchField.addValueChangeListener(e -> filterPagos());
 
         add(searchField);
     }
 
     private void createGrid() {
-        grid = new Grid<>();
+        grid = new Grid<>(Pago.class, false);
         grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         grid.setSizeFull();
 
-        // Placeholder columns
-        grid.addColumn(item -> "P" + System.currentTimeMillis()).setHeader("Número");
-        grid.addColumn(item -> "Tasa Renovación").setHeader("Concepto");
-        grid.addColumn(item -> "$15.000").setHeader("Monto");
-        grid.addColumn(item -> "Juan Pérez").setHeader("Pagador");
-        grid.addColumn(item -> "2024-11-15").setHeader("Fecha");
-        grid.addColumn(item -> {
-            Span badge = new Span("Pagado");
-            badge.getElement().getThemeList().add("badge success");
-            return badge;
-        }).setHeader("Estado");
+        // Columna número de pago
+        grid.addColumn(pago -> "P" + pago.getId())
+            .setHeader("Número")
+            .setWidth("100px")
+            .setFlexGrow(0);
 
-        // Placeholder data
-        grid.setItems("Item 1", "Item 2", "Item 3");
+        // Columna trámite
+        grid.addColumn(pago -> pago.getTramite() != null ? 
+            "T" + pago.getTramite().getId() + " - " + 
+            pago.getTramite().getTipo().getDescripcion() : "N/A")
+            .setHeader("Trámite")
+            .setWidth("200px");
+
+        // Columna monto
+        grid.addColumn(pago -> CURRENCY_FORMAT.format(pago.getMonto()))
+            .setHeader("Monto")
+            .setWidth("120px")
+            .setFlexGrow(0);
+
+        // Columna titular/pagador
+        grid.addColumn(pago -> pago.getTramite() != null && 
+            pago.getTramite().getTitular() != null ? 
+            pago.getTramite().getTitular().getNombre() + " " + 
+            pago.getTramite().getTitular().getApellido() : "N/A")
+            .setHeader("Pagador")
+            .setWidth("200px");
+
+        // Columna fecha
+        grid.addColumn(pago -> pago.getFecha() != null ? 
+            pago.getFecha().format(DATE_FORMATTER) : "N/A")
+            .setHeader("Fecha")
+            .setWidth("150px")
+            .setFlexGrow(0);
+
+        // Columna medio de pago
+        grid.addColumn(pago -> pago.getMedio().getDescripcion())
+            .setHeader("Medio")
+            .setWidth("120px")
+            .setFlexGrow(0);
+
+        // Columna estado con badge
+        grid.addComponentColumn(this::createEstadoBadge)
+            .setHeader("Estado")
+            .setWidth("120px")
+            .setFlexGrow(0);
+
+        // Columna número de comprobante
+        grid.addColumn(Pago::getNumeroComprobante)
+            .setHeader("Comprobante")
+            .setWidth("150px")
+            .setFlexGrow(0);
 
         add(grid);
+    }
+
+    private Span createEstadoBadge(Pago pago) {
+        Span badge = new Span(pago.getEstado().getDescripcion());
+        
+        switch (pago.getEstado()) {
+            case ACREDITADO:
+                badge.getElement().getThemeList().add("badge success");
+                break;
+            case PENDIENTE:
+                badge.getElement().getThemeList().add("badge");
+                break;
+            case RECHAZADO:
+                badge.getElement().getThemeList().add("badge error");
+                break;
+            case VENCIDO:
+                badge.getElement().getThemeList().add("badge contrast");
+                break;
+        }
+        
+        return badge;
+    }
+
+    private void loadPagos() {
+        try {
+            log.info("Cargando lista de pagos");
+            List<Pago> pagos = pagoService.findAll();
+            dataProvider = new ListDataProvider<>(pagos);
+            grid.setDataProvider(dataProvider);
+            log.info("Cargados {} pagos exitosamente", pagos.size());
+        } catch (Exception e) {
+            log.error("Error al cargar pagos", e);
+            Notification.show("Error al cargar los pagos: " + e.getMessage(), 
+                3000, Notification.Position.MIDDLE);
+        }
+    }
+
+    private void filterPagos() {
+        if (dataProvider == null) return;
+        
+        String filterText = searchField.getValue();
+        if (filterText == null || filterText.trim().isEmpty()) {
+            dataProvider.clearFilters();
+        } else {
+            String filter = filterText.toLowerCase().trim();
+            dataProvider.setFilter(pago -> 
+                (pago.getTramite() != null && 
+                 String.valueOf(pago.getTramite().getId()).contains(filter)) ||
+                (pago.getNumeroComprobante() != null && 
+                 pago.getNumeroComprobante().toLowerCase().contains(filter)) ||
+                (pago.getNumeroTransaccion() != null && 
+                 pago.getNumeroTransaccion().toLowerCase().contains(filter)) ||
+                (pago.getTramite() != null && pago.getTramite().getTitular() != null &&
+                 (pago.getTramite().getTitular().getNombre().toLowerCase().contains(filter) ||
+                  pago.getTramite().getTitular().getApellido().toLowerCase().contains(filter)))
+            );
+        }
     }
 }

@@ -1,17 +1,24 @@
 package com.example.sigelic.service;
 
-import com.example.sigelic.model.*;
-import com.example.sigelic.repository.LicenciaRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.example.sigelic.model.ClaseLicencia;
+import com.example.sigelic.model.EstadoLicencia;
+import com.example.sigelic.model.Licencia;
+import com.example.sigelic.model.TipoTramite;
+import com.example.sigelic.model.Titular;
+import com.example.sigelic.model.Tramite;
+import com.example.sigelic.repository.LicenciaRepository;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Servicio para gestionar licencias de conducir
@@ -37,7 +44,15 @@ public class LicenciaService {
      */
     @Transactional(readOnly = true)
     public List<Licencia> findAll() {
-        return licenciaRepository.findAll();
+        try {
+            log.info("Iniciando búsqueda de todas las licencias...");
+            List<Licencia> licencias = licenciaRepository.findAllWithTitular();
+            log.info("Se encontraron {} licencias", licencias.size());
+            return licencias;
+        } catch (Exception e) {
+            log.error("Error al buscar licencias: {}", e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**

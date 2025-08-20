@@ -1,5 +1,7 @@
 package com.example.sigelic.views;
 
+import com.example.sigelic.model.Configuracion;
+import com.example.sigelic.service.ConfiguracionService;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
@@ -18,6 +20,12 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.annotation.security.RolesAllowed;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Vista para configuración del sistema
@@ -25,7 +33,10 @@ import jakarta.annotation.security.RolesAllowed;
 @Route(value = "configuracion", layout = MainLayout.class)
 @PageTitle("Configuración | SIGELIC")
 @RolesAllowed({"ADMINISTRADOR"})
+@Slf4j
 public class ConfiguracionView extends VerticalLayout {
+
+    private final ConfiguracionService configuracionService;
 
     // Campos de configuración general
     private TextField nombreSistemaField;
@@ -43,7 +54,8 @@ public class ConfiguracionView extends VerticalLayout {
     private IntegerField validezLicenciaField;
     private IntegerField diasAvisoVencimientoField;
 
-    public ConfiguracionView() {
+    public ConfiguracionView(ConfiguracionService configuracionService) {
+        this.configuracionService = configuracionService;
         addClassName("configuracion-view");
         setSizeFull();
 
@@ -167,51 +179,180 @@ public class ConfiguracionView extends VerticalLayout {
     }
 
     private void loadCurrentConfiguration() {
-        // TODO: Cargar configuración actual desde base de datos o archivos de configuración
-        // Por ahora, valores por defecto
-        nombreSistemaField.setValue("SIGELIC - Sistema de Gestión de Licencias");
-        urlSistemaField.setValue("http://localhost:8080");
-        emailContactoField.setValue("contacto@sigelic.gov.ar");
-        telefonoContactoField.setValue("+54 342 4573000");
-        
-        maxIntentosFallidosField.setValue(3);
-        tiempoBloqueoField.setValue(30);
-        duracionSesionField.setValue(60);
-        cambioPasswordObligatorioCheckbox.setValue(true);
-        
-        validezLicenciaField.setValue(5);
-        diasAvisoVencimientoField.setValue(90);
+        try {
+            log.info("Cargando configuración actual del sistema");
+            
+            // Cargar configuración general
+            configuracionService.getValor("sistema.nombre")
+                .ifPresent(nombreSistemaField::setValue);
+            
+            configuracionService.getValor("sistema.url")
+                .ifPresent(urlSistemaField::setValue);
+            
+            configuracionService.getValor("contacto.email")
+                .ifPresent(emailContactoField::setValue);
+            
+            configuracionService.getValor("contacto.telefono")
+                .ifPresent(telefonoContactoField::setValue);
+            
+            // Cargar configuración de seguridad
+            configuracionService.getValorComoInteger("seguridad.max_intentos_fallidos")
+                .ifPresent(maxIntentosFallidosField::setValue);
+            
+            configuracionService.getValorComoInteger("seguridad.tiempo_bloqueo_minutos")
+                .ifPresent(tiempoBloqueoField::setValue);
+            
+            configuracionService.getValorComoInteger("seguridad.duracion_sesion_minutos")
+                .ifPresent(duracionSesionField::setValue);
+            
+            configuracionService.getValorComoBoolean("seguridad.cambio_password_obligatorio")
+                .ifPresent(cambioPasswordObligatorioCheckbox::setValue);
+            
+            // Cargar configuración de licencias
+            configuracionService.getValorComoInteger("licencias.validez_anos")
+                .ifPresent(validezLicenciaField::setValue);
+            
+            configuracionService.getValorComoInteger("licencias.dias_aviso_vencimiento")
+                .ifPresent(diasAvisoVencimientoField::setValue);
+            
+            log.info("Configuración cargada exitosamente");
+            
+        } catch (Exception e) {
+            log.error("Error al cargar configuración", e);
+            showNotification("Error al cargar configuración: " + e.getMessage(), NotificationVariant.LUMO_ERROR);
+        }
     }
 
     private void saveConfiguration() {
         try {
-            // TODO: Validar campos obligatorios
-            if (nombreSistemaField.getValue().trim().isEmpty()) {
+            log.info("Guardando configuración del sistema");
+            
+            // Validar campos obligatorios
+            if (nombreSistemaField.getValue() == null || nombreSistemaField.getValue().trim().isEmpty()) {
                 showNotification("El nombre del sistema es obligatorio", NotificationVariant.LUMO_ERROR);
                 return;
             }
-
-            // TODO: Guardar configuración en base de datos o archivos
-            // Por ahora, solo mostrar confirmación
-            showNotification("Configuración guardada exitosamente", NotificationVariant.LUMO_SUCCESS);
             
+            if (emailContactoField.getValue() == null || emailContactoField.getValue().trim().isEmpty()) {
+                showNotification("El email de contacto es obligatorio", NotificationVariant.LUMO_ERROR);
+                return;
+            }
+            
+            // Obtener usuario actual
+            String usuarioActual = getCurrentUser();
+            
+            // Preparar mapa de configuraciones para actualizar
+            Map<String, String> configuraciones = new HashMap<>();
+            
+            // Configuración general
+            configuraciones.put("sistema.nombre", nombreSistemaField.getValue());
+            configuraciones.put("sistema.url", urlSistemaField.getValue());
+            configuraciones.put("contacto.email", emailContactoField.getValue());
+            configuraciones.put("contacto.telefono", telefonoContactoField.getValue());
+            
+            // Configuración de seguridad
+            if (maxIntentosFallidosField.getValue() != null) {
+                configuraciones.put("seguridad.max_intentos_fallidos", maxIntentosFallidosField.getValue().toString());
+            }
+            if (tiempoBloqueoField.getValue() != null) {
+                configuraciones.put("seguridad.tiempo_bloqueo_minutos", tiempoBloqueoField.getValue().toString());
+            }
+            if (duracionSesionField.getValue() != null) {
+                configuraciones.put("seguridad.duracion_sesion_minutos", duracionSesionField.getValue().toString());
+            }
+            configuraciones.put("seguridad.cambio_password_obligatorio", 
+                               cambioPasswordObligatorioCheckbox.getValue().toString());
+            
+            // Configuración de licencias
+            if (validezLicenciaField.getValue() != null) {
+                configuraciones.put("licencias.validez_anos", validezLicenciaField.getValue().toString());
+            }
+            if (diasAvisoVencimientoField.getValue() != null) {
+                configuraciones.put("licencias.dias_aviso_vencimiento", diasAvisoVencimientoField.getValue().toString());
+            }
+            
+            // Actualizar configuraciones
+            configuracionService.actualizarConfiguraciones(configuraciones, usuarioActual);
+            
+            showNotification("Configuración guardada exitosamente", NotificationVariant.LUMO_SUCCESS);
+            log.info("Configuración guardada exitosamente por usuario: {}", usuarioActual);
+            
+        } catch (IllegalArgumentException e) {
+            log.warn("Error de validación al guardar configuración: {}", e.getMessage());
+            showNotification("Error: " + e.getMessage(), NotificationVariant.LUMO_ERROR);
         } catch (Exception e) {
+            log.error("Error al guardar configuración", e);
             showNotification("Error al guardar configuración: " + e.getMessage(), NotificationVariant.LUMO_ERROR);
         }
     }
 
     private void testConfiguration() {
         try {
-            // TODO: Implementar pruebas de configuración
-            // - Probar conectividad de email
-            // - Validar URLs
-            // - Verificar configuraciones de seguridad
+            log.info("Probando configuración del sistema");
+            
+            // Validar configuración de email
+            String email = emailContactoField.getValue();
+            if (email != null && !email.trim().isEmpty()) {
+                if (!email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+                    showNotification("El formato del email no es válido", NotificationVariant.LUMO_ERROR);
+                    return;
+                }
+            }
+            
+            // Validar URL del sistema
+            String url = urlSistemaField.getValue();
+            if (url != null && !url.trim().isEmpty()) {
+                if (!url.matches("^https?://.*")) {
+                    showNotification("La URL debe comenzar con http:// o https://", NotificationVariant.LUMO_ERROR);
+                    return;
+                }
+            }
+            
+            // Validar configuraciones de seguridad
+            if (maxIntentosFallidosField.getValue() != null && maxIntentosFallidosField.getValue() < 1) {
+                showNotification("El máximo de intentos fallidos debe ser mayor a 0", NotificationVariant.LUMO_ERROR);
+                return;
+            }
+            
+            if (tiempoBloqueoField.getValue() != null && tiempoBloqueoField.getValue() < 5) {
+                showNotification("El tiempo de bloqueo debe ser de al menos 5 minutos", NotificationVariant.LUMO_ERROR);
+                return;
+            }
+            
+            if (duracionSesionField.getValue() != null && duracionSesionField.getValue() < 15) {
+                showNotification("La duración de sesión debe ser de al menos 15 minutos", NotificationVariant.LUMO_ERROR);
+                return;
+            }
+            
+            // Validar configuraciones de licencias
+            if (validezLicenciaField.getValue() != null && validezLicenciaField.getValue() < 1) {
+                showNotification("La validez de licencia debe ser de al menos 1 año", NotificationVariant.LUMO_ERROR);
+                return;
+            }
+            
+            if (diasAvisoVencimientoField.getValue() != null && diasAvisoVencimientoField.getValue() < 30) {
+                showNotification("Los días de aviso deben ser de al menos 30", NotificationVariant.LUMO_ERROR);
+                return;
+            }
             
             showNotification("Configuración probada exitosamente", NotificationVariant.LUMO_SUCCESS);
+            log.info("Prueba de configuración completada exitosamente");
             
         } catch (Exception e) {
+            log.error("Error en la prueba de configuración", e);
             showNotification("Error en la prueba de configuración: " + e.getMessage(), NotificationVariant.LUMO_ERROR);
         }
+    }
+
+    /**
+     * Obtiene el usuario actual autenticado
+     */
+    private String getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated()) {
+            return authentication.getName();
+        }
+        return "UNKNOWN";
     }
 
     private void showNotification(String message, NotificationVariant variant) {

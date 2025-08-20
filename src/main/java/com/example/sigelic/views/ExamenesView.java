@@ -95,7 +95,7 @@ public class ExamenesView extends VerticalLayout {
         grid.setSizeFull();
 
         // Columnas del grid
-        grid.addColumn(exam -> "T-" + exam.getId()).setHeader("ID").setWidth("100px");
+        grid.addColumn(exam -> (exam.getTipo().equals("Teórico") ? "T-" : "P-") + exam.getId()).setHeader("ID").setWidth("100px");
         grid.addColumn(ExamenWrapper::getTipo).setHeader("Tipo").setWidth("120px");
         grid.addColumn(exam -> exam.getTramite().getId()).setHeader("Nº Trámite").setWidth("120px");
         grid.addColumn(exam -> exam.getTramite().getTitular().getNombre() + " " + 
@@ -103,11 +103,7 @@ public class ExamenesView extends VerticalLayout {
         grid.addColumn(exam -> exam.getFecha().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")))
              .setHeader("Fecha").setWidth("150px");
         grid.addColumn(ExamenWrapper::getExaminador).setHeader("Examinador").setWidth("150px");
-        grid.addColumn(exam -> {
-            Span badge = new Span(exam.isAprobado() ? "Aprobado" : "Reprobado");
-            badge.getElement().getThemeList().add("badge " + (exam.isAprobado() ? "success" : "error"));
-            return badge;
-        }).setHeader("Resultado").setWidth("120px");
+        grid.addColumn(exam -> exam.isAprobado() ? "Aprobado" : "Reprobado").setHeader("Resultado").setWidth("120px");
 
         // Configurar data provider
         dataProvider = new ListDataProvider<>(new ArrayList<>());

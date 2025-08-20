@@ -1,21 +1,25 @@
 package com.example.sigelic.repository;
 
-import com.example.sigelic.model.ExamenPractico;
-import com.example.sigelic.model.Tramite;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import com.example.sigelic.model.ExamenPractico;
+import com.example.sigelic.model.Tramite;
 
 /**
  * Repositorio para la entidad ExamenPractico
  */
 @Repository
 public interface ExamenPracticoRepository extends JpaRepository<ExamenPractico, Long> {
+    
+    @Query("SELECT e FROM ExamenPractico e LEFT JOIN FETCH e.tramite t LEFT JOIN FETCH t.titular ORDER BY e.fecha DESC")
+    List<ExamenPractico> findAllWithTramite();
     
     List<ExamenPractico> findByTramite(Tramite tramite);
     

@@ -20,6 +20,9 @@ import com.example.sigelic.model.Titular;
 @Repository
 public interface LicenciaRepository extends JpaRepository<Licencia, Long> {
     
+    @Query("SELECT l FROM Licencia l LEFT JOIN FETCH l.titular LEFT JOIN FETCH l.tramite ORDER BY l.fechaEmision DESC")
+    List<Licencia> findAllWithTitular();
+    
     List<Licencia> findByTitular(Titular titular);
     
     List<Licencia> findByTitularAndEstado(Titular titular, EstadoLicencia estado);

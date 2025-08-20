@@ -140,7 +140,8 @@ public class LicenciasView extends VerticalLayout {
             dataProvider = new ListDataProvider<>(licencias);
             grid.setDataProvider(dataProvider);
         } catch (Exception e) {
-            showNotification("Error al cargar licencias: " + e.getMessage(), NotificationVariant.LUMO_ERROR);
+            e.printStackTrace(); // Imprimir stack trace completo
+            showNotification("Error al cargar licencias: " + e.getClass().getSimpleName() + " - " + e.getMessage(), NotificationVariant.LUMO_ERROR);
         }
     }
 

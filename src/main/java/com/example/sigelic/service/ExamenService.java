@@ -1,17 +1,18 @@
 package com.example.sigelic.service;
 
-import com.example.sigelic.model.ExamenTeorico;
-import com.example.sigelic.model.ExamenPractico;
-import com.example.sigelic.model.Tramite;
-import com.example.sigelic.repository.ExamenTeoricoRepository;
-import com.example.sigelic.repository.ExamenPracticoRepository;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import com.example.sigelic.model.ExamenPractico;
+import com.example.sigelic.model.ExamenTeorico;
+import com.example.sigelic.model.Tramite;
+import com.example.sigelic.repository.ExamenPracticoRepository;
+import com.example.sigelic.repository.ExamenTeoricoRepository;
 
 /**
  * Servicio para gestión de exámenes teóricos y prácticos
@@ -33,7 +34,7 @@ public class ExamenService {
      */
     @Transactional(readOnly = true)
     public List<ExamenTeorico> findAllTeoricos() {
-        return examenTeoricoRepository.findAll();
+        return examenTeoricoRepository.findAllWithTramite();
     }
 
     /**
@@ -41,7 +42,7 @@ public class ExamenService {
      */
     @Transactional(readOnly = true)
     public List<ExamenPractico> findAllPracticos() {
-        return examenPracticoRepository.findAll();
+        return examenPracticoRepository.findAllWithTramite();
     }
 
     /**

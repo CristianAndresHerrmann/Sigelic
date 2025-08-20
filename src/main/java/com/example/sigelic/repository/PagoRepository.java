@@ -1,18 +1,19 @@
 package com.example.sigelic.repository;
 
-import com.example.sigelic.model.Pago;
-import com.example.sigelic.model.Tramite;
-import com.example.sigelic.model.EstadoPago;
-import com.example.sigelic.model.MedioPago;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import com.example.sigelic.model.EstadoPago;
+import com.example.sigelic.model.MedioPago;
+import com.example.sigelic.model.Pago;
+import com.example.sigelic.model.Tramite;
 
 /**
  * Repositorio para la entidad Pago
@@ -46,4 +47,10 @@ public interface PagoRepository extends JpaRepository<Pago, Long> {
     
     @Query("SELECT SUM(p.monto) FROM Pago p WHERE p.fechaAcreditacion BETWEEN :desde AND :hasta AND p.estado = 'ACREDITADO'")
     BigDecimal sumMontoByFechaPagoBetween(@Param("desde") LocalDateTime desde, @Param("hasta") LocalDateTime hasta);
+    
+    @Query("SELECT p FROM Pago p " +
+           "LEFT JOIN FETCH p.tramite t " +
+           "LEFT JOIN FETCH t.titular " +
+           "ORDER BY p.fecha DESC")
+    List<Pago> findAllWithDetails();
 }

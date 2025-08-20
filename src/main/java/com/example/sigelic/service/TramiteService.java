@@ -1,17 +1,31 @@
 package com.example.sigelic.service;
 
-import com.example.sigelic.model.*;
-import com.example.sigelic.repository.*;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.example.sigelic.model.AptoMedico;
+import com.example.sigelic.model.ClaseLicencia;
+import com.example.sigelic.model.EstadoTramite;
+import com.example.sigelic.model.ExamenPractico;
+import com.example.sigelic.model.ExamenTeorico;
+import com.example.sigelic.model.Licencia;
+import com.example.sigelic.model.Pago;
+import com.example.sigelic.model.TipoTramite;
+import com.example.sigelic.model.Titular;
+import com.example.sigelic.model.Tramite;
+import com.example.sigelic.repository.AptoMedicoRepository;
+import com.example.sigelic.repository.ExamenPracticoRepository;
+import com.example.sigelic.repository.ExamenTeoricoRepository;
+import com.example.sigelic.repository.PagoRepository;
+import com.example.sigelic.repository.TramiteRepository;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Servicio para gestionar trámites de licencias
@@ -43,7 +57,7 @@ public class TramiteService {
      */
     @Transactional(readOnly = true)
     public List<Tramite> findAll() {
-        return tramiteRepository.findAll();
+        return tramiteRepository.findAllWithTitular();
     }
 
     /**

@@ -25,6 +25,7 @@ public class PagoService {
 
     private final PagoRepository pagoRepository;
     private final CostoTramiteRepository costoTramiteRepository;
+    private final ConfiguracionService configuracionService;
 
     /**
      * Busca un pago por ID
@@ -32,6 +33,14 @@ public class PagoService {
     @Transactional(readOnly = true)
     public Optional<Pago> findById(Long id) {
         return pagoRepository.findById(id);
+    }
+
+    /**
+     * Obtiene todos los pagos
+     */
+    @Transactional(readOnly = true)
+    public List<Pago> findAll() {
+        return pagoRepository.findAllWithDetails();
     }
 
     /**
@@ -68,6 +77,9 @@ public class PagoService {
         pago.setMonto(monto);
         pago.setMedio(medio);
         pago.setEstado(EstadoPago.PENDIENTE);
+
+        // Establecer fecha de vencimiento según configuración
+        pago.setFechaVencimiento(calcularFechaVencimiento());
 
         // Generar número de transacción
         pago.setNumeroTransaccion(generarNumeroTransaccion());
@@ -280,5 +292,21 @@ public class PagoService {
         
         BigDecimal total = pagoRepository.sumMontoByFechaPagoBetween(inicioDelDia, finDelDia);
         return total != null ? total.doubleValue() : 0.0;
+    }
+
+    /**
+     * Calcula la fecha de vencimiento para una orden de pago
+     * basada en la configuración del sistema
+     */
+    private LocalDateTime calcularFechaVencimiento() {
+        try {
+            // Obtener horas de vencimiento desde configuración (por defecto 48 horas)
+            String horasStr = configuracionService.getValor("pagos.vencimiento_horas", "48");
+            int horas = Integer.parseInt(horasStr);
+            return LocalDateTime.now().plusHours(horas);
+        } catch (NumberFormatException e) {
+            log.warn("Error al parsear configuración de vencimiento, usando valor por defecto: {}", e.getMessage());
+            return LocalDateTime.now().plusHours(48);
+        }
     }
 }

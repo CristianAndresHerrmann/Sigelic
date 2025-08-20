@@ -18,6 +18,9 @@ import com.example.sigelic.model.Tramite;
 @Repository
 public interface ExamenTeoricoRepository extends JpaRepository<ExamenTeorico, Long> {
     
+    @Query("SELECT e FROM ExamenTeorico e LEFT JOIN FETCH e.tramite t LEFT JOIN FETCH t.titular ORDER BY e.fecha DESC")
+    List<ExamenTeorico> findAllWithTramite();
+    
     List<ExamenTeorico> findByTramite(Tramite tramite);
     
     Optional<ExamenTeorico> findByTramiteAndAprobado(Tramite tramite, Boolean aprobado);

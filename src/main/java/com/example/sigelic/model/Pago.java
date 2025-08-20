@@ -15,7 +15,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
@@ -122,14 +121,6 @@ public class Pago {
     public void marcarVencido() {
         if (estado == EstadoPago.PENDIENTE) {
             estado = EstadoPago.VENCIDO;
-        }
-    }
-
-    @PrePersist
-    private void establecerVencimientoPorDefecto() {
-        if (fechaVencimiento == null) {
-            // Por defecto, la orden de pago vence en 48 horas
-            fechaVencimiento = LocalDateTime.now().plusHours(48);
         }
     }
 }
