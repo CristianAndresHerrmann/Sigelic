@@ -68,15 +68,21 @@ class ReporteServiceTest {
         @Test
         @DisplayName("Debe generar reporte de trámites por período")
         void debeGenerarReporteTramitesPorPeriodo() {
-            // Given
+            // Given - Stubbear TODOS los tipos de trámite
             when(tramiteRepository.countByTipoEnPeriodo(TipoTramite.EMISION, fechaDesde, fechaHasta)).thenReturn(10L);
             when(tramiteRepository.countByTipoEnPeriodo(TipoTramite.RENOVACION, fechaDesde, fechaHasta)).thenReturn(5L);
             when(tramiteRepository.countByTipoEnPeriodo(TipoTramite.DUPLICADO, fechaDesde, fechaHasta)).thenReturn(3L);
             when(tramiteRepository.countByTipoEnPeriodo(TipoTramite.CAMBIO_DOMICILIO, fechaDesde, fechaHasta)).thenReturn(2L);
             
+            // Stubbear TODOS los estados de trámite
             when(tramiteRepository.countByEstado(EstadoTramite.INICIADO)).thenReturn(8L);
             when(tramiteRepository.countByEstado(EstadoTramite.DOCS_OK)).thenReturn(5L);
+            when(tramiteRepository.countByEstado(EstadoTramite.APTO_MED)).thenReturn(4L);
+            when(tramiteRepository.countByEstado(EstadoTramite.EX_TEO_OK)).thenReturn(3L);
+            when(tramiteRepository.countByEstado(EstadoTramite.EX_PRA_OK)).thenReturn(2L);
+            when(tramiteRepository.countByEstado(EstadoTramite.PAGO_OK)).thenReturn(1L);
             when(tramiteRepository.countByEstado(EstadoTramite.EMITIDA)).thenReturn(7L);
+            when(tramiteRepository.countByEstado(EstadoTramite.RECHAZADA)).thenReturn(1L);
 
             // When
             Map<String, Object> reporte = reporteService.getReporteTramitesPorPeriodo(fechaDesde, fechaHasta);
