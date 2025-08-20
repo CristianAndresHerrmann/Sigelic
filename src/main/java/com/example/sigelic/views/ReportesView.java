@@ -2,13 +2,13 @@ package com.example.sigelic.views;
 
 import com.example.sigelic.service.ExportService;
 import com.example.sigelic.service.ReporteService;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
-import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.icon.Icon;
@@ -19,15 +19,14 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.annotation.security.RolesAllowed;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -49,6 +48,7 @@ public class ReportesView extends VerticalLayout {
     private Grid<Map<String, String>> grid;
     private Button exportButton;
     private Button exportExcelButton;
+    private Button exportPdfButton;
 
     private List<String> currentHeaders = new ArrayList<>();
     private List<List<String>> currentData = new ArrayList<>();
@@ -128,6 +128,10 @@ public class ReportesView extends VerticalLayout {
         exportExcelButton = new Button("Exportar Excel", new Icon(VaadinIcon.FILE_TABLE));
         exportExcelButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
         exportExcelButton.addClickListener(e -> exportToExcel());
+        
+        exportPdfButton = new Button("Exportar PDF", new Icon(VaadinIcon.FILE_TEXT));
+        exportPdfButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+        exportPdfButton.addClickListener(e -> exportToPdf());
 
         HorizontalLayout filterRow1 = new HorizontalLayout(tipoReporteCombo);
         filterRow1.setWidthFull();
@@ -136,7 +140,7 @@ public class ReportesView extends VerticalLayout {
         filterRow2.setAlignItems(Alignment.END);
         filterRow2.setWidthFull();
 
-        HorizontalLayout exportRow = new HorizontalLayout(exportButton, exportExcelButton);
+        HorizontalLayout exportRow = new HorizontalLayout(exportButton, exportExcelButton, exportPdfButton);
 
         add(filtersTitle, filterRow1, filterRow2, exportRow);
     }
@@ -146,8 +150,10 @@ public class ReportesView extends VerticalLayout {
         resultsTitle.addClassNames(LumoUtility.Margin.Bottom.SMALL, LumoUtility.Margin.Top.MEDIUM);
 
         grid = new Grid<>();
-        grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_WRAP_CELL_CONTENT);
         grid.setSizeFull();
+        grid.setHeight("400px"); // Altura fija para evitar problemas de scroll
+        grid.getElement().getStyle().set("overflow", "auto");
 
         add(resultsTitle, grid);
     }
@@ -407,26 +413,29 @@ public class ReportesView extends VerticalLayout {
     private void updateExportButtons(boolean enabled) {
         exportButton.setEnabled(enabled);
         exportExcelButton.setEnabled(enabled);
+        exportPdfButton.setEnabled(enabled);
     }
 
     private void exportToCsv() {
         try {
             byte[] csvData = exportService.exportToCsv(currentTitle, currentHeaders, currentData);
             
-            StreamResource resource = new StreamResource(
-                currentTitle.replace(" ", "_") + ".csv",
-                () -> new ByteArrayInputStream(csvData));
+            String filename = currentTitle.replace(" ", "_") + "_" + 
+                            LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + ".csv";
             
-            resource.setContentType("text/csv");
-            resource.setCacheTime(0);
+            // Convertir bytes a base64 para descargar via JavaScript
+            String base64Data = java.util.Base64.getEncoder().encodeToString(csvData);
             
-            Anchor downloadAnchor = new Anchor(resource, "");
-            downloadAnchor.getElement().setAttribute("download", true);
-            downloadAnchor.getElement().getStyle().set("display", "none");
-            
-            getElement().appendChild(downloadAnchor.getElement());
-            downloadAnchor.getElement().executeJs("this.click()");
-            getElement().removeChild(downloadAnchor.getElement());
+            // Usar JavaScript para descargar el archivo
+            UI.getCurrent().getPage().executeJs(
+                "const link = document.createElement('a');" +
+                "link.href = 'data:text/csv;base64,' + $0;" +
+                "link.download = $1;" +
+                "document.body.appendChild(link);" +
+                "link.click();" +
+                "document.body.removeChild(link);",
+                base64Data, filename
+            );
             
             showSuccessNotification("Archivo CSV generado exitosamente");
             
@@ -440,26 +449,57 @@ public class ReportesView extends VerticalLayout {
         try {
             byte[] excelData = exportService.exportToExcel(currentTitle, currentHeaders, currentData);
             
-            StreamResource resource = new StreamResource(
-                currentTitle.replace(" ", "_") + ".xlsx",
-                () -> new ByteArrayInputStream(excelData));
+            String filename = currentTitle.replace(" ", "_") + "_" + 
+                            LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + ".xlsx";
             
-            resource.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-            resource.setCacheTime(0);
+            // Convertir bytes a base64 para descargar via JavaScript
+            String base64Data = java.util.Base64.getEncoder().encodeToString(excelData);
             
-            Anchor downloadAnchor = new Anchor(resource, "");
-            downloadAnchor.getElement().setAttribute("download", true);
-            downloadAnchor.getElement().getStyle().set("display", "none");
-            
-            getElement().appendChild(downloadAnchor.getElement());
-            downloadAnchor.getElement().executeJs("this.click()");
-            getElement().removeChild(downloadAnchor.getElement());
+            // Usar JavaScript para descargar el archivo
+            UI.getCurrent().getPage().executeJs(
+                "const link = document.createElement('a');" +
+                "link.href = 'data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,' + $0;" +
+                "link.download = $1;" +
+                "document.body.appendChild(link);" +
+                "link.click();" +
+                "document.body.removeChild(link);",
+                base64Data, filename
+            );
             
             showSuccessNotification("Archivo Excel generado exitosamente");
             
         } catch (Exception e) {
             log.error("Error exportando a Excel: ", e);
             showErrorNotification("Error exportando a Excel: " + e.getMessage());
+        }
+    }
+
+    private void exportToPdf() {
+        try {
+            byte[] pdfData = exportService.exportToPdf(currentTitle, currentHeaders, currentData);
+            
+            String filename = currentTitle.replace(" ", "_") + "_" + 
+                            LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + ".pdf";
+            
+            // Convertir bytes a base64 para descargar via JavaScript
+            String base64Data = java.util.Base64.getEncoder().encodeToString(pdfData);
+            
+            // Usar JavaScript para descargar el archivo
+            UI.getCurrent().getPage().executeJs(
+                "const link = document.createElement('a');" +
+                "link.href = 'data:application/pdf;base64,' + $0;" +
+                "link.download = $1;" +
+                "document.body.appendChild(link);" +
+                "link.click();" +
+                "document.body.removeChild(link);",
+                base64Data, filename
+            );
+            
+            showSuccessNotification("Archivo PDF generado exitosamente");
+            
+        } catch (Exception e) {
+            log.error("Error exportando a PDF: ", e);
+            showErrorNotification("Error exportando a PDF: " + e.getMessage());
         }
     }
 
