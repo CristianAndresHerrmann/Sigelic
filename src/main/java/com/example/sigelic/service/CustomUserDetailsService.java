@@ -13,7 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
-import java.util.stream.Collectors;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Implementación de UserDetailsService para Spring Security
@@ -34,6 +35,8 @@ public class CustomUserDetailsService implements UserDetailsService {
         Usuario usuario = usuarioRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + username));
 
+        log.debug("Password hash encontrado para {}: {}", username, usuario.getPassword());
+        
         return new CustomUserDetails(usuario);
     }
 
@@ -50,10 +53,18 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         @Override
         public Collection<? extends GrantedAuthority> getAuthorities() {
-            // Convertir permisos a authorities de Spring Security
-            return usuario.getPermisos().stream()
+            // Crear una lista para todas las authorities
+            Set<SimpleGrantedAuthority> authorities = new HashSet<>();
+            
+            // Agregar permisos específicos
+            usuario.getPermisos().stream()
                     .map(SimpleGrantedAuthority::new)
-                    .collect(Collectors.toList());
+                    .forEach(authorities::add);
+            
+            // Agregar rol con prefijo ROLE_ para compatibilidad con @RolesAllowed
+            authorities.add(new SimpleGrantedAuthority("ROLE_" + usuario.getRol().name()));
+            
+            return authorities;
         }
 
         @Override

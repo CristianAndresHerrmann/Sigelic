@@ -39,4 +39,7 @@ public interface ExamenPracticoRepository extends JpaRepository<ExamenPractico, 
     List<ExamenPractico> findByExaminador(String examinador);
     
     List<ExamenPractico> findByPistaUtilizada(String pistaUtilizada);
+    
+    @Query("SELECT COUNT(e) FROM ExamenPractico e WHERE e.aprobado = false OR e.aprobado IS NULL")
+    Long countByAprobadoFalseOrNull();
 }

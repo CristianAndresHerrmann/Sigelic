@@ -33,6 +33,14 @@ public class LicenciaService {
     }
 
     /**
+     * Obtiene todas las licencias
+     */
+    @Transactional(readOnly = true)
+    public List<Licencia> findAll() {
+        return licenciaRepository.findAll();
+    }
+
+    /**
      * Busca una licencia por número
      */
     @Transactional(readOnly = true)
@@ -268,5 +276,14 @@ public class LicenciaService {
         }
         
         return numero;
+    }
+
+    /**
+     * Cuenta las licencias emitidas actualmente vigentes
+     */
+    @Transactional(readOnly = true)
+    public long countLicenciasEmitidas() {
+        LocalDate hoy = LocalDate.now();
+        return licenciaRepository.countByFechaVencimientoAfter(hoy);
     }
 }

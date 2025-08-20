@@ -38,4 +38,7 @@ public interface ExamenTeoricoRepository extends JpaRepository<ExamenTeorico, Lo
     Long countTotalEnPeriodo(@Param("desde") LocalDateTime desde, @Param("hasta") LocalDateTime hasta);
     
     List<ExamenTeorico> findByExaminador(String examinador);
+    
+    @Query("SELECT COUNT(e) FROM ExamenTeorico e WHERE e.aprobado = false OR e.aprobado IS NULL")
+    Long countByAprobadoFalseOrNull();
 }

@@ -1,6 +1,8 @@
 package com.example.sigelic.config;
 
 import com.example.sigelic.service.CustomUserDetailsService;
+import com.example.sigelic.views.LoginView;
+import com.vaadin.flow.spring.security.VaadinWebSecurity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,19 +12,17 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.SecurityFilterChain;
 
 /**
- * Configuración de seguridad para SIGELIC con sistema RBAC completo
+ * Configuración de seguridad para SIGELIC con sistema RBAC completo y Vaadin
  */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
 @RequiredArgsConstructor
-public class SecurityConfig {
+public class SecurityConfig extends VaadinWebSecurity {
 
     private final CustomUserDetailsService userDetailsService;
 
@@ -44,99 +44,60 @@ public class SecurityConfig {
         return authConfig.getAuthenticationManager();
     }
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-            // Configuración CSRF
-            .csrf(csrf -> csrf.disable())
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        // Configurar URLs públicas específicas para API
+        http.authorizeHttpRequests(authz -> authz
+            // API endpoints específicos
+            .requestMatchers("/api/auth/**").permitAll()
+            .requestMatchers("/api/public/**").permitAll()
             
-            // Configuración de sesiones
-            .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-                .maximumSessions(1)
-                .maxSessionsPreventsLogin(false)
-            )
+            // Endpoints de gestión de usuarios - requieren permisos específicos
+            .requestMatchers("/api/usuarios/**").hasAnyAuthority("USUARIOS_LEER", "USUARIOS_CREAR", "USUARIOS_EDITAR", "USUARIOS_ELIMINAR")
             
-            // Configuración de autorización
-            .authorizeHttpRequests(authz -> authz
-                // Endpoints públicos
-                .requestMatchers("/", "/login", "/logout", "/error").permitAll()
-                .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
-                
-                // API públicos (registro, recuperación de contraseña, etc.)
-                .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/public/**").permitAll()
-                
-                // Endpoints de gestión de usuarios - requieren permisos específicos
-                .requestMatchers("/api/usuarios/**").hasAnyAuthority("USUARIOS_LEER", "USUARIOS_CREAR", "USUARIOS_EDITAR", "USUARIOS_ELIMINAR")
-                
-                // Endpoints de seguridad y auditoria
-                .requestMatchers("/api/seguridad/**").hasAuthority("SEGURIDAD_GESTIONAR_ROLES")
-                .requestMatchers("/api/auditoria/**").hasAuthority("AUDITORIA_ACCEDER_LOGS")
-                
-                // Endpoints de licencias
-                .requestMatchers("/api/licencias/crear").hasAuthority("LICENCIAS_CREAR")
-                .requestMatchers("/api/licencias/editar/**").hasAuthority("LICENCIAS_EDITAR")
-                .requestMatchers("/api/licencias/eliminar/**").hasAuthority("LICENCIAS_ELIMINAR")
-                .requestMatchers("/api/licencias/**").hasAnyAuthority("LICENCIAS_LEER", "LICENCIAS_CREAR", "LICENCIAS_EDITAR")
-                
-                // Endpoints de exámenes
-                .requestMatchers("/api/examenes/crear").hasAuthority("EXAMENES_CREAR")
-                .requestMatchers("/api/examenes/editar/**").hasAuthority("EXAMENES_EDITAR")
-                .requestMatchers("/api/examenes/calificar/**").hasAuthority("EXAMENES_CALIFICAR")
-                .requestMatchers("/api/examenes/**").hasAnyAuthority("EXAMENES_LEER", "EXAMENES_CREAR", "EXAMENES_EDITAR")
-                
-                // Endpoints de pagos
-                .requestMatchers("/api/pagos/procesar").hasAuthority("PAGOS_PROCESAR")
-                .requestMatchers("/api/pagos/reembolsar/**").hasAuthority("PAGOS_REEMBOLSAR")
-                .requestMatchers("/api/pagos/**").hasAnyAuthority("PAGOS_LEER", "PAGOS_PROCESAR")
-                
-                // Endpoints de reportes
-                .requestMatchers("/api/reportes/**").hasAuthority("REPORTES_GENERAR")
-                
-                // Actuator para monitoreo (solo administradores)
-                .requestMatchers("/actuator/**").hasAuthority("SISTEMA_CONFIGURAR")
-                
-                // Consola H2 (solo para desarrollo)
-                .requestMatchers("/h2-console/**").hasAuthority("SISTEMA_CONFIGURAR")
-                
-                // Cualquier otra solicitud requiere autenticación
-                .anyRequest().authenticated()
-            )
+            // Endpoints de seguridad y auditoria
+            .requestMatchers("/api/seguridad/**").hasAuthority("SEGURIDAD_GESTIONAR_ROLES")
+            .requestMatchers("/api/auditoria/**").hasAuthority("AUDITORIA_ACCEDER_LOGS")
             
-            // Configuración de login
-            .formLogin(form -> form
-                .loginPage("/login")
-                .defaultSuccessUrl("/dashboard", true)
-                .failureUrl("/login?error=true")
-                .permitAll()
-            )
+            // Endpoints de licencias
+            .requestMatchers("/api/licencias/crear").hasAuthority("LICENCIAS_CREAR")
+            .requestMatchers("/api/licencias/editar/**").hasAuthority("LICENCIAS_EDITAR")
+            .requestMatchers("/api/licencias/eliminar/**").hasAuthority("LICENCIAS_ELIMINAR")
+            .requestMatchers("/api/licencias/**").hasAnyAuthority("LICENCIAS_LEER", "LICENCIAS_CREAR", "LICENCIAS_EDITAR")
             
-            // Configuración de headers de seguridad
-            .headers(headers -> headers
-                .frameOptions(frameOptions -> frameOptions.sameOrigin())
-                .httpStrictTransportSecurity(hstsConfig -> hstsConfig
-                    .maxAgeInSeconds(31536000)
-                    .includeSubDomains(true))
-            )
+            // Endpoints de exámenes
+            .requestMatchers("/api/examenes/crear").hasAuthority("EXAMENES_CREAR")
+            .requestMatchers("/api/examenes/editar/**").hasAuthority("EXAMENES_EDITAR")
+            .requestMatchers("/api/examenes/calificar/**").hasAuthority("EXAMENES_CALIFICAR")
+            .requestMatchers("/api/examenes/**").hasAnyAuthority("EXAMENES_LEER", "EXAMENES_CREAR", "EXAMENES_EDITAR")
             
-            // Configuración de login
-            .formLogin(form -> form
-                .loginPage("/login")
-                .defaultSuccessUrl("/dashboard", true)
-                .failureUrl("/login?error=true")
-                .permitAll()
-            )
+            // Endpoints de pagos
+            .requestMatchers("/api/pagos/procesar").hasAuthority("PAGOS_PROCESAR")
+            .requestMatchers("/api/pagos/reembolsar/**").hasAuthority("PAGOS_REEMBOLSAR")
+            .requestMatchers("/api/pagos/**").hasAnyAuthority("PAGOS_LEER", "PAGOS_PROCESAR")
             
-            // Configuración de logout
-            .logout(logout -> logout
-                .logoutUrl("/logout")
-                .logoutSuccessUrl("/login?logout=true")
-                .invalidateHttpSession(true)
-                .deleteCookies("JSESSIONID")
-                .permitAll()
-            );
+            // Endpoints de reportes
+            .requestMatchers("/api/reportes/**").hasAuthority("REPORTES_GENERAR")
+            
+            // Actuator para monitoreo (solo administradores)
+            .requestMatchers("/actuator/**").hasAuthority("SISTEMA_CONFIGURAR")
+            
+            // Consola H2 (solo para desarrollo)
+            .requestMatchers("/h2-console/**").hasAuthority("SISTEMA_CONFIGURAR")
+        );
 
-        return http.build();
+        // Configuración de headers de seguridad
+        http.headers(headers -> headers
+            .frameOptions(frameOptions -> frameOptions.sameOrigin())
+            .httpStrictTransportSecurity(hstsConfig -> hstsConfig
+                .maxAgeInSeconds(31536000)
+                .includeSubDomains(true))
+        );
+
+        // Configuración específica de Vaadin
+        setLoginView(http, LoginView.class);
+        
+        // Delegar la configuración base a VaadinWebSecurity
+        super.configure(http);
     }
 }

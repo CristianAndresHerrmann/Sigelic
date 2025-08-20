@@ -39,6 +39,14 @@ public class TramiteService {
     }
 
     /**
+     * Obtiene todos los trámites
+     */
+    @Transactional(readOnly = true)
+    public List<Tramite> findAll() {
+        return tramiteRepository.findAll();
+    }
+
+    /**
      * Obtiene todos los trámites de un titular
      */
     @Transactional(readOnly = true)
@@ -277,5 +285,23 @@ public class TramiteService {
     @Transactional(readOnly = true)
     public Long getCountByEstado(EstadoTramite estado) {
         return tramiteRepository.countByEstado(estado);
+    }
+
+    /**
+     * Cuenta los trámites activos (en progreso, pendientes)
+     */
+    @Transactional(readOnly = true)
+    public long countTramitesActivos() {
+        List<EstadoTramite> estadosActivos = Arrays.asList(
+            EstadoTramite.INICIADO,
+            EstadoTramite.DOCS_OK,
+            EstadoTramite.APTO_MED,
+            EstadoTramite.EX_TEO_OK,
+            EstadoTramite.EX_PRA_OK,
+            EstadoTramite.PAGO_OK
+        );
+        return estadosActivos.stream()
+                .mapToLong(estado -> tramiteRepository.countByEstado(estado))
+                .sum();
     }
 }

@@ -43,4 +43,7 @@ public interface PagoRepository extends JpaRepository<Pago, Long> {
     
     @Query("SELECT COUNT(p) FROM Pago p WHERE p.medio = :medio AND p.fecha BETWEEN :desde AND :hasta")
     Long countByMedioEnPeriodo(@Param("medio") MedioPago medio, @Param("desde") LocalDateTime desde, @Param("hasta") LocalDateTime hasta);
+    
+    @Query("SELECT SUM(p.monto) FROM Pago p WHERE p.fechaAcreditacion BETWEEN :desde AND :hasta AND p.estado = 'ACREDITADO'")
+    BigDecimal sumMontoByFechaPagoBetween(@Param("desde") LocalDateTime desde, @Param("hasta") LocalDateTime hasta);
 }

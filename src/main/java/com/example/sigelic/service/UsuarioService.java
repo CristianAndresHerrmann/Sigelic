@@ -542,4 +542,20 @@ public class UsuarioService {
     public boolean existsByEmail(String email) {
         return usuarioRepository.existsByEmail(email);
     }
+    
+    /**
+     * Actualiza la contraseña de un usuario
+     */
+    public void actualizarPassword(String username, String nuevaPassword) {
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByUsername(username);
+        if (usuarioOpt.isPresent()) {
+            Usuario usuario = usuarioOpt.get();
+            usuario.setPassword(passwordEncoder.encode(nuevaPassword));
+            usuario.setFechaActualizacion(LocalDateTime.now());
+            usuarioRepository.save(usuario);
+            log.info("Contraseña actualizada para usuario: {}", username);
+        } else {
+            log.warn("Usuario no encontrado para actualizar contraseña: {}", username);
+        }
+    }
 }

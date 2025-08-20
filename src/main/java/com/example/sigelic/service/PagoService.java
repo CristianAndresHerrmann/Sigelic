@@ -269,4 +269,16 @@ public class PagoService {
                 return new BigDecimal("1000.00");
         }
     }
+
+    /**
+     * Obtiene el total de pagos realizados en el día actual
+     */
+    @Transactional(readOnly = true)
+    public double getTotalPagosDiarios() {
+        LocalDateTime inicioDelDia = LocalDate.now().atStartOfDay();
+        LocalDateTime finDelDia = inicioDelDia.plusDays(1).minusSeconds(1);
+        
+        BigDecimal total = pagoRepository.sumMontoByFechaPagoBetween(inicioDelDia, finDelDia);
+        return total != null ? total.doubleValue() : 0.0;
+    }
 }

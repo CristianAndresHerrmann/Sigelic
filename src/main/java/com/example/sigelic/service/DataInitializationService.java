@@ -51,7 +51,14 @@ public class DataInitializationService implements CommandLineRunner {
                 
                 usuarioService.crearUsuario(admin);
                 log.info("Usuario administrador creado: admin/Admin123!");
+            } else {
+                // El usuario admin ya existe, vamos a actualizar su contraseña por si está incorrecta
+                log.info("Usuario admin ya existe, actualizando contraseña a Admin123!");
+                usuarioService.actualizarPassword("admin", "Admin123!");
             }
+            
+            // Actualizar contraseñas de usuarios de migración si existen
+            actualizarPasswordsUsuariosMigracion();
 
             // Crear usuario supervisor por defecto
             if (!usuarioService.existsByUsername("supervisor")) {
@@ -184,6 +191,46 @@ public class DataInitializationService implements CommandLineRunner {
 
         } catch (Exception e) {
             log.error("Error al crear usuarios por defecto: {}", e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Actualiza las contraseñas de usuarios de migración que pueden tener BCrypt incorrecto
+     */
+    private void actualizarPasswordsUsuariosMigracion() {
+        try {
+            log.info("Actualizando contraseñas de usuarios de migración...");
+            
+            // Lista de usuarios de migración con sus nuevas contraseñas por defecto
+            String[][] usuariosMigracion = {
+                {"supervisor", "Super123!"},
+                {"agente1", "Agente123!"},
+                {"agente2", "Agente123!"},
+                {"medico1", "Medico123!"},
+                {"medico2", "Medico123!"},
+                {"examinador1", "Examinador123!"},
+                {"examinador2", "Examinador123!"},
+                {"cajero1", "Cajero123!"},
+                {"cajero2", "Cajero123!"},
+                {"auditor", "Auditor123!"}
+            };
+            
+            for (String[] usuario : usuariosMigracion) {
+                String username = usuario[0];
+                String password = usuario[1];
+                
+                if (usuarioService.existsByUsername(username)) {
+                    log.info("Actualizando contraseña para usuario: {} -> {}", username, password);
+                    usuarioService.actualizarPassword(username, password);
+                } else {
+                    log.debug("Usuario {} no existe, se omite actualización", username);
+                }
+            }
+            
+            log.info("Actualización de contraseñas de migración completada");
+            
+        } catch (Exception e) {
+            log.error("Error al actualizar contraseñas de usuarios de migración: {}", e.getMessage(), e);
         }
     }
 }

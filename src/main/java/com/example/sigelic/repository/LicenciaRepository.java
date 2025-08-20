@@ -41,4 +41,7 @@ public interface LicenciaRepository extends JpaRepository<Licencia, Long> {
     List<Licencia> findLicenciasVigentesByTitular(@Param("titular") Titular titular);
     
     boolean existsByNumeroLicencia(String numeroLicencia);
+    
+    @Query("SELECT COUNT(l) FROM Licencia l WHERE l.fechaVencimiento > :fecha AND l.estado = 'VIGENTE'")
+    Long countByFechaVencimientoAfter(@Param("fecha") LocalDate fecha);
 }
