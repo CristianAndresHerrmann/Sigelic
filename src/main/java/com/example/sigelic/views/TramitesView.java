@@ -1,7 +1,12 @@
 package com.example.sigelic.views;
 
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
 import com.example.sigelic.model.Tramite;
+import com.example.sigelic.service.TitularService;
 import com.example.sigelic.service.TramiteService;
+import com.example.sigelic.views.dialog.NuevoTramiteDialog;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
@@ -20,10 +25,8 @@ import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
-import jakarta.annotation.security.RolesAllowed;
 
-import java.time.format.DateTimeFormatter;
-import java.util.List;
+import jakarta.annotation.security.RolesAllowed;
 
 /**
  * Vista para gestión de trámites
@@ -34,12 +37,14 @@ import java.util.List;
 public class TramitesView extends VerticalLayout {
 
     private final TramiteService tramiteService;
+    private final TitularService titularService;
     private Grid<Tramite> grid;
     private ListDataProvider<Tramite> dataProvider;
     private TextField searchField;
 
-    public TramitesView(TramiteService tramiteService) {
+    public TramitesView(TramiteService tramiteService, TitularService titularService) {
         this.tramiteService = tramiteService;
+        this.titularService = titularService;
         addClassName("tramites-view");
         setSizeFull();
 
@@ -55,9 +60,7 @@ public class TramitesView extends VerticalLayout {
 
         Button addTramiteButton = new Button("Nuevo Trámite", new Icon(VaadinIcon.PLUS));
         addTramiteButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        addTramiteButton.addClickListener(e -> {
-            // TODO: Implementar diálogo para nuevo trámite
-        });
+        addTramiteButton.addClickListener(e -> openNuevoTramiteDialog());
 
         HorizontalLayout header = new HorizontalLayout(title, addTramiteButton);
         header.setAlignItems(Alignment.CENTER);
@@ -150,5 +153,10 @@ public class TramitesView extends VerticalLayout {
         Notification notification = Notification.show(message);
         notification.addThemeVariants(variant);
         notification.setPosition(Notification.Position.TOP_CENTER);
+    }
+
+    private void openNuevoTramiteDialog() {
+        NuevoTramiteDialog dialog = new NuevoTramiteDialog(tramiteService, titularService, unused -> refreshGrid());
+        dialog.open();
     }
 }
