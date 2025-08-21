@@ -34,7 +34,7 @@ public interface LicenciaRepository extends JpaRepository<Licencia, Long> {
     @Query("SELECT l FROM Licencia l WHERE l.fechaVencimiento BETWEEN :desde AND :hasta AND l.estado = 'VIGENTE'")
     List<Licencia> findLicenciasProximasAVencer(@Param("desde") LocalDate desde, @Param("hasta") LocalDate hasta);
     
-    @Query("SELECT l FROM Licencia l WHERE l.fechaVencimiento < :fecha AND l.estado = 'VIGENTE'")
+    @Query("SELECT l FROM Licencia l WHERE l.fechaVencimiento < :fecha AND l.estado != 'DUPLICADA'")
     List<Licencia> findLicenciasVencidas(@Param("fecha") LocalDate fecha);
     
     @Query("SELECT COUNT(l) FROM Licencia l WHERE l.fechaEmision BETWEEN :desde AND :hasta")

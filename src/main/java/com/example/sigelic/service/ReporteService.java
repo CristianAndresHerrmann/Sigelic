@@ -13,6 +13,8 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import static java.util.stream.Collectors.counting;
+import static java.util.stream.Collectors.groupingBy;
 
 /**
  * Servicio para generar reportes y estadísticas del sistema
@@ -63,26 +65,144 @@ public class ReporteService {
 
     /**
      * Genera reporte de licencias emitidas por período
+     * NOTA: Este reporte cuenta licencias por su fecha de EMISIÓN, no por su estado actual
      */
     public Map<String, Object> getReporteLicenciasPorPeriodo(LocalDate desde, LocalDate hasta) {
         Map<String, Object> reporte = new HashMap<>();
         
-        Long totalLicencias = licenciaRepository.countLicenciasEmitidasEnPeriodo(desde, hasta);
+        // Licencias EMITIDAS en el período (filtradas por fecha de emisión)
+        Long totalLicenciasEmitidas = licenciaRepository.countLicenciasEmitidasEnPeriodo(desde, hasta);
         
-        // Próximas a vencer (próximos 30 días)
+        // Próximas a vencer (próximos 30 días) - estado actual
         LocalDate proximasVencer = LocalDate.now().plusDays(30);
         List<Licencia> licenciasProximasVencer = licenciaRepository.findLicenciasProximasAVencer(LocalDate.now(), proximasVencer);
         
-        // Licencias vencidas
+        // Licencias vencidas - estado actual
         List<Licencia> licenciasVencidas = licenciaRepository.findLicenciasVencidas(LocalDate.now());
         
-        reporte.put("totalLicenciasEmitidas", totalLicencias);
+        // Licencias vigentes actuales - estado actual
+        Long licenciasVigentesActuales = licenciaRepository.countByFechaVencimientoAfter(LocalDate.now());
+        
+        reporte.put("totalLicenciasEmitidas", totalLicenciasEmitidas); // Emitidas en el período
+        reporte.put("licenciasVigentesActuales", licenciasVigentesActuales); // Vigentes hoy (total)
         reporte.put("licenciasProximasVencer", licenciasProximasVencer.size());
         reporte.put("licenciasVencidas", licenciasVencidas.size());
         reporte.put("fechaDesde", desde);
         reporte.put("fechaHasta", hasta);
+        reporte.put("aclaracion", "totalLicenciasEmitidas cuenta solo las emitidas entre fechaDesde y fechaHasta. Las otras métricas son del estado actual.");
         
         return reporte;
+    }
+
+    /**
+     * Método para validar el conteo de licencias vencidas
+     * Útil para debugging y verificación de reportes
+     */
+    public Map<String, Object> validarConteoLicenciasVencidas() {
+        Map<String, Object> validacion = new HashMap<>();
+        LocalDate hoy = LocalDate.now();
+        
+        // Obtener todas las licencias para análisis
+        List<Licencia> todasLasLicencias = licenciaRepository.findAll();
+        List<Licencia> licenciasVencidasQuery = licenciaRepository.findLicenciasVencidas(hoy);
+        
+        // Contar manualmente por estado y fecha
+        long vencidasPorFecha = todasLasLicencias.stream()
+            .filter(l -> l.getFechaVencimiento().isBefore(hoy))
+            .filter(l -> l.getEstado() != EstadoLicencia.DUPLICADA)
+            .count();
+            
+        long vencidasEstadoVencida = todasLasLicencias.stream()
+            .filter(l -> l.getEstado() == EstadoLicencia.VENCIDA)
+            .count();
+            
+        long vencidasEstadoVigente = todasLasLicencias.stream()
+            .filter(l -> l.getEstado() == EstadoLicencia.VIGENTE)
+            .filter(l -> l.getFechaVencimiento().isBefore(hoy))
+            .count();
+            
+        long vencidasEstadoSuspendida = todasLasLicencias.stream()
+            .filter(l -> l.getEstado() == EstadoLicencia.SUSPENDIDA)
+            .filter(l -> l.getFechaVencimiento().isBefore(hoy))
+            .count();
+            
+        long vencidasEstadoInhabilitada = todasLasLicencias.stream()
+            .filter(l -> l.getEstado() == EstadoLicencia.INHABILITADA)
+            .filter(l -> l.getFechaVencimiento().isBefore(hoy))
+            .count();
+        
+        validacion.put("fechaValidacion", hoy);
+        validacion.put("totalLicencias", todasLasLicencias.size());
+        validacion.put("licenciasVencidasQuery", licenciasVencidasQuery.size());
+        validacion.put("vencidasPorFecha", vencidasPorFecha);
+        validacion.put("vencidasEstadoVencida", vencidasEstadoVencida);
+        validacion.put("vencidasEstadoVigente", vencidasEstadoVigente);
+        validacion.put("vencidasEstadoSuspendida", vencidasEstadoSuspendida);
+        validacion.put("vencidasEstadoInhabilitada", vencidasEstadoInhabilitada);
+        validacion.put("queryCorrecta", licenciasVencidasQuery.size() == vencidasPorFecha);
+        
+        log.info("Validación de licencias vencidas: {}", validacion);
+        
+        return validacion;
+    }
+
+    /**
+     * Método para validar el conteo de licencias vigentes
+     * Útil para debugging y verificación de reportes
+     */
+    public Map<String, Object> validarConteoLicenciasVigentes() {
+        Map<String, Object> validacion = new HashMap<>();
+        LocalDate hoy = LocalDate.now();
+        
+        // Obtener todas las licencias para análisis
+        List<Licencia> todasLasLicencias = licenciaRepository.findAll();
+        Long licenciasVigentesQuery = licenciaRepository.countByFechaVencimientoAfter(hoy);
+        
+        // Contar manualmente licencias vigentes por diferentes criterios
+        long vigentesEstadoVigente = todasLasLicencias.stream()
+            .filter(l -> l.getEstado() == EstadoLicencia.VIGENTE)
+            .count();
+            
+        long vigentesEstadoVigenteNoVencidas = todasLasLicencias.stream()
+            .filter(l -> l.getEstado() == EstadoLicencia.VIGENTE)
+            .filter(l -> l.getFechaVencimiento().isAfter(hoy))
+            .count();
+            
+        long vigentesEstadoVigenteVencidas = todasLasLicencias.stream()
+            .filter(l -> l.getEstado() == EstadoLicencia.VIGENTE)
+            .filter(l -> l.getFechaVencimiento().isBefore(hoy) || l.getFechaVencimiento().equals(hoy))
+            .count();
+        
+        // Detalles por titular para debugging
+        Map<String, Long> licenciasPorTitular = todasLasLicencias.stream()
+            .filter(l -> l.getTitular() != null)
+            .collect(groupingBy(
+                l -> l.getTitular().getNombre() + " " + l.getTitular().getApellido() + " (ID: " + l.getTitular().getId() + ")",
+                counting()
+            ));
+            
+        Map<String, Long> vigentesNoVencidasPorTitular = todasLasLicencias.stream()
+            .filter(l -> l.getEstado() == EstadoLicencia.VIGENTE)
+            .filter(l -> l.getFechaVencimiento().isAfter(hoy))
+            .filter(l -> l.getTitular() != null)
+            .collect(groupingBy(
+                l -> l.getTitular().getNombre() + " " + l.getTitular().getApellido() + " (ID: " + l.getTitular().getId() + ")",
+                counting()
+            ));
+        
+        validacion.put("fechaValidacion", hoy);
+        validacion.put("totalLicencias", todasLasLicencias.size());
+        validacion.put("licenciasVigentesQuery", licenciasVigentesQuery);
+        validacion.put("vigentesEstadoVigente", vigentesEstadoVigente);
+        validacion.put("vigentesEstadoVigenteNoVencidas", vigentesEstadoVigenteNoVencidas);
+        validacion.put("vigentesEstadoVigenteVencidas", vigentesEstadoVigenteVencidas);
+        validacion.put("queryCorrecta", licenciasVigentesQuery == vigentesEstadoVigenteNoVencidas);
+        validacion.put("licenciasPorTitular", licenciasPorTitular);
+        validacion.put("vigentesNoVencidasPorTitular", vigentesNoVencidasPorTitular);
+        
+        log.info("Validación de licencias vigentes: {}", validacion);
+        
+        return validacion;
     }
 
     /**
@@ -200,6 +320,9 @@ public class ReporteService {
         List<Licencia> proximasVencer = licenciaRepository.findLicenciasProximasAVencer(hoy, hoy.plusDays(30));
         List<Licencia> vencidas = licenciaRepository.findLicenciasVencidas(hoy);
         
+        // Licencias vigentes
+        Long licenciasVigentes = licenciaRepository.countByFechaVencimientoAfter(hoy);
+        
         // Inhabilitaciones activas
         List<Inhabilitacion> inhabilitacionesActivas = inhabilitacionRepository.findInhabilitacionesActivas();
         
@@ -215,6 +338,7 @@ public class ReporteService {
         tramites.put("rechazados", tramitesRechazados);
         
         Map<String, Object> licencias = new HashMap<>();
+        licencias.put("vigentesActuales", licenciasVigentes); // Total de licencias vigentes hoy
         licencias.put("proximasVencer", proximasVencer.size());
         licencias.put("vencidas", vencidas.size());
         

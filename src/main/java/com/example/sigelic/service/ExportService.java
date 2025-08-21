@@ -1,23 +1,33 @@
 package com.example.sigelic.service;
 
-import com.itextpdf.kernel.pdf.PdfDocument;
-import com.itextpdf.kernel.pdf.PdfWriter;
-import com.itextpdf.layout.Document;
-import com.itextpdf.layout.element.Cell;
-import com.itextpdf.layout.element.Paragraph;
-import com.itextpdf.layout.element.Table;
-import com.itextpdf.layout.properties.TextAlignment;
-import com.itextpdf.layout.properties.UnitValue;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.stereotype.Service;
-
 import java.io.ByteArrayOutputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.poi.ss.usermodel.BorderStyle;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.stereotype.Service;
+
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.properties.TextAlignment;
+import com.itextpdf.layout.properties.UnitValue;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Servicio para exportación de reportes a diferentes formatos
@@ -32,8 +42,9 @@ public class ExportService {
      * Exporta datos a Excel
      */
     public byte[] exportToExcel(String title, List<String> headers, List<List<String>> data) {
-        try {
-            Workbook workbook = new XSSFWorkbook();
+        try (Workbook workbook = new XSSFWorkbook();
+             ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            
             Sheet sheet = workbook.createSheet(title);
             
             // Estilo para el título
@@ -103,10 +114,7 @@ public class ExportService {
                 sheet.autoSizeColumn(i);
             }
             
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
             workbook.write(baos);
-            workbook.close();
-            
             return baos.toByteArray();
             
         } catch (Exception e) {
@@ -162,58 +170,57 @@ public class ExportService {
      * Exporta datos a PDF
      */
     public byte[] exportToPdf(String title, List<String> headers, List<List<String>> data) {
-        try {
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             PdfWriter writer = new PdfWriter(outputStream);
-            PdfDocument pdf = new PdfDocument(writer);
-            Document document = new Document(pdf);
-            
-            // Título del reporte
-            Paragraph titleParagraph = new Paragraph(title)
-                    .setTextAlignment(TextAlignment.CENTER)
-                    .setFontSize(16)
-                    .setBold()
-                    .setMarginBottom(20);
-            document.add(titleParagraph);
-            
-            // Fecha de generación
-            Paragraph dateParagraph = new Paragraph("Generado el: " + LocalDateTime.now().format(DATE_FORMATTER))
-                    .setTextAlignment(TextAlignment.RIGHT)
-                    .setFontSize(10)
-                    .setMarginBottom(20);
-            document.add(dateParagraph);
-            
-            if (!headers.isEmpty() && !data.isEmpty()) {
-                // Crear tabla
-                Table table = new Table(UnitValue.createPercentArray(headers.size()))
-                        .setWidth(UnitValue.createPercentValue(100));
+            try (PdfDocument pdf = new PdfDocument(writer);
+                 Document document = new Document(pdf)) {
                 
-                // Agregar headers
-                for (String header : headers) {
-                    Cell headerCell = new Cell()
-                            .add(new Paragraph(header))
-                            .setBold()
-                            .setTextAlignment(TextAlignment.CENTER)
-                            .setBackgroundColor(com.itextpdf.kernel.colors.ColorConstants.LIGHT_GRAY);
-                    table.addHeaderCell(headerCell);
-                }
+                // Título del reporte
+                Paragraph titleParagraph = new Paragraph(title)
+                        .setTextAlignment(TextAlignment.CENTER)
+                        .setFontSize(16)
+                        .setBold()
+                        .setMarginBottom(20);
+                document.add(titleParagraph);
                 
-                // Agregar datos
-                for (List<String> row : data) {
-                    for (String cellValue : row) {
-                        Cell cell = new Cell()
-                                .add(new Paragraph(cellValue != null ? cellValue : ""))
-                                .setTextAlignment(TextAlignment.LEFT);
-                        table.addCell(cell);
+                // Fecha de generación
+                Paragraph dateParagraph = new Paragraph("Generado el: " + LocalDateTime.now().format(DATE_FORMATTER))
+                        .setTextAlignment(TextAlignment.RIGHT)
+                        .setFontSize(10)
+                        .setMarginBottom(20);
+                document.add(dateParagraph);
+                
+                if (!headers.isEmpty() && !data.isEmpty()) {
+                    // Crear tabla
+                    Table table = new Table(UnitValue.createPercentArray(headers.size()))
+                            .setWidth(UnitValue.createPercentValue(100));
+                    
+                    // Agregar headers
+                    for (String header : headers) {
+                        com.itextpdf.layout.element.Cell headerCell = new com.itextpdf.layout.element.Cell()
+                                .add(new Paragraph(header))
+                                .setBold()
+                                .setTextAlignment(TextAlignment.CENTER)
+                                .setBackgroundColor(com.itextpdf.kernel.colors.ColorConstants.LIGHT_GRAY);
+                        table.addHeaderCell(headerCell);
                     }
+                    
+                    // Agregar datos
+                    for (List<String> row : data) {
+                        for (String cellValue : row) {
+                            com.itextpdf.layout.element.Cell cell = new com.itextpdf.layout.element.Cell()
+                                    .add(new Paragraph(cellValue != null ? cellValue : ""))
+                                    .setTextAlignment(TextAlignment.LEFT);
+                            table.addCell(cell);
+                        }
+                    }
+                    
+                    document.add(table);
+                } else {
+                    document.add(new Paragraph("No hay datos para mostrar"));
                 }
-                
-                document.add(table);
-            } else {
-                document.add(new Paragraph("No hay datos para mostrar"));
             }
             
-            document.close();
             return outputStream.toByteArray();
             
         } catch (Exception e) {
@@ -231,8 +238,8 @@ public class ExportService {
 
     private String formatValue(Object value) {
         if (value == null) return "";
-        if (value instanceof LocalDateTime) {
-            return ((LocalDateTime) value).format(DATE_FORMATTER);
+        if (value instanceof LocalDateTime dateTime) {
+            return dateTime.format(DATE_FORMATTER);
         }
         return value.toString();
     }
