@@ -18,6 +18,8 @@ public interface TitularRepository extends JpaRepository<Titular, Long> {
     
     Optional<Titular> findByDni(String dni);
     
+    List<Titular> findByDniContainingIgnoreCase(String dni);
+    
     List<Titular> findByNombreContainingIgnoreCaseOrApellidoContainingIgnoreCase(String nombre, String apellido);
     
     @Query("SELECT t FROM Titular t WHERE t.email = :email")

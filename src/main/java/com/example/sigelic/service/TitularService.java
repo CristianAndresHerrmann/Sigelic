@@ -1,16 +1,19 @@
 package com.example.sigelic.service;
 
-import com.example.sigelic.model.Titular;
-import com.example.sigelic.model.Inhabilitacion;
-import com.example.sigelic.repository.TitularRepository;
-import com.example.sigelic.repository.InhabilitacionRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
+import com.example.sigelic.dto.request.TitularRequestDTO;
+import com.example.sigelic.model.Inhabilitacion;
+import com.example.sigelic.model.Titular;
+import com.example.sigelic.repository.InhabilitacionRepository;
+import com.example.sigelic.repository.TitularRepository;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Servicio para gestionar titulares de licencias
@@ -49,6 +52,28 @@ public class TitularService {
     }
 
     /**
+     * Busca titulares por nombre o apellido con inhabilitaciones cargadas
+     */
+    @Transactional(readOnly = true)
+    public List<Titular> findByNombreWithInhabilitaciones(String nombre) {
+        List<Titular> titulares = titularRepository.findByNombreContainingIgnoreCaseOrApellidoContainingIgnoreCase(nombre, nombre);
+        // Forzar la carga de inhabilitaciones mientras estamos en sesión
+        titulares.forEach(titular -> titular.getInhabilitaciones().size());
+        return titulares;
+    }
+
+    /**
+     * Busca titulares por DNI con inhabilitaciones cargadas
+     */
+    @Transactional(readOnly = true)
+    public List<Titular> findByDniWithInhabilitaciones(String dni) {
+        List<Titular> titulares = titularRepository.findByDniContainingIgnoreCase(dni);
+        // Forzar la carga de inhabilitaciones mientras estamos en sesión
+        titulares.forEach(titular -> titular.getInhabilitaciones().size());
+        return titulares;
+    }
+
+    /**
      * Busca titulares por nombre completo
      */
     @Transactional(readOnly = true)
@@ -62,6 +87,17 @@ public class TitularService {
     @Transactional(readOnly = true)
     public List<Titular> findAll() {
         return titularRepository.findAll();
+    }
+
+    /**
+     * Obtiene todos los titulares con inhabilitaciones cargadas para vistas
+     */
+    @Transactional(readOnly = true)
+    public List<Titular> findAllWithInhabilitaciones() {
+        List<Titular> titulares = titularRepository.findAll();
+        // Forzar la carga de inhabilitaciones mientras estamos en sesión
+        titulares.forEach(titular -> titular.getInhabilitaciones().size());
+        return titulares;
     }
 
     /**
@@ -157,6 +193,28 @@ public class TitularService {
     @Transactional(readOnly = true)
     public List<Titular> getTitularesConInhabilitacionesActivas() {
         return titularRepository.findTitularesConInhabilitacionesActivas();
+    }
+
+    /**
+     * Crea un titular a partir de un DTO
+     */
+    public Titular createFromDTO(TitularRequestDTO dto) {
+        Titular titular = new Titular();
+        titular.setNombre(dto.getNombre().trim());
+        titular.setApellido(dto.getApellido().trim());
+        titular.setDni(dto.getDni().trim());
+        titular.setFechaNacimiento(dto.getFechaNacimiento());
+        titular.setDomicilio(dto.getDomicilio().trim());
+        
+        if (dto.getEmail() != null && !dto.getEmail().trim().isEmpty()) {
+            titular.setEmail(dto.getEmail().trim().toLowerCase());
+        }
+        
+        if (dto.getTelefono() != null && !dto.getTelefono().trim().isEmpty()) {
+            titular.setTelefono(dto.getTelefono().trim());
+        }
+        
+        return save(titular);
     }
 
     private void validateTitular(Titular titular) {

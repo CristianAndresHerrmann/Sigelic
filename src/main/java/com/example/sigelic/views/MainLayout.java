@@ -1,5 +1,7 @@
 package com.example.sigelic.views;
 
+import org.springframework.security.core.userdetails.UserDetails;
+
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.avatar.Avatar;
@@ -19,7 +21,6 @@ import com.vaadin.flow.component.sidenav.SideNavItem;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.spring.security.AuthenticationContext;
 import com.vaadin.flow.theme.lumo.LumoUtility;
-import org.springframework.security.core.userdetails.UserDetails;
 
 /**
  * Layout principal de la aplicación SIGELIC
@@ -104,6 +105,13 @@ public class MainLayout extends AppLayout {
         authContext.getAuthenticatedUser(UserDetails.class).ifPresent(user -> {
             if (hasAnyRole(user, "ADMINISTRADOR", "SUPERVISOR")) {
                 nav.addItem(new SideNavItem("Usuarios", UsuariosView.class, VaadinIcon.USERS.create()));
+            }
+        });
+
+        // Gestión de Titulares (para agentes y superiores)
+        authContext.getAuthenticatedUser(UserDetails.class).ifPresent(user -> {
+            if (hasAnyRole(user, "ADMINISTRADOR", "SUPERVISOR", "AGENTE")) {
+                nav.addItem(new SideNavItem("Titulares", TitularesView.class, VaadinIcon.USER_CHECK.create()));
             }
         });
 
