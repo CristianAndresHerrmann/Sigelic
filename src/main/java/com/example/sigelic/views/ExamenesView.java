@@ -3,14 +3,18 @@ package com.example.sigelic.views;
 import com.example.sigelic.model.ExamenTeorico;
 import com.example.sigelic.model.ExamenPractico;
 import com.example.sigelic.service.ExamenService;
+import com.example.sigelic.service.TramiteService;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
@@ -35,14 +39,16 @@ import java.util.List;
 public class ExamenesView extends VerticalLayout {
 
     private final ExamenService examenService;
+    private final TramiteService tramiteService;
 
     private Grid<ExamenWrapper> grid;
     private TextField searchField;
     private ComboBox<String> tipoFilter;
     private ListDataProvider<ExamenWrapper> dataProvider;
 
-    public ExamenesView(ExamenService examenService) {
+    public ExamenesView(ExamenService examenService, TramiteService tramiteService) {
         this.examenService = examenService;
+        this.tramiteService = tramiteService;
         addClassName("examenes-view");
         setSizeFull();
 
@@ -104,6 +110,32 @@ public class ExamenesView extends VerticalLayout {
              .setHeader("Fecha").setWidth("150px");
         grid.addColumn(ExamenWrapper::getExaminador).setHeader("Examinador").setWidth("150px");
         grid.addColumn(exam -> exam.isAprobado() ? "Aprobado" : "Reprobado").setHeader("Resultado").setWidth("120px");
+
+        // Columna de acciones
+        grid.addComponentColumn(exam -> {
+            HorizontalLayout acciones = new HorizontalLayout();
+            acciones.setSpacing(true);
+
+            // Botón para ver detalles
+            Button verBtn = new Button("Ver", new Icon(VaadinIcon.EYE));
+            verBtn.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);
+            verBtn.setTooltipText("Ver detalles del examen");
+            verBtn.addClickListener(e -> verDetalleExamen(exam));
+            acciones.add(verBtn);
+
+            // Solo para exámenes teóricos reprobados: permitir reintento
+            if ("Teórico".equals(exam.getTipo()) && !exam.isAprobado() && 
+                exam.getTramite().getEstado() == com.example.sigelic.model.EstadoTramite.EX_TEO_RECHAZADO) {
+                
+                Button reintentoBtn = new Button("Reintento", new Icon(VaadinIcon.REFRESH));
+                reintentoBtn.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_SUCCESS);
+                reintentoBtn.setTooltipText("Permitir reintento del examen teórico");
+                reintentoBtn.addClickListener(e -> permitirReintentoExamenTeorico(exam));
+                acciones.add(reintentoBtn);
+            }
+
+            return acciones;
+        }).setHeader("Acciones").setWidth("150px");
 
         // Configurar data provider
         dataProvider = new ListDataProvider<>(new ArrayList<>());
@@ -210,5 +242,55 @@ public class ExamenesView extends VerticalLayout {
                        ", Faltas graves: " + examenPractico.getFaltasGraves();
             }
         }
+    }
+
+    private void verDetalleExamen(ExamenWrapper exam) {
+        Dialog dialog = new Dialog();
+        dialog.setHeaderTitle("Detalle del Examen " + exam.getTipo());
+        dialog.setWidth("500px");
+
+        VerticalLayout content = new VerticalLayout();
+        content.add(new Span("ID: " + exam.getId()));
+        content.add(new Span("Tipo: " + exam.getTipo()));
+        content.add(new Span("Trámite: T" + String.format("%06d", exam.getTramite().getId())));
+        content.add(new Span("Titular: " + exam.getTramite().getTitular().getNombre() + 
+                            " " + exam.getTramite().getTitular().getApellido()));
+        content.add(new Span("Fecha: " + exam.getFecha().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))));
+        content.add(new Span("Examinador: " + exam.getExaminador()));
+        content.add(new Span("Resultado: " + (exam.isAprobado() ? "Aprobado" : "Reprobado")));
+        content.add(new Span("Detalle: " + exam.getDetalle()));
+
+        if (exam.examenTeorico != null && exam.examenTeorico.getObservaciones() != null) {
+            content.add(new Span("Observaciones: " + exam.examenTeorico.getObservaciones()));
+        }
+
+        dialog.add(content);
+
+        Button cerrarBtn = new Button("Cerrar", e -> dialog.close());
+        cerrarBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        dialog.getFooter().add(cerrarBtn);
+
+        dialog.open();
+    }
+
+    private void permitirReintentoExamenTeorico(ExamenWrapper exam) {
+        try {
+            String motivo = "Reintento autorizado para examen teórico";
+            tramiteService.permitirReintento(exam.getTramite().getId(), motivo);
+            
+            showNotification("Reintento autorizado. El trámite puede realizar un nuevo examen teórico.", 
+                           NotificationVariant.LUMO_SUCCESS);
+            
+            loadData(); // Recargar datos
+        } catch (Exception e) {
+            showNotification("Error al autorizar reintento: " + e.getMessage(), 
+                           NotificationVariant.LUMO_ERROR);
+        }
+    }
+
+    private void showNotification(String message, NotificationVariant variant) {
+        Notification notification = Notification.show(message);
+        notification.addThemeVariants(variant);
+        notification.setDuration(4000);
     }
 }

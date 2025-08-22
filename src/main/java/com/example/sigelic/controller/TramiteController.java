@@ -96,6 +96,32 @@ public class TramiteController {
     }
 
     /**
+     * Rechaza el examen teórico de un trámite
+     */
+    @PatchMapping("/{id}/rechazar-examen-teorico")
+    public ResponseEntity<TramiteResponseDTO> rechazarExamenTeorico(
+            @PathVariable Long id,
+            @RequestParam String motivo) {
+        
+        Tramite tramite = tramiteService.rechazarExamenTeorico(id, motivo);
+        TramiteResponseDTO dto = tramiteMapper.toResponseDTO(tramite);
+        return ResponseEntity.ok(dto);
+    }
+
+    /**
+     * Permite el reintento para un trámite con examen teórico rechazado
+     */
+    @PatchMapping("/{id}/permitir-reintento")
+    public ResponseEntity<TramiteResponseDTO> permitirReintento(
+            @PathVariable Long id,
+            @RequestParam String motivo) {
+        
+        Tramite tramite = tramiteService.permitirReintento(id, motivo);
+        TramiteResponseDTO dto = tramiteMapper.toResponseDTO(tramite);
+        return ResponseEntity.ok(dto);
+    }
+
+    /**
      * Emite una licencia a partir de un trámite
      */
     @PostMapping("/{id}/emitir-licencia")

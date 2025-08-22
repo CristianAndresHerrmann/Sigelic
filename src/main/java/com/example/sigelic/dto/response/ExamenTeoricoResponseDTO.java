@@ -1,11 +1,11 @@
 package com.example.sigelic.dto.response;
 
-import lombok.Data;
-import lombok.Builder;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-
 import java.time.LocalDateTime;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * DTO de respuesta para ExamenTeorico
@@ -25,4 +25,12 @@ public class ExamenTeoricoResponseDTO {
     private String examinador;
     private String observaciones;
     private boolean vigente;
+    
+    // Información del trámite asociado
+    private Long tramiteId;
+    
+    // Información del titular
+    private String titularNombre;
+    private String titularApellido;
+    private String titularDni;
 }
