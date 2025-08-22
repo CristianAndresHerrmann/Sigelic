@@ -9,7 +9,7 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.sigelic.dto.AptoMedicoRequestDTO;
+import com.example.sigelic.dto.request.AptoMedicoRequestDTO;
 import com.example.sigelic.dto.response.AptoMedicoResponseDTO;
 import com.example.sigelic.model.AptoMedico;
 import com.example.sigelic.model.ClaseLicencia;
@@ -109,6 +109,9 @@ public class TramiteService {
             throw new IllegalArgumentException("El titular no cumple con la edad mínima para la clase " + clase.name());
         }
 
+        // Validaciones específicas por tipo de trámite
+        validarRequisitosPorTipoTramite(titular, tipo, clase);
+
         Tramite tramite = new Tramite();
         tramite.setTitular(titular);
         tramite.setTipo(tipo);
@@ -117,6 +120,114 @@ public class TramiteService {
 
         log.info("Iniciando trámite de {} para titular: {} {}", tipo.name(), titular.getNombre(), titular.getApellido());
         return tramiteRepository.save(tramite);
+    }
+
+    /**
+     * Valida los requisitos específicos según el tipo de trámite
+     */
+    private void validarRequisitosPorTipoTramite(Titular titular, TipoTramite tipo, ClaseLicencia clase) {
+        switch (tipo) {
+            case RENOVACION:
+                validarRenovacion(titular, clase);
+                break;
+            case DUPLICADO:
+                validarDuplicado(titular, clase);
+                break;
+            case CAMBIO_DOMICILIO:
+                validarCambioDomicilio(titular, clase);
+                break;
+            case EMISION:
+                validarEmision(titular, clase);
+                break;
+            default:
+                // No hay validaciones específicas para otros tipos
+        }
+    }
+
+    /**
+     * Valida que el titular pueda hacer una renovación
+     */
+    private void validarRenovacion(Titular titular, ClaseLicencia clase) {
+        // Buscar licencias del titular para la clase solicitada
+        List<Licencia> licenciasDelTitular = licenciaService.findByTitular(titular);
+        
+        // Verificar que tenga al menos una licencia de la clase solicitada
+        boolean tieneLicenciaClase = licenciasDelTitular.stream()
+                .anyMatch(licencia -> licencia.getClase() == clase);
+        
+        if (!tieneLicenciaClase) {
+            throw new IllegalStateException("No se puede renovar: el titular no tiene una licencia de clase " + 
+                    clase.name() + " en el sistema");
+        }
+
+        // Verificar que tenga una licencia vigente o vencida (pero no muy antigua)
+        boolean tieneLicenciaRenovable = licenciasDelTitular.stream()
+                .anyMatch(licencia -> licencia.getClase() == clase && 
+                         licencia.getFechaVencimiento().isAfter(LocalDate.now().minusYears(2)));
+        
+        if (!tieneLicenciaRenovable) {
+            throw new IllegalStateException("No se puede renovar: la licencia de clase " + clase.name() + 
+                    " está vencida hace más de 2 años. Debe hacer una emisión nueva");
+        }
+    }
+
+    /**
+     * Valida que el titular pueda hacer un duplicado
+     */
+    private void validarDuplicado(Titular titular, ClaseLicencia clase) {
+        // Buscar licencias del titular para la clase solicitada
+        List<Licencia> licenciasDelTitular = licenciaService.findByTitular(titular);
+        
+        // Verificar que tenga al menos una licencia de la clase solicitada
+        boolean tieneLicenciaClase = licenciasDelTitular.stream()
+                .anyMatch(licencia -> licencia.getClase() == clase);
+        
+        if (!tieneLicenciaClase) {
+            throw new IllegalStateException("No se puede hacer duplicado: el titular no tiene una licencia de clase " + 
+                    clase.name() + " en el sistema");
+        }
+
+        // Verificar que tenga una licencia vigente para duplicar
+        boolean tieneLicenciaVigente = licenciasDelTitular.stream()
+                .anyMatch(licencia -> licencia.getClase() == clase && licencia.isVigente());
+        
+        if (!tieneLicenciaVigente) {
+            throw new IllegalStateException("No se puede hacer duplicado: no tiene una licencia vigente de clase " + 
+                    clase.name() + ". Si está vencida, debe hacer una renovación");
+        }
+    }
+
+    /**
+     * Valida que el titular pueda hacer un cambio de domicilio
+     */
+    private void validarCambioDomicilio(Titular titular, ClaseLicencia clase) {
+        // Buscar licencias del titular para la clase solicitada
+        List<Licencia> licenciasDelTitular = licenciaService.findByTitular(titular);
+        
+        // Verificar que tenga una licencia vigente de la clase solicitada
+        boolean tieneLicenciaVigente = licenciasDelTitular.stream()
+                .anyMatch(licencia -> licencia.getClase() == clase && licencia.isVigente());
+        
+        if (!tieneLicenciaVigente) {
+            throw new IllegalStateException("No se puede cambiar domicilio: el titular no tiene una licencia vigente de clase " + 
+                    clase.name() + " en el sistema");
+        }
+    }
+
+    /**
+     * Valida que el titular pueda hacer una emisión
+     */
+    private void validarEmision(Titular titular, ClaseLicencia clase) {
+        // Para emisión, verificar que no tenga ya una licencia vigente de la misma clase
+        List<Licencia> licenciasDelTitular = licenciaService.findByTitular(titular);
+        
+        boolean yaTimeLicenciaVigente = licenciasDelTitular.stream()
+                .anyMatch(licencia -> licencia.getClase() == clase && licencia.isVigente());
+        
+        if (yaTimeLicenciaVigente) {
+            throw new IllegalStateException("No se puede emitir: el titular ya tiene una licencia vigente de clase " + 
+                    clase.name() + ". Si necesita una nueva, haga un duplicado");
+        }
     }
 
     /**

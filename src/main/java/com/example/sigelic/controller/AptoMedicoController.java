@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.sigelic.dto.AptoMedicoRequestDTO;
+import com.example.sigelic.dto.request.AptoMedicoRequestDTO;
 import com.example.sigelic.dto.response.AptoMedicoResponseDTO;
 import com.example.sigelic.service.TramiteService;
 

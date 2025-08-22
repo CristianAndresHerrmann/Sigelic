@@ -3,7 +3,7 @@ package com.example.sigelic.views.dialog;
 import java.time.LocalDateTime;
 import java.util.function.Consumer;
 
-import com.example.sigelic.dto.AptoMedicoRequestDTO;
+import com.example.sigelic.dto.request.AptoMedicoRequestDTO;
 import com.example.sigelic.dto.response.AptoMedicoResponseDTO;
 import com.example.sigelic.model.Tramite;
 import com.example.sigelic.service.TramiteService;

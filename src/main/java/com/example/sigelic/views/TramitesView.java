@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.example.sigelic.model.EstadoTramite;
 import com.example.sigelic.model.Tramite;
+import com.example.sigelic.service.LicenciaService;
 import com.example.sigelic.service.TitularService;
 import com.example.sigelic.service.TramiteService;
 import com.example.sigelic.views.dialog.DetalleTramiteDialog;
@@ -42,13 +43,15 @@ public class TramitesView extends VerticalLayout {
 
     private final TramiteService tramiteService;
     private final TitularService titularService;
+    private final LicenciaService licenciaService;
     private Grid<Tramite> grid;
     private ListDataProvider<Tramite> dataProvider;
     private TextField searchField;
 
-    public TramitesView(TramiteService tramiteService, TitularService titularService) {
+    public TramitesView(TramiteService tramiteService, TitularService titularService, LicenciaService licenciaService) {
         this.tramiteService = tramiteService;
         this.titularService = titularService;
+        this.licenciaService = licenciaService;
         addClassName("tramites-view");
         setSizeFull();
 
@@ -260,7 +263,7 @@ public class TramitesView extends VerticalLayout {
     }
 
     private void openNuevoTramiteDialog() {
-        NuevoTramiteDialog dialog = new NuevoTramiteDialog(tramiteService, titularService, unused -> refreshGrid());
+        NuevoTramiteDialog dialog = new NuevoTramiteDialog(tramiteService, titularService, licenciaService, unused -> refreshGrid());
         dialog.open();
     }
 }

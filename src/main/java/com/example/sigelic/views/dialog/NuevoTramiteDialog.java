@@ -1,11 +1,14 @@
 package com.example.sigelic.views.dialog;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
 import com.example.sigelic.model.ClaseLicencia;
+import com.example.sigelic.model.Licencia;
 import com.example.sigelic.model.TipoTramite;
 import com.example.sigelic.model.Titular;
+import com.example.sigelic.service.LicenciaService;
 import com.example.sigelic.service.TitularService;
 import com.example.sigelic.service.TramiteService;
 import com.vaadin.flow.component.button.Button;
@@ -33,6 +36,7 @@ public class NuevoTramiteDialog extends Dialog {
 
     private final TramiteService tramiteService;
     private final TitularService titularService;
+    private final LicenciaService licenciaService;
     private final Consumer<Void> onSuccess;
 
     private ComboBox<Titular> titularComboBox;
@@ -43,9 +47,11 @@ public class NuevoTramiteDialog extends Dialog {
 
     private Binder<TramiteData> binder;
 
-    public NuevoTramiteDialog(TramiteService tramiteService, TitularService titularService, Consumer<Void> onSuccess) {
+    public NuevoTramiteDialog(TramiteService tramiteService, TitularService titularService, 
+                              LicenciaService licenciaService, Consumer<Void> onSuccess) {
         this.tramiteService = tramiteService;
         this.titularService = titularService;
+        this.licenciaService = licenciaService;
         this.onSuccess = onSuccess;
 
         setHeaderTitle("Nuevo Trámite");
@@ -76,13 +82,18 @@ public class NuevoTramiteDialog extends Dialog {
         titularComboBox.setItemLabelGenerator(titular -> 
             titular.getNombre() + " " + titular.getApellido() + " - DNI: " + titular.getDni());
         titularComboBox.setPlaceholder("Seleccione un titular...");
-        titularComboBox.addValueChangeListener(e -> validarTitularSeleccionado());
+        titularComboBox.addValueChangeListener(e -> {
+            validarTitularSeleccionado();
+            actualizarTiposTramiteDisponibles();
+        });
 
         // ComboBox para tipo de trámite
         tipoTramiteComboBox = new ComboBox<>("Tipo de Trámite");
-        tipoTramiteComboBox.setItems(TipoTramite.values());
         tipoTramiteComboBox.setItemLabelGenerator(TipoTramite::getDescripcion);
-        tipoTramiteComboBox.addValueChangeListener(e -> updateRequisitosInfo());
+        tipoTramiteComboBox.addValueChangeListener(e -> {
+            updateRequisitosInfo();
+            actualizarClasesDisponibles();
+        });
 
         // ComboBox para clase de licencia
         claseLicenciaComboBox = new ComboBox<>("Clase de Licencia");
@@ -260,6 +271,116 @@ public class NuevoTramiteDialog extends Dialog {
         Notification notification = Notification.show(message);
         notification.addThemeVariants(variant);
         notification.setPosition(Notification.Position.TOP_CENTER);
+    }
+
+    /**
+     * Actualiza los tipos de trámite disponibles según las licencias del titular seleccionado
+     */
+    private void actualizarTiposTramiteDisponibles() {
+        Titular titular = titularComboBox.getValue();
+        if (titular == null) {
+            tipoTramiteComboBox.setItems();
+            tipoTramiteComboBox.setEnabled(false);
+            return;
+        }
+
+        List<TipoTramite> tiposDisponibles = new ArrayList<>();
+        List<Licencia> licenciasDelTitular = licenciaService.findByTitular(titular);
+
+        // EMISION siempre está disponible
+        tiposDisponibles.add(TipoTramite.EMISION);
+
+        // RENOVACION, DUPLICADO y CAMBIO_DOMICILIO solo si tiene licencias
+        if (!licenciasDelTitular.isEmpty()) {
+            // Verificar si tiene licencias vigentes para duplicado y cambio de domicilio
+            boolean tieneLicenciasVigentes = licenciasDelTitular.stream()
+                    .anyMatch(Licencia::isVigente);
+
+            // Verificar si tiene licencias renovables (vigentes o vencidas hace menos de 2 años)
+            boolean tieneLicenciasRenovables = licenciasDelTitular.stream()
+                    .anyMatch(licencia -> licencia.getFechaVencimiento().isAfter(
+                            java.time.LocalDate.now().minusYears(2)));
+
+            if (tieneLicenciasVigentes) {
+                tiposDisponibles.add(TipoTramite.DUPLICADO);
+                tiposDisponibles.add(TipoTramite.CAMBIO_DOMICILIO);
+            }
+
+            if (tieneLicenciasRenovables) {
+                tiposDisponibles.add(TipoTramite.RENOVACION);
+            }
+        }
+
+        tipoTramiteComboBox.setItems(tiposDisponibles);
+        tipoTramiteComboBox.setEnabled(true);
+        tipoTramiteComboBox.setValue(null);
+        claseLicenciaComboBox.setValue(null);
+    }
+
+    /**
+     * Actualiza las clases disponibles según el tipo de trámite y las licencias del titular
+     */
+    private void actualizarClasesDisponibles() {
+        Titular titular = titularComboBox.getValue();
+        TipoTramite tipo = tipoTramiteComboBox.getValue();
+        
+        if (titular == null || tipo == null) {
+            claseLicenciaComboBox.setItems();
+            claseLicenciaComboBox.setEnabled(false);
+            return;
+        }
+
+        List<ClaseLicencia> clasesDisponibles = new ArrayList<>();
+        List<Licencia> licenciasDelTitular = licenciaService.findByTitular(titular);
+
+        switch (tipo) {
+            case EMISION:
+                // Para emisión, todas las clases están disponibles (excepto las que ya tiene vigentes)
+                for (ClaseLicencia clase : ClaseLicencia.values()) {
+                    boolean yaTimeLicenciaVigente = licenciasDelTitular.stream()
+                            .anyMatch(licencia -> licencia.getClase() == clase && licencia.isVigente());
+                    if (!yaTimeLicenciaVigente) {
+                        clasesDisponibles.add(clase);
+                    }
+                }
+                break;
+
+            case RENOVACION:
+                // Solo las clases que tiene y son renovables
+                licenciasDelTitular.stream()
+                        .filter(licencia -> licencia.getFechaVencimiento().isAfter(
+                                java.time.LocalDate.now().minusYears(2)))
+                        .map(Licencia::getClase)
+                        .distinct()
+                        .forEach(clasesDisponibles::add);
+                break;
+
+            case DUPLICADO:
+            case CAMBIO_DOMICILIO:
+                // Solo las clases vigentes
+                licenciasDelTitular.stream()
+                        .filter(Licencia::isVigente)
+                        .map(Licencia::getClase)
+                        .distinct()
+                        .forEach(clasesDisponibles::add);
+                break;
+        }
+
+        claseLicenciaComboBox.setItems(clasesDisponibles);
+        claseLicenciaComboBox.setEnabled(!clasesDisponibles.isEmpty());
+        claseLicenciaComboBox.setValue(null);
+
+        // Mostrar mensaje si no hay clases disponibles
+        if (clasesDisponibles.isEmpty()) {
+            String mensaje = switch (tipo) {
+                case RENOVACION -> "El titular no tiene licencias renovables";
+                case DUPLICADO -> "El titular no tiene licencias vigentes para duplicar";
+                case CAMBIO_DOMICILIO -> "El titular no tiene licencias vigentes";
+                case EMISION -> "El titular ya tiene licencias vigentes en todas las clases";
+                default -> "No hay clases disponibles";
+            };
+            showNotification(mensaje, NotificationVariant.LUMO_WARNING);
+        }
     }
 
     // Clase interna para el binder

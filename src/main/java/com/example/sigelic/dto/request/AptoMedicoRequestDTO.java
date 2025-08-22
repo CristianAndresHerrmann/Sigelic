@@ -1,4 +1,4 @@
-package com.example.sigelic.dto;
+package com.example.sigelic.dto.request;
 
 import java.time.LocalDateTime;
 
