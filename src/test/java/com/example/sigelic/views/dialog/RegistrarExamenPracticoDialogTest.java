@@ -1,20 +1,27 @@
 package com.example.sigelic.views.dialog;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
-
 import java.time.LocalDateTime;
 import java.util.function.Consumer;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import org.mockito.Mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.example.sigelic.model.ClaseLicencia;
 import com.example.sigelic.model.ExamenPractico;
 import com.example.sigelic.model.Titular;
 import com.example.sigelic.model.Tramite;
@@ -38,7 +45,7 @@ class RegistrarExamenPracticoDialogTest {
         // Crear un tramite de prueba
         tramite = new Tramite();
         tramite.setId(123L);
-        tramite.setClaseSolicitada("A");
+        tramite.setClaseSolicitada(ClaseLicencia.A);
         
         Titular titular = new Titular();
         titular.setNombre("Juan");

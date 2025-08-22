@@ -276,6 +276,9 @@ public class TramiteService {
             tramite.actualizarEstado();
             log.info("Examen teórico aprobado para trámite ID: {}", tramiteId);
         } else {
+            // Examen reprobado: NO aprobado pero permite reintento
+            tramite.setExamenTeoricoAprobado(false);
+            tramite.setEstado(EstadoTramite.EX_TEO_RECHAZADO);
             log.info("Examen teórico desaprobado para trámite ID: {}", tramiteId);
         }
 
@@ -302,6 +305,9 @@ public class TramiteService {
             tramite.actualizarEstado();
             log.info("Examen práctico aprobado para trámite ID: {}", tramiteId);
         } else {
+            // Examen reprobado: NO aprobado pero permite reintento
+            tramite.setExamenPracticoAprobado(false);
+            tramite.setEstado(EstadoTramite.EX_PRA_RECHAZADO);
             log.info("Examen práctico desaprobado para trámite ID: {}", tramiteId);
         }
 

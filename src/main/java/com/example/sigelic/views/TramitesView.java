@@ -173,7 +173,10 @@ public class TramitesView extends VerticalLayout {
             }
 
             // Botón para examen teórico (si está en APTO_MED y requiere examen teórico)
-            if (tramite.getEstado() == EstadoTramite.APTO_MED && tramite.requiereExamenTeorico()) {
+            // O si está en EX_TEO_RECHAZADO (permite reintento)
+            if ((tramite.getEstado() == EstadoTramite.APTO_MED || 
+                 tramite.getEstado() == EstadoTramite.EX_TEO_RECHAZADO) && 
+                tramite.requiereExamenTeorico()) {
                 Button examenTeoricoBtn = new Button("Ex. Teórico", new Icon(VaadinIcon.BOOK));
                 examenTeoricoBtn.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_SUCCESS);
                 examenTeoricoBtn.setTooltipText("Registrar examen teórico");
@@ -181,8 +184,12 @@ public class TramitesView extends VerticalLayout {
                 acciones.add(examenTeoricoBtn);
             }
 
-            // Botón para examen práctico (si está en EX_TEO_OK y requiere examen práctico)
-            if (tramite.getEstado() == EstadoTramite.EX_TEO_OK && tramite.requiereExamenPractico()) {
+            // Botón para examen práctico (solo si el teórico está aprobado)
+            // O si el práctico fue rechazado (permite reintento del práctico)
+            if (((tramite.getEstado() == EstadoTramite.EX_TEO_OK) || 
+                 (tramite.getEstado() == EstadoTramite.EX_PRA_RECHAZADO)) && 
+                tramite.requiereExamenPractico() && 
+                tramite.getExamenTeoricoAprobado()) { // CLAVE: Solo si teórico está aprobado
                 Button examenPracticoBtn = new Button("Ex. Práctico", new Icon(VaadinIcon.CAR));
                 examenPracticoBtn.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_SUCCESS);
                 examenPracticoBtn.setTooltipText("Registrar examen práctico");
@@ -213,7 +220,10 @@ public class TramitesView extends VerticalLayout {
             }
 
             // Botones para reintentos (si el trámite está rechazado pero permite reintento)
-            if (tramite.getEstado().esRechazo() && tramite.getEstado().permiteReintento()) {
+            // EXCLUIR exámenes reprobados que ya tienen su botón específico de reintento
+            if (tramite.getEstado().esRechazo() && tramite.getEstado().permiteReintento() &&
+                tramite.getEstado() != EstadoTramite.EX_TEO_RECHAZADO &&
+                tramite.getEstado() != EstadoTramite.EX_PRA_RECHAZADO) {
                 Button reintentoBtn = new Button("Permitir Reintento", new Icon(VaadinIcon.REFRESH));
                 reintentoBtn.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_SUCCESS);
                 reintentoBtn.setTooltipText("Permitir reintento del trámite");
