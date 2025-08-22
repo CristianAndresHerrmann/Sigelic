@@ -11,6 +11,7 @@ import com.example.sigelic.service.TramiteService;
 import com.example.sigelic.views.dialog.DetalleTramiteDialog;
 import com.example.sigelic.views.dialog.NuevoTramiteDialog;
 import com.example.sigelic.views.dialog.RegistrarAptoMedicoDialog;
+import com.example.sigelic.views.dialog.RegistrarExamenPracticoDialog;
 import com.example.sigelic.views.dialog.RegistrarExamenTeoricoDialog;
 import com.example.sigelic.views.dialog.ValidarDocumentacionDialog;
 import com.vaadin.flow.component.button.Button;
@@ -185,8 +186,7 @@ public class TramitesView extends VerticalLayout {
                 Button examenPracticoBtn = new Button("Ex. Práctico", new Icon(VaadinIcon.CAR));
                 examenPracticoBtn.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_SUCCESS);
                 examenPracticoBtn.setTooltipText("Registrar examen práctico");
-                examenPracticoBtn.addClickListener(e -> 
-                    showNotification("Examen práctico - Por implementar", NotificationVariant.LUMO_CONTRAST));
+                examenPracticoBtn.addClickListener(e -> abrirDialogoExamenPractico(tramite));
                 acciones.add(examenPracticoBtn);
             }
 
@@ -241,6 +241,11 @@ public class TramitesView extends VerticalLayout {
 
     private void abrirDialogoExamenTeorico(Tramite tramite) {
         RegistrarExamenTeoricoDialog dialog = new RegistrarExamenTeoricoDialog(tramiteService, tramite, unused -> refreshGrid());
+        dialog.open();
+    }
+
+    private void abrirDialogoExamenPractico(Tramite tramite) {
+        RegistrarExamenPracticoDialog dialog = new RegistrarExamenPracticoDialog(tramiteService, tramite, unused -> refreshGrid());
         dialog.open();
     }
 
