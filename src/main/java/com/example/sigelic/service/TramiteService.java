@@ -377,16 +377,111 @@ public class TramiteService {
     }
 
     /**
-     * Rechaza un trámite
+     * Rechaza un trámite (método genérico mantenido por compatibilidad)
      */
     public Tramite rechazarTramite(Long tramiteId, String motivo) {
         Tramite tramite = tramiteRepository.findById(tramiteId)
                 .orElseThrow(() -> new IllegalArgumentException("Trámite no encontrado con ID: " + tramiteId));
 
-        tramite.setEstado(EstadoTramite.RECHAZADA);
-        tramite.setObservaciones(motivo);
+        log.info("Intentando rechazar trámite ID: {} en estado: {} - Motivo: {}", 
+                tramiteId, tramite.getEstado(), motivo);
 
-        log.info("Trámite rechazado ID: {} - Motivo: {}", tramiteId, motivo);
+        // Determinar qué tipo de rechazo es basado en el estado actual
+        switch (tramite.getEstado()) {
+            case INICIADO -> {
+                // Si está iniciado, se está validando documentación
+                return rechazarDocumentacion(tramiteId, motivo);
+            }
+            case DOCS_OK, APTO_MED -> {
+                // Si tiene docs OK o apto médico, puede estar en examen teórico
+                if (tramite.requiereExamenTeorico()) {
+                    return rechazarExamenTeorico(tramiteId, motivo);
+                } else if (tramite.requiereExamenPractico()) {
+                    return rechazarExamenPractico(tramiteId, motivo);
+                } else {
+                    // Rechazo genérico
+                    tramite.setEstado(EstadoTramite.RECHAZADA);
+                    tramite.setObservaciones(motivo);
+                    log.info("Trámite rechazado genéricamente ID: {} - Motivo: {}", tramiteId, motivo);
+                    return tramiteRepository.save(tramite);
+                }
+            }
+            case EX_TEO_OK -> {
+                // Si aprobó teórico, puede estar en práctico
+                if (tramite.requiereExamenPractico()) {
+                    return rechazarExamenPractico(tramiteId, motivo);
+                } else {
+                    // Rechazo genérico
+                    tramite.setEstado(EstadoTramite.RECHAZADA);
+                    tramite.setObservaciones(motivo);
+                    log.info("Trámite rechazado genéricamente ID: {} - Motivo: {}", tramiteId, motivo);
+                    return tramiteRepository.save(tramite);
+                }
+            }
+            default -> {
+                // Rechazo genérico para otros casos
+                tramite.setEstado(EstadoTramite.RECHAZADA);
+                tramite.setObservaciones(motivo);
+                log.info("Trámite rechazado genéricamente ID: {} - Motivo: {}", tramiteId, motivo);
+                return tramiteRepository.save(tramite);
+            }
+        }
+    }
+
+    /**
+     * Rechaza la documentación de un trámite
+     */
+    public Tramite rechazarDocumentacion(Long tramiteId, String motivo) {
+        Tramite tramite = tramiteRepository.findById(tramiteId)
+                .orElseThrow(() -> new IllegalArgumentException("Trámite no encontrado con ID: " + tramiteId));
+
+        log.info("Rechazando documentación para trámite ID: {} en estado: {}", tramiteId, tramite.getEstado());
+        
+        tramite.setObservaciones(motivo);
+        tramite.rechazarDocumentacion();
+        
+        log.info("Documentación rechazada para trámite ID: {} - Nuevo estado: {} - Motivo: {}", 
+                tramiteId, tramite.getEstado(), motivo);
+        
+        return tramiteRepository.save(tramite);
+    }
+
+    /**
+     * Rechaza el examen teórico de un trámite
+     */
+    public Tramite rechazarExamenTeorico(Long tramiteId, String motivo) {
+        Tramite tramite = tramiteRepository.findById(tramiteId)
+                .orElseThrow(() -> new IllegalArgumentException("Trámite no encontrado con ID: " + tramiteId));
+
+        tramite.setObservaciones(motivo);
+        tramite.rechazarExamenTeorico();
+        log.info("Examen teórico rechazado para trámite ID: {} - Motivo: {}", tramiteId, motivo);
+        return tramiteRepository.save(tramite);
+    }
+
+    /**
+     * Rechaza el examen práctico de un trámite
+     */
+    public Tramite rechazarExamenPractico(Long tramiteId, String motivo) {
+        Tramite tramite = tramiteRepository.findById(tramiteId)
+                .orElseThrow(() -> new IllegalArgumentException("Trámite no encontrado con ID: " + tramiteId));
+
+        tramite.setObservaciones(motivo);
+        tramite.rechazarExamenPractico();
+        log.info("Examen práctico rechazado para trámite ID: {} - Motivo: {}", tramiteId, motivo);
+        return tramiteRepository.save(tramite);
+    }
+
+    /**
+     * Permite el reintento de un trámite rechazado
+     */
+    public Tramite permitirReintento(Long tramiteId, String motivo) {
+        Tramite tramite = tramiteRepository.findById(tramiteId)
+                .orElseThrow(() -> new IllegalArgumentException("Trámite no encontrado con ID: " + tramiteId));
+
+        tramite.setObservaciones(motivo);
+        tramite.permitirReintento();
+        log.info("Reintento autorizado para trámite ID: {} - Motivo: {}", tramiteId, motivo);
         return tramiteRepository.save(tramite);
     }
 
@@ -481,7 +576,10 @@ public class TramiteService {
             tramite.actualizarEstado();
             log.info("Apto médico registrado para trámite ID: {}", tramiteId);
         } else {
-            log.info("No apto médico registrado para trámite ID: {}", tramiteId);
+            // Cambiar estado a APTO_MED_RECHAZADO (estado final)
+            tramite.setEstado(EstadoTramite.APTO_MED_RECHAZADO);
+            tramite.setAptoMedicoVigente(false);
+            log.info("No apto médico registrado para trámite ID: {} - Trámite finalizado", tramiteId);
         }
 
         tramiteRepository.save(tramite);

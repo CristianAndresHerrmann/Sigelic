@@ -135,6 +135,10 @@ public class TramitesView extends VerticalLayout {
                     badge.getElement().getThemeList().add("badge success");
                     break;
                 case RECHAZADA:
+                case DOCS_RECHAZADAS:
+                case APTO_MED_RECHAZADO:
+                case EX_TEO_RECHAZADO:
+                case EX_PRA_RECHAZADO:
                     badge.getElement().getThemeList().add("badge error");
                     break;
                 default:
@@ -208,6 +212,15 @@ public class TramitesView extends VerticalLayout {
                 acciones.add(emitirBtn);
             }
 
+            // Botones para reintentos (si el trámite está rechazado pero permite reintento)
+            if (tramite.getEstado().esRechazo() && tramite.getEstado().permiteReintento()) {
+                Button reintentoBtn = new Button("Permitir Reintento", new Icon(VaadinIcon.REFRESH));
+                reintentoBtn.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_SUCCESS);
+                reintentoBtn.setTooltipText("Permitir reintento del trámite");
+                reintentoBtn.addClickListener(e -> permitirReintento(tramite));
+                acciones.add(reintentoBtn);
+            }
+
             // Botón para ver detalles (siempre disponible)
             Button detalleBtn = new Button("Ver", new Icon(VaadinIcon.EYE));
             detalleBtn.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);
@@ -265,5 +278,16 @@ public class TramitesView extends VerticalLayout {
     private void openNuevoTramiteDialog() {
         NuevoTramiteDialog dialog = new NuevoTramiteDialog(tramiteService, titularService, licenciaService, unused -> refreshGrid());
         dialog.open();
+    }
+
+    private void permitirReintento(Tramite tramite) {
+        try {
+            String motivo = "Reintento autorizado por el sistema";
+            tramiteService.permitirReintento(tramite.getId(), motivo);
+            showNotification("Reintento autorizado exitosamente", NotificationVariant.LUMO_SUCCESS);
+            refreshGrid();
+        } catch (Exception e) {
+            showNotification("Error al autorizar reintento: " + e.getMessage(), NotificationVariant.LUMO_ERROR);
+        }
     }
 }

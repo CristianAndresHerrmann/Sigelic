@@ -148,7 +148,7 @@ public class Tramite {
      * Actualiza el estado del trámite según los requisitos cumplidos
      */
     public void actualizarEstado() {
-        if (estado == EstadoTramite.RECHAZADA || estado == EstadoTramite.EMITIDA) {
+        if (estado.esFinal()) {
             return; // No cambiar estados finales
         }
 
@@ -164,6 +164,61 @@ public class Tramite {
             estado = EstadoTramite.APTO_MED;
         } else if (documentacionValidada) {
             estado = EstadoTramite.DOCS_OK;
+        }
+    }
+
+    /**
+     * Verifica si el trámite puede continuar o está rechazado
+     */
+    public boolean puedeAvanzar() {
+        return estado.puedeAvanzar();
+    }
+
+    /**
+     * Verifica si el trámite permite reintentos en su estado actual
+     */
+    public boolean permiteReintento() {
+        return estado.permiteReintento();
+    }
+
+    /**
+     * Rechaza el examen teórico y cambia el estado
+     */
+    public void rechazarExamenTeorico() {
+        this.examenTeoricoAprobado = false;
+        this.estado = EstadoTramite.EX_TEO_RECHAZADO;
+    }
+
+    /**
+     * Rechaza el examen práctico y cambia el estado
+     */
+    public void rechazarExamenPractico() {
+        this.examenPracticoAprobado = false;
+        this.estado = EstadoTramite.EX_PRA_RECHAZADO;
+    }
+
+    /**
+     * Rechaza la documentación y cambia el estado
+     */
+    public void rechazarDocumentacion() {
+        this.documentacionValidada = false;
+        this.estado = EstadoTramite.DOCS_RECHAZADAS;
+    }
+
+    /**
+     * Permite reintentar desde un estado de rechazo de examen
+     */
+    public void permitirReintento() {
+        if (estado == EstadoTramite.EX_TEO_RECHAZADO) {
+            // Volver al estado anterior (APTO_MED o el que corresponda)
+            if (aptoMedicoVigente) {
+                estado = EstadoTramite.APTO_MED;
+            } else if (documentacionValidada) {
+                estado = EstadoTramite.DOCS_OK;
+            }
+        } else if (estado == EstadoTramite.EX_PRA_RECHAZADO) {
+            // Volver al estado EX_TEO_OK
+            estado = EstadoTramite.EX_TEO_OK;
         }
     }
 }
