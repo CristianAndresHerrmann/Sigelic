@@ -1,5 +1,6 @@
 package com.example.sigelic.service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -8,6 +9,8 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.sigelic.dto.AptoMedicoRequestDTO;
+import com.example.sigelic.dto.response.AptoMedicoResponseDTO;
 import com.example.sigelic.model.AptoMedico;
 import com.example.sigelic.model.ClaseLicencia;
 import com.example.sigelic.model.EstadoTramite;
@@ -133,6 +136,13 @@ public class TramiteService {
 
         log.info("Documentación validada para trámite ID: {}", tramiteId);
         return tramiteRepository.save(tramite);
+    }
+
+    /**
+     * Valida la documentación de un trámite (versión simplificada)
+     */
+    public Tramite validarDocumentacion(Long tramiteId) {
+        return validarDocumentacion(tramiteId, "Sistema"); // Agente por defecto
     }
 
     /**
@@ -317,5 +327,100 @@ public class TramiteService {
         return estadosActivos.stream()
                 .mapToLong(estado -> tramiteRepository.countByEstado(estado))
                 .sum();
+    }
+
+    /**
+     * Registra un apto médico usando DTO
+     */
+    public AptoMedicoResponseDTO registrarAptoMedico(Long tramiteId, AptoMedicoRequestDTO request) {
+        Tramite tramite = tramiteRepository.findById(tramiteId)
+                .orElseThrow(() -> new IllegalArgumentException("Trámite no encontrado con ID: " + tramiteId));
+
+        if (!tramite.requiereAptoMedico()) {
+            throw new IllegalStateException("Este tipo de trámite no requiere apto médico");
+        }
+
+        // Crear entidad AptoMedico desde DTO (solo campos disponibles)
+        AptoMedico apto = new AptoMedico();
+        apto.setTramite(tramite);
+        apto.setFecha(request.getFechaExamen());
+        apto.setProfesional(request.getMedicoExaminador());
+        apto.setApto(request.getApto());
+        apto.setPresionSistolica(request.getPresionSistolica());
+        apto.setPresionDiastolica(request.getPresionDiastolica());
+        
+        // Combinar campos de agudeza visual
+        String agudezaVisual = String.format("OD: %.1f, OI: %.1f", 
+            request.getAgudezaVisualOjoDerecho() != null ? request.getAgudezaVisualOjoDerecho().doubleValue() : 0.0,
+            request.getAgudezaVisualOjoIzquierdo() != null ? request.getAgudezaVisualOjoIzquierdo().doubleValue() : 0.0);
+        apto.setAgudezaVisual(agudezaVisual);
+        
+        apto.setObservaciones(request.getObservaciones());
+        apto.setRestricciones(request.getRestricciones());
+        
+        // Calcular fecha de vencimiento según meses de validez
+        if (request.getMesesValidez() != null) {
+            apto.setFechaVencimiento(request.getFechaExamen().toLocalDate().plusMonths(request.getMesesValidez()));
+        }
+
+        aptoMedicoRepository.save(apto);
+
+        if (apto.getApto()) {
+            tramite.setAptoMedicoVigente(true);
+            tramite.actualizarEstado();
+            log.info("Apto médico registrado para trámite ID: {}", tramiteId);
+        } else {
+            log.info("No apto médico registrado para trámite ID: {}", tramiteId);
+        }
+
+        tramiteRepository.save(tramite);
+
+        // Convertir a DTO de respuesta
+        return convertirAAptoMedicoResponseDTO(apto);
+    }
+
+    /**
+     * Obtiene el apto médico de un trámite
+     */
+    @Transactional(readOnly = true)
+    public Optional<AptoMedicoResponseDTO> obtenerAptoMedico(Long tramiteId) {
+        Tramite tramite = tramiteRepository.findById(tramiteId)
+                .orElseThrow(() -> new IllegalArgumentException("Trámite no encontrado con ID: " + tramiteId));
+        
+        return aptoMedicoRepository.findUltimoAptoVigente(tramite)
+                .map(this::convertirAAptoMedicoResponseDTO);
+    }
+
+    /**
+     * Obtiene lista de aptos médicos próximos a vencer
+     */
+    @Transactional(readOnly = true)
+    public List<AptoMedicoResponseDTO> obtenerAptosProximosAVencer() {
+        LocalDate desde = LocalDate.now();
+        LocalDate hasta = LocalDate.now().plusDays(30);
+        List<AptoMedico> aptosProximos = aptoMedicoRepository.findAptosProximosAVencer(desde, hasta);
+        return aptosProximos.stream()
+                .map(this::convertirAAptoMedicoResponseDTO)
+                .toList();
+    }
+
+    /**
+     * Convierte AptoMedico a DTO de respuesta
+     */
+    private AptoMedicoResponseDTO convertirAAptoMedicoResponseDTO(AptoMedico apto) {
+        return AptoMedicoResponseDTO.builder()
+                .id(apto.getId())
+                .profesional(apto.getProfesional())
+                .matriculaProfesional(apto.getMatriculaProfesional())
+                .apto(apto.getApto())
+                .fecha(apto.getFecha())
+                .fechaVencimiento(apto.getFechaVencimiento())
+                .observaciones(apto.getObservaciones())
+                .restricciones(apto.getRestricciones())
+                .presionSistolica(apto.getPresionSistolica())
+                .presionDiastolica(apto.getPresionDiastolica())
+                .agudezaVisual(apto.getAgudezaVisual())
+                .vigente(apto.isVigente())
+                .build();
     }
 }

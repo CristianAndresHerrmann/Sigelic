@@ -3,10 +3,14 @@ package com.example.sigelic.views;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+import com.example.sigelic.model.EstadoTramite;
 import com.example.sigelic.model.Tramite;
 import com.example.sigelic.service.TitularService;
 import com.example.sigelic.service.TramiteService;
+import com.example.sigelic.views.dialog.DetalleTramiteDialog;
 import com.example.sigelic.views.dialog.NuevoTramiteDialog;
+import com.example.sigelic.views.dialog.RegistrarAptoMedicoDialog;
+import com.example.sigelic.views.dialog.ValidarDocumentacionDialog;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
@@ -136,7 +140,107 @@ public class TramitesView extends VerticalLayout {
             return badge;
         })).setHeader("Estado").setSortable(true);
 
+        // Columna de acciones
+        grid.addColumn(new ComponentRenderer<>(tramite -> {
+            HorizontalLayout acciones = new HorizontalLayout();
+            acciones.setSpacing(true);
+
+            // Botón para validar documentación (solo si está en INICIADO)
+            if (tramite.getEstado() == EstadoTramite.INICIADO) {
+                Button validarDocsBtn = new Button("Validar Docs", new Icon(VaadinIcon.CHECK));
+                validarDocsBtn.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_SUCCESS);
+                validarDocsBtn.setTooltipText("Validar documentación presentada");
+                validarDocsBtn.addClickListener(e -> abrirDialogoValidarDocumentacion(tramite));
+                acciones.add(validarDocsBtn);
+            }
+
+            // Botón para apto médico (solo si está en DOCS_OK y requiere apto médico)
+            if (tramite.getEstado() == EstadoTramite.DOCS_OK && tramite.requiereAptoMedico()) {
+                Button aptoMedicoBtn = new Button("Apto Médico", new Icon(VaadinIcon.STETHOSCOPE));
+                aptoMedicoBtn.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_PRIMARY);
+                aptoMedicoBtn.setTooltipText("Registrar examen médico");
+                aptoMedicoBtn.addClickListener(e -> abrirDialogoAptoMedico(tramite));
+                acciones.add(aptoMedicoBtn);
+            }
+
+            // Botón para examen teórico (si está en APTO_MED y requiere examen teórico)
+            if (tramite.getEstado() == EstadoTramite.APTO_MED && tramite.requiereExamenTeorico()) {
+                Button examenTeoricoBtn = new Button("Ex. Teórico", new Icon(VaadinIcon.BOOK));
+                examenTeoricoBtn.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_SUCCESS);
+                examenTeoricoBtn.setTooltipText("Registrar examen teórico");
+                examenTeoricoBtn.addClickListener(e -> 
+                    showNotification("Examen teórico - Por implementar", NotificationVariant.LUMO_CONTRAST));
+                acciones.add(examenTeoricoBtn);
+            }
+
+            // Botón para examen práctico (si está en EX_TEO_OK y requiere examen práctico)
+            if (tramite.getEstado() == EstadoTramite.EX_TEO_OK && tramite.requiereExamenPractico()) {
+                Button examenPracticoBtn = new Button("Ex. Práctico", new Icon(VaadinIcon.CAR));
+                examenPracticoBtn.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_SUCCESS);
+                examenPracticoBtn.setTooltipText("Registrar examen práctico");
+                examenPracticoBtn.addClickListener(e -> 
+                    showNotification("Examen práctico - Por implementar", NotificationVariant.LUMO_CONTRAST));
+                acciones.add(examenPracticoBtn);
+            }
+
+            // Botón para pago (si está en EX_PRA_OK o cualquier estado que permita pago)
+            if ((tramite.getEstado() == EstadoTramite.EX_PRA_OK) || 
+                (tramite.getEstado() == EstadoTramite.APTO_MED && !tramite.requiereExamenTeorico() && !tramite.requiereExamenPractico()) ||
+                (tramite.getEstado() == EstadoTramite.EX_TEO_OK && !tramite.requiereExamenPractico())) {
+                Button pagoBtn = new Button("Pago", new Icon(VaadinIcon.CREDIT_CARD));
+                pagoBtn.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_PRIMARY);
+                pagoBtn.setTooltipText("Registrar pago");
+                pagoBtn.addClickListener(e -> 
+                    showNotification("Registro de pago - Por implementar", NotificationVariant.LUMO_CONTRAST));
+                acciones.add(pagoBtn);
+            }
+
+            // Botón para emitir licencia (si está en PAGO_OK)
+            if (tramite.getEstado() == EstadoTramite.PAGO_OK) {
+                Button emitirBtn = new Button("Emitir", new Icon(VaadinIcon.DIPLOMA));
+                emitirBtn.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_SUCCESS);
+                emitirBtn.setTooltipText("Emitir licencia");
+                emitirBtn.addClickListener(e -> 
+                    showNotification("Emisión de licencia - Por implementar", NotificationVariant.LUMO_CONTRAST));
+                acciones.add(emitirBtn);
+            }
+
+            // Botón para ver detalles (siempre disponible)
+            Button detalleBtn = new Button("Ver", new Icon(VaadinIcon.EYE));
+            detalleBtn.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);
+            detalleBtn.setTooltipText("Ver detalle completo del trámite");
+            detalleBtn.addClickListener(e -> verDetalleTramite(tramite));
+            acciones.add(detalleBtn);
+
+            return acciones;
+        })).setHeader("Acciones").setWidth("250px");
+
         add(grid);
+    }
+
+    private void abrirDialogoAptoMedico(Tramite tramite) {
+        RegistrarAptoMedicoDialog dialog = new RegistrarAptoMedicoDialog(tramiteService, tramite, unused -> refreshGrid());
+        dialog.open();
+    }
+
+    private void abrirDialogoValidarDocumentacion(Tramite tramite) {
+        ValidarDocumentacionDialog dialog = new ValidarDocumentacionDialog(tramiteService, tramite, unused -> refreshGrid());
+        dialog.open();
+    }
+
+    private void validarDocumentacion(Tramite tramite) {
+        try {
+            tramiteService.validarDocumentacion(tramite.getId());
+            showNotification("Documentación validada exitosamente", NotificationVariant.LUMO_SUCCESS);
+            refreshGrid();
+        } catch (Exception e) {
+            showNotification("Error al validar documentación: " + e.getMessage(), NotificationVariant.LUMO_ERROR);
+        }
+    }
+
+    private void verDetalleTramite(Tramite tramite) {
+        DetalleTramiteDialog dialog = new DetalleTramiteDialog(tramiteService, tramite);
+        dialog.open();
     }
 
     private void refreshGrid() {
