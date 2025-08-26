@@ -1,7 +1,11 @@
-package com.example.sigelic.views;
+ package com.example.sigelic.views;
+
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 import com.example.sigelic.model.Licencia;
 import com.example.sigelic.service.LicenciaService;
+import com.example.sigelic.views.dialog.VerLicenciaDialog;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
@@ -20,10 +24,8 @@ import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
-import jakarta.annotation.security.RolesAllowed;
 
-import java.time.format.DateTimeFormatter;
-import java.util.List;
+import jakarta.annotation.security.RolesAllowed;
 
 /**
  * Vista para gestión de licencias de conducir
@@ -131,7 +133,34 @@ public class LicenciasView extends VerticalLayout {
             return badge;
         })).setHeader("Estado").setSortable(true);
 
+        // Columna de acciones
+        grid.addColumn(new ComponentRenderer<>(licencia -> {
+            HorizontalLayout actions = new HorizontalLayout();
+            actions.setSpacing(true);
+
+            Button verButton = new Button(new Icon(VaadinIcon.EYE));
+            verButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);
+            verButton.setTooltipText("Ver licencia");
+            verButton.addClickListener(e -> abrirVerLicenciaDialog(licencia));
+
+            Button editButton = new Button(new Icon(VaadinIcon.EDIT));
+            editButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);
+            editButton.setTooltipText("Editar licencia");
+            editButton.addClickListener(e -> {
+                // TODO: Implementar edición de licencia
+                showNotification("Funcionalidad en desarrollo", NotificationVariant.LUMO_CONTRAST);
+            });
+
+            actions.add(verButton, editButton);
+            return actions;
+        })).setHeader("Acciones").setWidth("120px").setFlexGrow(0);
+
         add(grid);
+    }
+
+    private void abrirVerLicenciaDialog(Licencia licencia) {
+        VerLicenciaDialog dialog = new VerLicenciaDialog(licencia);
+        dialog.open();
     }
 
     private void refreshGrid() {

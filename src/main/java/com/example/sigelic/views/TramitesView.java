@@ -9,6 +9,7 @@ import com.example.sigelic.service.LicenciaService;
 import com.example.sigelic.service.TitularService;
 import com.example.sigelic.service.TramiteService;
 import com.example.sigelic.views.dialog.DetalleTramiteDialog;
+import com.example.sigelic.views.dialog.EmitirLicenciaDialog;
 import com.example.sigelic.views.dialog.NuevoTramiteDialog;
 import com.example.sigelic.views.dialog.RegistrarAptoMedicoDialog;
 import com.example.sigelic.views.dialog.RegistrarExamenPracticoDialog;
@@ -214,8 +215,7 @@ public class TramitesView extends VerticalLayout {
                 Button emitirBtn = new Button("Emitir", new Icon(VaadinIcon.DIPLOMA));
                 emitirBtn.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_SUCCESS);
                 emitirBtn.setTooltipText("Emitir licencia");
-                emitirBtn.addClickListener(e -> 
-                    showNotification("Emisión de licencia - Por implementar", NotificationVariant.LUMO_CONTRAST));
+                emitirBtn.addClickListener(e -> abrirDialogoEmisionLicencia(tramite));
                 acciones.add(emitirBtn);
             }
 
@@ -266,6 +266,11 @@ public class TramitesView extends VerticalLayout {
 
     private void abrirDialogoValidarDocumentacion(Tramite tramite) {
         ValidarDocumentacionDialog dialog = new ValidarDocumentacionDialog(tramiteService, tramite, unused -> refreshGrid());
+        dialog.open();
+    }
+
+    private void abrirDialogoEmisionLicencia(Tramite tramite) {
+        EmitirLicenciaDialog dialog = new EmitirLicenciaDialog(tramiteService, tramite, this::refreshGrid);
         dialog.open();
     }
 
