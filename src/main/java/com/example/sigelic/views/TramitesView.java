@@ -13,6 +13,7 @@ import com.example.sigelic.views.dialog.NuevoTramiteDialog;
 import com.example.sigelic.views.dialog.RegistrarAptoMedicoDialog;
 import com.example.sigelic.views.dialog.RegistrarExamenPracticoDialog;
 import com.example.sigelic.views.dialog.RegistrarExamenTeoricoDialog;
+import com.example.sigelic.views.dialog.RegistrarPagoDialog;
 import com.example.sigelic.views.dialog.ValidarDocumentacionDialog;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -204,8 +205,7 @@ public class TramitesView extends VerticalLayout {
                 Button pagoBtn = new Button("Pago", new Icon(VaadinIcon.CREDIT_CARD));
                 pagoBtn.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_PRIMARY);
                 pagoBtn.setTooltipText("Registrar pago");
-                pagoBtn.addClickListener(e -> 
-                    showNotification("Registro de pago - Por implementar", NotificationVariant.LUMO_CONTRAST));
+                pagoBtn.addClickListener(e -> abrirDialogoPago(tramite));
                 acciones.add(pagoBtn);
             }
 
@@ -256,6 +256,11 @@ public class TramitesView extends VerticalLayout {
 
     private void abrirDialogoExamenPractico(Tramite tramite) {
         RegistrarExamenPracticoDialog dialog = new RegistrarExamenPracticoDialog(tramiteService, tramite, unused -> refreshGrid());
+        dialog.open();
+    }
+
+    private void abrirDialogoPago(Tramite tramite) {
+        RegistrarPagoDialog dialog = new RegistrarPagoDialog(tramite, tramiteService, this::refreshGrid);
         dialog.open();
     }
 

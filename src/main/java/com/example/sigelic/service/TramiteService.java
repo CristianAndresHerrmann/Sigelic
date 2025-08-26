@@ -13,6 +13,7 @@ import com.example.sigelic.dto.request.AptoMedicoRequestDTO;
 import com.example.sigelic.dto.response.AptoMedicoResponseDTO;
 import com.example.sigelic.model.AptoMedico;
 import com.example.sigelic.model.ClaseLicencia;
+import com.example.sigelic.model.EstadoPago;
 import com.example.sigelic.model.EstadoTramite;
 import com.example.sigelic.model.ExamenPractico;
 import com.example.sigelic.model.ExamenTeorico;
@@ -350,10 +351,18 @@ public class TramiteService {
         pago.setTramite(tramite);
         pagoRepository.save(pago);
 
+        // Actualizar el estado del trámite según el estado del pago
         if (pago.isAcreditado()) {
             tramite.setPagoAcreditado(true);
             tramite.actualizarEstado();
             log.info("Pago acreditado para trámite ID: {}", tramiteId);
+        } else if (pago.getEstado() == EstadoPago.RECHAZADO) {
+            // No cambiar el estado del trámite, pero registrar el evento
+            log.info("Pago rechazado para trámite ID: {} - Motivo: {}", tramiteId, pago.getObservaciones());
+            // El trámite mantiene su estado actual y puede generar una nueva orden de pago si es necesario
+        } else if (pago.getEstado() == EstadoPago.VENCIDO) {
+            log.info("Pago vencido para trámite ID: {}", tramiteId);
+            // El trámite mantiene su estado actual y puede generar una nueva orden de pago si es necesario
         }
 
         return tramiteRepository.save(tramite);
