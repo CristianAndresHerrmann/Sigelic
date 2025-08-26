@@ -1,18 +1,27 @@
 package com.example.sigelic.service;
 
-import com.example.sigelic.model.*;
-import com.example.sigelic.repository.PagoRepository;
-import com.example.sigelic.repository.CostoTramiteRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.example.sigelic.model.ClaseLicencia;
+import com.example.sigelic.model.CostoTramite;
+import com.example.sigelic.model.EstadoPago;
+import com.example.sigelic.model.MedioPago;
+import com.example.sigelic.model.Pago;
+import com.example.sigelic.model.TipoTramite;
+import com.example.sigelic.model.Tramite;
+import com.example.sigelic.repository.CostoTramiteRepository;
+import com.example.sigelic.repository.PagoRepository;
+import com.example.sigelic.util.ComprobanteNumberGenerator;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Servicio para gestionar pagos de trámites
@@ -25,7 +34,7 @@ public class PagoService {
 
     private final PagoRepository pagoRepository;
     private final CostoTramiteRepository costoTramiteRepository;
-    private final ConfiguracionService configuracionService;
+    private final ComprobanteNumberGenerator comprobanteGenerator;
 
     /**
      * Busca un pago por ID
@@ -90,7 +99,7 @@ public class PagoService {
     }
 
     /**
-     * Acredita un pago
+     * Acredita un pago con número de comprobante manual
      */
     public Pago acreditarPago(Long pagoId, String numeroComprobante, String cajero) {
         Pago pago = pagoRepository.findById(pagoId)
@@ -111,6 +120,14 @@ public class PagoService {
         log.info("Acreditando pago ID: {} - Comprobante: {}", pagoId, numeroComprobante);
         
         return pagoRepository.save(pago);
+    }
+
+    /**
+     * Acredita un pago generando automáticamente el número de comprobante
+     */
+    public Pago acreditarPagoConComprobanteAutomatico(Long pagoId, String cajero) {
+        String numeroComprobante = comprobanteGenerator.generarNumeroComprobante();
+        return acreditarPago(pagoId, numeroComprobante, cajero);
     }
 
     /**
@@ -220,7 +237,7 @@ public class PagoService {
     }
 
     /**
-     * Crea un pago manual (pago en caja)
+     * Crea un pago manual (pago en caja) con número de comprobante manual
      */
     public Pago crearPagoManual(Tramite tramite, BigDecimal monto, String numeroComprobante, String cajero) {
         Pago pago = new Pago();
@@ -233,9 +250,18 @@ public class PagoService {
         pago.setNumeroTransaccion(generarNumeroTransaccion());
         pago.setFechaAcreditacion(LocalDateTime.now());
 
-        log.info("Creando pago manual para trámite ID: {} - Monto: ${}", tramite.getId(), monto);
+        log.info("Creando pago manual para trámite ID: {} - Monto: ${} - Comprobante: {}", 
+                tramite.getId(), monto, numeroComprobante);
         
         return pagoRepository.save(pago);
+    }
+
+    /**
+     * Crea un pago manual (pago en caja) generando automáticamente el número de comprobante
+     */
+    public Pago crearPagoManualConComprobanteAutomatico(Tramite tramite, BigDecimal monto, String cajero) {
+        String numeroComprobante = comprobanteGenerator.generarNumeroComprobante();
+        return crearPagoManual(tramite, monto, numeroComprobante, cajero);
     }
 
     /**
@@ -301,12 +327,25 @@ public class PagoService {
     private LocalDateTime calcularFechaVencimiento() {
         try {
             // Obtener horas de vencimiento desde configuración (por defecto 48 horas)
-            String horasStr = configuracionService.getValor("pagos.vencimiento_horas", "48");
-            int horas = Integer.parseInt(horasStr);
+            int horas = 48; // Valor por defecto
             return LocalDateTime.now().plusHours(horas);
-        } catch (NumberFormatException e) {
+        } catch (Exception e) {
             log.warn("Error al parsear configuración de vencimiento, usando valor por defecto: {}", e.getMessage());
             return LocalDateTime.now().plusHours(48);
         }
+    }
+
+    /**
+     * Obtiene una previsualización del siguiente número de comprobante que se asignará
+     */
+    public String previsualizarSiguienteComprobante() {
+        return comprobanteGenerator.previsualizarSiguienteComprobante();
+    }
+
+    /**
+     * Obtiene información sobre la secuencia actual de comprobantes
+     */
+    public String obtenerInfoSecuenciaActual() {
+        return comprobanteGenerator.obtenerInfoEstado();
     }
 }

@@ -8,6 +8,7 @@ import com.example.sigelic.model.EstadoPago;
 import com.example.sigelic.model.MedioPago;
 import com.example.sigelic.model.Pago;
 import com.example.sigelic.model.Tramite;
+import com.example.sigelic.service.PagoService;
 import com.example.sigelic.service.TramiteService;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -16,8 +17,11 @@ import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
@@ -28,6 +32,7 @@ import com.vaadin.flow.data.validator.StringLengthValidator;
 public class RegistrarPagoDialog extends Dialog {
     
     private final TramiteService tramiteService;
+    private final PagoService pagoService;
     private final Tramite tramite;
     private final Runnable onSuccess;
     
@@ -42,9 +47,10 @@ public class RegistrarPagoDialog extends Dialog {
     
     private Binder<Pago> binder;
     
-    public RegistrarPagoDialog(Tramite tramite, TramiteService tramiteService, Runnable onSuccess) {
+    public RegistrarPagoDialog(Tramite tramite, TramiteService tramiteService, PagoService pagoService, Runnable onSuccess) {
         this.tramite = tramite;
         this.tramiteService = tramiteService;
+        this.pagoService = pagoService;
         this.onSuccess = onSuccess;
         
         setHeaderTitle("Registrar Pago");
@@ -103,6 +109,21 @@ public class RegistrarPagoDialog extends Dialog {
         numeroComprobanteField.setPlaceholder("Ej: 001-00012345");
         numeroComprobanteField.setHelperText("Número del comprobante de pago");
         
+        // Crear botón para generar comprobante automático
+        Button generarComprobanteBtn = new Button("Generar Automático", new Icon(VaadinIcon.MAGIC));
+        generarComprobanteBtn.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);
+        generarComprobanteBtn.setTooltipText("Generar número de comprobante automáticamente");
+        generarComprobanteBtn.addClickListener(e -> generarComprobanteAutomatico());
+        
+        // Layout para el campo de comprobante con el botón
+        HorizontalLayout comprobanteLayout = new HorizontalLayout();
+        comprobanteLayout.setAlignItems(FlexComponent.Alignment.END);
+        comprobanteLayout.setSpacing(true);
+        numeroComprobanteField.setWidthFull();
+        comprobanteLayout.add(numeroComprobanteField, generarComprobanteBtn);
+        comprobanteLayout.setFlexGrow(1, numeroComprobanteField);
+        comprobanteLayout.setFlexGrow(0, generarComprobanteBtn);
+        
         numeroTransaccionField = new TextField("Número de Transacción");
         numeroTransaccionField.setPlaceholder("ID de transacción (opcional)");
         numeroTransaccionField.setHelperText("Identificador de la transacción");
@@ -123,7 +144,7 @@ public class RegistrarPagoDialog extends Dialog {
             solicitanteField, tipoTramiteField,
             claseLicenciaField, montoField,
             medioPagoField, estadoPagoField,
-            numeroComprobanteField, numeroTransaccionField,
+            comprobanteLayout, numeroTransaccionField,
             fechaVencimientoField, cajeroField,
             observacionesField
         );
@@ -133,6 +154,7 @@ public class RegistrarPagoDialog extends Dialog {
         );
         formLayout.setColspan(solicitanteField, 2);
         formLayout.setColspan(tipoTramiteField, 2);
+        formLayout.setColspan(comprobanteLayout, 2);
         formLayout.setColspan(observacionesField, 2);
         
         add(titulo, formLayout);
@@ -348,5 +370,19 @@ public class RegistrarPagoDialog extends Dialog {
     private void showNotification(String message, NotificationVariant variant) {
         Notification notification = Notification.show(message, 3000, Notification.Position.TOP_CENTER);
         notification.addThemeVariants(variant);
+    }
+
+    /**
+     * Genera automáticamente un número de comprobante y lo asigna al campo
+     */
+    private void generarComprobanteAutomatico() {
+        try {
+            String siguienteComprobante = pagoService.previsualizarSiguienteComprobante();
+            numeroComprobanteField.setValue(siguienteComprobante);
+            numeroComprobanteField.setHelperText("Comprobante generado automáticamente - No modificar a menos que sea necesario");
+            showNotification("Número de comprobante generado: " + siguienteComprobante, NotificationVariant.LUMO_SUCCESS);
+        } catch (Exception e) {
+            showNotification("Error al generar número de comprobante: " + e.getMessage(), NotificationVariant.LUMO_ERROR);
+        }
     }
 }

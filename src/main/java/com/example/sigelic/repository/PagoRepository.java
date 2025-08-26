@@ -53,4 +53,10 @@ public interface PagoRepository extends JpaRepository<Pago, Long> {
            "LEFT JOIN FETCH t.titular " +
            "ORDER BY p.fecha DESC")
     List<Pago> findAllWithDetails();
+    
+    @Query("SELECT p.numeroComprobante FROM Pago p " +
+           "WHERE p.numeroComprobante IS NOT NULL " +
+           "ORDER BY p.id DESC " +
+           "LIMIT 1")
+    String findUltimoComprobante();
 }
