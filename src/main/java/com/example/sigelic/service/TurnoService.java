@@ -6,7 +6,9 @@ import com.example.sigelic.repository.RecursoRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
+import com.example.sigelic.security.Authorities;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -29,6 +31,7 @@ public class TurnoService {
      * Busca un turno por ID
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.TURNO_VER + "')")
     public Optional<Turno> findById(Long id) {
         return turnoRepository.findById(id);
     }
@@ -37,6 +40,7 @@ public class TurnoService {
      * Obtiene todos los turnos de un titular
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.TURNO_VER + "')")
     public List<Turno> findByTitular(Long titularId) {
         Titular titular = titularService.findById(titularId)
                 .orElseThrow(() -> new IllegalArgumentException("Titular no encontrado con ID: " + titularId));
@@ -47,6 +51,7 @@ public class TurnoService {
      * Obtiene turnos por recurso
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.TURNO_VER + "')")
     public List<Turno> findByRecurso(Long recursoId) {
         Recurso recurso = recursoRepository.findById(recursoId)
                 .orElseThrow(() -> new IllegalArgumentException("Recurso no encontrado con ID: " + recursoId));
@@ -57,6 +62,7 @@ public class TurnoService {
      * Obtiene turnos en un período
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.TURNO_VER + "')")
     public List<Turno> findTurnosEnPeriodo(LocalDateTime desde, LocalDateTime hasta) {
         return turnoRepository.findTurnosEnPeriodo(desde, hasta);
     }
@@ -64,6 +70,7 @@ public class TurnoService {
     /**
      * Reserva un nuevo turno
      */
+    @PreAuthorize("hasAuthority('" + Authorities.TURNO_ASIGNAR + "')")
     public Turno reservarTurno(Long titularId, TipoTurno tipo, LocalDateTime inicio, LocalDateTime fin, Long recursoId, Long tramiteId) {
         Titular titular = titularService.findById(titularId)
                 .orElseThrow(() -> new IllegalArgumentException("Titular no encontrado con ID: " + titularId));
@@ -116,6 +123,7 @@ public class TurnoService {
     /**
      * Confirma un turno reservado
      */
+    @PreAuthorize("hasAuthority('" + Authorities.TURNO_REPROGRAMAR + "')")
     public Turno confirmarTurno(Long turnoId) {
         Turno turno = turnoRepository.findById(turnoId)
                 .orElseThrow(() -> new IllegalArgumentException("Turno no encontrado con ID: " + turnoId));
@@ -137,6 +145,7 @@ public class TurnoService {
     /**
      * Completa un turno
      */
+    @PreAuthorize("hasAuthority('" + Authorities.TURNO_REPROGRAMAR + "')")
     public Turno completarTurno(Long turnoId, String observaciones) {
         Turno turno = turnoRepository.findById(turnoId)
                 .orElseThrow(() -> new IllegalArgumentException("Turno no encontrado con ID: " + turnoId));
@@ -158,6 +167,7 @@ public class TurnoService {
     /**
      * Cancela un turno
      */
+    @PreAuthorize("hasAuthority('" + Authorities.TURNO_CANCELAR + "')")
     public Turno cancelarTurno(Long turnoId, String motivo) {
         Turno turno = turnoRepository.findById(turnoId)
                 .orElseThrow(() -> new IllegalArgumentException("Turno no encontrado con ID: " + turnoId));
@@ -175,6 +185,7 @@ public class TurnoService {
     /**
      * Marca un turno como ausente
      */
+    @PreAuthorize("hasAuthority('" + Authorities.TURNO_REPROGRAMAR + "')")
     public Turno marcarAusente(Long turnoId) {
         Turno turno = turnoRepository.findById(turnoId)
                 .orElseThrow(() -> new IllegalArgumentException("Turno no encontrado con ID: " + turnoId));
@@ -192,6 +203,7 @@ public class TurnoService {
     /**
      * Asigna un profesional a un turno
      */
+    @PreAuthorize("hasAuthority('" + Authorities.TURNO_REPROGRAMAR + "')")
     public Turno asignarProfesional(Long turnoId, String profesional) {
         Turno turno = turnoRepository.findById(turnoId)
                 .orElseThrow(() -> new IllegalArgumentException("Turno no encontrado con ID: " + turnoId));
@@ -206,6 +218,7 @@ public class TurnoService {
      * Obtiene turnos disponibles para un tipo de recurso en un período
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAnyAuthority('" + Authorities.TURNO_VER + "', '" + Authorities.TURNO_ASIGNAR + "')")
     public List<LocalDateTime> getHorariosDisponibles(TipoRecurso tipoRecurso, LocalDateTime desde, LocalDateTime hasta, int duracionMinutos) {
         List<Recurso> recursos = recursoRepository.findRecursosActivosPorTipo(tipoRecurso);
         
@@ -223,6 +236,7 @@ public class TurnoService {
      * Obtiene turnos de un profesional en un período
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.TURNO_VER + "')")
     public List<Turno> getTurnosByProfesionalEnPeriodo(String profesional, LocalDateTime desde, LocalDateTime hasta) {
         return turnoRepository.findTurnosByProfesionalEnPeriodo(profesional, desde, hasta);
     }
@@ -231,6 +245,7 @@ public class TurnoService {
      * Obtiene estadísticas de turnos por estado en un período
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.TURNO_VER + "')")
     public Long getCountByEstadoEnPeriodo(EstadoTurno estado, LocalDateTime desde, LocalDateTime hasta) {
         return turnoRepository.countByEstadoEnPeriodo(estado, desde, hasta);
     }
@@ -239,6 +254,7 @@ public class TurnoService {
      * Verifica si un titular puede reservar un turno
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.TURNO_ASIGNAR + "')")
     public boolean puedeReservarTurno(Long titularId, TipoTurno tipo) {
         // Verificar que el titular pueda iniciar trámites (sin inhabilitaciones)
         return titularService.puedeIniciarTramite(titularId);
@@ -248,6 +264,7 @@ public class TurnoService {
      * Obtiene los próximos turnos de un titular
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.TURNO_VER + "')")
     public List<Turno> getProximosTurnos(Long titularId) {
         Titular titular = titularService.findById(titularId)
                 .orElseThrow(() -> new IllegalArgumentException("Titular no encontrado con ID: " + titularId));

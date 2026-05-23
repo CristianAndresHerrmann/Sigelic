@@ -4,10 +4,12 @@ import com.example.sigelic.dto.response.LicenciaResponseDTO;
 import com.example.sigelic.mapper.LicenciaMapper;
 import com.example.sigelic.model.Licencia;
 import com.example.sigelic.model.Titular;
+import com.example.sigelic.security.Authorities;
 import com.example.sigelic.service.LicenciaService;
 import com.example.sigelic.service.TitularService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -35,6 +37,7 @@ public class LicenciaController {
      * Obtiene una licencia por ID
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('" + Authorities.LICENCIA_VER + "')")
     public ResponseEntity<LicenciaResponseDTO> obtenerLicenciaPorId(@PathVariable Long id) {
         Optional<Licencia> licenciaOpt = licenciaService.findById(id);
         if (licenciaOpt.isPresent()) {
@@ -48,6 +51,7 @@ public class LicenciaController {
      * Busca licencias por número
      */
     @GetMapping("/numero/{numero}")
+    @PreAuthorize("hasAuthority('" + Authorities.LICENCIA_VER + "')")
     public ResponseEntity<LicenciaResponseDTO> obtenerLicenciaPorNumero(@PathVariable String numero) {
         Optional<Licencia> licenciaOpt = licenciaService.findByNumero(numero);
         if (licenciaOpt.isPresent()) {
@@ -61,6 +65,7 @@ public class LicenciaController {
      * Obtiene licencias de un titular
      */
     @GetMapping("/titular/{titularId}")
+    @PreAuthorize("hasAuthority('" + Authorities.LICENCIA_VER + "')")
     public ResponseEntity<List<LicenciaResponseDTO>> obtenerLicenciasPorTitular(@PathVariable Long titularId) {
         Optional<Titular> titularOpt = titularService.findById(titularId);
         if (titularOpt.isPresent()) {
@@ -75,6 +80,7 @@ public class LicenciaController {
      * Obtiene licencias vigentes de un titular
      */
     @GetMapping("/titular/{titularId}/vigentes")
+    @PreAuthorize("hasAuthority('" + Authorities.LICENCIA_VER + "')")
     public ResponseEntity<List<LicenciaResponseDTO>> obtenerLicenciasVigentesPorTitular(@PathVariable Long titularId) {
         Optional<Titular> titularOpt = titularService.findById(titularId);
         if (titularOpt.isPresent()) {
@@ -89,6 +95,7 @@ public class LicenciaController {
      * Obtiene licencias próximas a vencer (30 días por defecto)
      */
     @GetMapping("/proximas-vencer")
+    @PreAuthorize("hasAuthority('" + Authorities.LICENCIA_VER + "')")
     public ResponseEntity<List<LicenciaResponseDTO>> obtenerLicenciasProximasAVencer(
             @RequestParam(defaultValue = "30") int dias) {
         
@@ -101,6 +108,7 @@ public class LicenciaController {
      * Obtiene licencias vencidas
      */
     @GetMapping("/vencidas")
+    @PreAuthorize("hasAuthority('" + Authorities.LICENCIA_VER + "')")
     public ResponseEntity<List<LicenciaResponseDTO>> obtenerLicenciasVencidas() {
         List<Licencia> licencias = licenciaService.getLicenciasVencidas();
         List<LicenciaResponseDTO> dtos = licenciaMapper.toResponseDTOList(licencias);
@@ -111,6 +119,7 @@ public class LicenciaController {
      * Suspende una licencia
      */
     @PatchMapping("/{id}/suspender")
+    @PreAuthorize("hasAuthority('" + Authorities.LICENCIA_GESTIONAR_ESTADO + "')")
     public ResponseEntity<LicenciaResponseDTO> suspenderLicencia(
             @PathVariable Long id,
             @RequestParam String motivo) {
@@ -128,6 +137,7 @@ public class LicenciaController {
      * Inhabilita una licencia
      */
     @PatchMapping("/{id}/inhabilitar")
+    @PreAuthorize("hasAuthority('" + Authorities.LICENCIA_GESTIONAR_ESTADO + "')")
     public ResponseEntity<LicenciaResponseDTO> inhabilitarLicencia(
             @PathVariable Long id,
             @RequestParam String motivo) {
@@ -145,6 +155,7 @@ public class LicenciaController {
      * Actualiza el domicilio en una licencia
      */
     @PatchMapping("/{id}/actualizar-domicilio")
+    @PreAuthorize("hasAuthority('" + Authorities.LICENCIA_EMITIR + "')")
     public ResponseEntity<LicenciaResponseDTO> actualizarDomicilio(
             @PathVariable Long id,
             @RequestParam String nuevoDomicilio) {
@@ -166,6 +177,7 @@ public class LicenciaController {
      * Ejecuta actualización masiva de licencias vencidas
      */
     @PostMapping("/actualizar-vencidas")
+    @PreAuthorize("hasAuthority('" + Authorities.PROCESO_VENCIMIENTOS_EJECUTAR + "')")
     public ResponseEntity<Void> actualizarLicenciasVencidas() {
         licenciaService.actualizarLicenciasVencidas();
         return ResponseEntity.ok().build();
@@ -175,6 +187,7 @@ public class LicenciaController {
      * Obtiene conteo de licencias emitidas en un período
      */
     @GetMapping("/contador/emitidas")
+    @PreAuthorize("hasAuthority('" + Authorities.LICENCIA_VER + "')")
     public ResponseEntity<Long> obtenerContadorLicenciasEmitidas(
             @RequestParam LocalDate desde,
             @RequestParam LocalDate hasta) {

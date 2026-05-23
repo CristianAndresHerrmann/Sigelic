@@ -18,8 +18,7 @@ public enum RolSistema {
         
         // Titulares
         Permiso.TITULAR_VER,
-        Permiso.TITULAR_CREAR,
-        Permiso.TITULAR_EDITAR,
+        Permiso.TITULAR_GESTIONAR,
         
         // Inhabilitaciones
         Permiso.INHABILITACION_GESTIONAR,
@@ -27,7 +26,7 @@ public enum RolSistema {
         // Trámites
         Permiso.TRAMITE_VER,
         Permiso.TRAMITE_INICIAR,
-        Permiso.TRAMITE_AVANZAR,
+        Permiso.TRAMITE_VALIDAR_DOCUMENTACION,
         Permiso.TRAMITE_RECHAZAR,
         
         // Turnos
@@ -46,10 +45,13 @@ public enum RolSistema {
         // Licencias
         Permiso.LICENCIA_VER,
         Permiso.LICENCIA_EMITIR,
+        Permiso.LICENCIA_GESTIONAR_ESTADO,
         Permiso.LICENCIA_REIMPRIMIR_PDF_QR,
         
         // Reportes
         Permiso.REPORTE_VER,
+        Permiso.EXAMEN_REINTENTO_AUTORIZAR,
+        Permiso.PROCESO_VENCIMIENTOS_EJECUTAR,
         
         // Overrides
         Permiso.OVERRIDE_TRANSICION_ESTADO,
@@ -60,10 +62,12 @@ public enum RolSistema {
         // Trámites
         Permiso.TRAMITE_VER,
         Permiso.TRAMITE_RECHAZAR,
-        Permiso.TRAMITE_AVANZAR,
+        Permiso.TRAMITE_VALIDAR_DOCUMENTACION,
         
         // Consultas
         Permiso.TITULAR_VER,
+        Permiso.TITULAR_GESTIONAR,
+        Permiso.INHABILITACION_GESTIONAR,
         Permiso.LICENCIA_VER,
         Permiso.EXAMEN_VER,
         Permiso.APTO_MEDICO_VER,
@@ -71,10 +75,15 @@ public enum RolSistema {
         
         // Turnos
         Permiso.TURNO_VER,
+        Permiso.TURNO_ASIGNAR,
+        Permiso.TURNO_REPROGRAMAR,
+        Permiso.TURNO_CANCELAR,
         
         // Reportes y auditoría
         Permiso.REPORTE_VER,
-        Permiso.AUDITORIA_VER
+        Permiso.AUDITORIA_VER,
+        Permiso.EXAMEN_REINTENTO_AUTORIZAR,
+        Permiso.LICENCIA_GESTIONAR_ESTADO
         
         // Override limitado se puede agregar según necesidad
         // Permiso.OVERRIDE_TRANSICION_ESTADO
@@ -83,13 +92,12 @@ public enum RolSistema {
     AGENTE("AGENTE", "Agente de ventanilla", Set.of(
         // Titulares
         Permiso.TITULAR_VER,
-        Permiso.TITULAR_CREAR,
-        Permiso.TITULAR_EDITAR,
+        Permiso.TITULAR_GESTIONAR,
         
         // Trámites
         Permiso.TRAMITE_VER,
         Permiso.TRAMITE_INICIAR,
-        Permiso.TRAMITE_AVANZAR,
+        Permiso.TRAMITE_VALIDAR_DOCUMENTACION,
         
         // Turnos
         Permiso.TURNO_VER,
@@ -132,6 +140,7 @@ public enum RolSistema {
         // Pagos
         Permiso.PAGO_ORDEN_GENERAR,
         Permiso.PAGO_ACREDITAR,
+        Permiso.PAGO_RECHAZAR,
         Permiso.PAGO_VER,
         
         // Consultas necesarias

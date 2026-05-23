@@ -2,6 +2,7 @@ package com.example.sigelic.views;
 
 import com.example.sigelic.model.ExamenTeorico;
 import com.example.sigelic.model.ExamenPractico;
+import com.example.sigelic.security.Authorities;
 import com.example.sigelic.service.ExamenService;
 import com.example.sigelic.service.TramiteService;
 import com.vaadin.flow.component.button.Button;
@@ -35,20 +36,22 @@ import java.util.List;
  */
 @Route(value = "examenes", layout = MainLayout.class)
 @PageTitle("Exámenes | SIGELIC")
-@RolesAllowed({"ADMINISTRADOR", "SUPERVISOR", "MEDICO", "EXAMINADOR"})
+@RolesAllowed({"ADMINISTRADOR", "SUPERVISOR", "EXAMINADOR"})
 public class ExamenesView extends VerticalLayout {
 
     private final ExamenService examenService;
     private final TramiteService tramiteService;
+    private final AuthorityChecker authorityChecker;
 
     private Grid<ExamenWrapper> grid;
     private TextField searchField;
     private ComboBox<String> tipoFilter;
     private ListDataProvider<ExamenWrapper> dataProvider;
 
-    public ExamenesView(ExamenService examenService, TramiteService tramiteService) {
+    public ExamenesView(ExamenService examenService, TramiteService tramiteService, AuthorityChecker authorityChecker) {
         this.examenService = examenService;
         this.tramiteService = tramiteService;
+        this.authorityChecker = authorityChecker;
         addClassName("examenes-view");
         setSizeFull();
 
@@ -68,7 +71,11 @@ public class ExamenesView extends VerticalLayout {
             // TODO: Implementar diálogo para nuevo examen
         });
 
-        HorizontalLayout header = new HorizontalLayout(title, addExamenButton);
+        HorizontalLayout header = new HorizontalLayout(title);
+        if (authorityChecker.has(Authorities.EXAMEN_TEO_REGISTRAR)
+                || authorityChecker.has(Authorities.EXAMEN_PRA_REGISTRAR)) {
+            header.add(addExamenButton);
+        }
         header.setAlignItems(Alignment.CENTER);
         header.setJustifyContentMode(JustifyContentMode.BETWEEN);
         header.setWidthFull();
@@ -125,7 +132,8 @@ public class ExamenesView extends VerticalLayout {
 
             // Solo para exámenes teóricos reprobados: permitir reintento
             if ("Teórico".equals(exam.getTipo()) && !exam.isAprobado() && 
-                exam.getTramite().getEstado() == com.example.sigelic.model.EstadoTramite.EX_TEO_RECHAZADO) {
+                exam.getTramite().getEstado() == com.example.sigelic.model.EstadoTramite.EX_TEO_RECHAZADO
+                    && authorityChecker.has(Authorities.EXAMEN_REINTENTO_AUTORIZAR)) {
                 
                 Button reintentoBtn = new Button("Reintento", new Icon(VaadinIcon.REFRESH));
                 reintentoBtn.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_SUCCESS);

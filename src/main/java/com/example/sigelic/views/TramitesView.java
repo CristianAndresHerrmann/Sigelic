@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.example.sigelic.model.EstadoTramite;
 import com.example.sigelic.model.Tramite;
+import com.example.sigelic.security.Authorities;
 import com.example.sigelic.service.LicenciaService;
 import com.example.sigelic.service.PagoService;
 import com.example.sigelic.service.TitularService;
@@ -43,22 +44,25 @@ import jakarta.annotation.security.RolesAllowed;
  */
 @Route(value = "tramites", layout = MainLayout.class)
 @PageTitle("Trámites | SIGELIC")
-@RolesAllowed({"ADMINISTRADOR", "SUPERVISOR", "AGENTE", "EXAMINADOR", "CAJERO"})
+@RolesAllowed({"ADMINISTRADOR", "SUPERVISOR", "AGENTE", "MEDICO", "EXAMINADOR", "CAJERO"})
 public class TramitesView extends VerticalLayout {
 
     private final TramiteService tramiteService;
     private final TitularService titularService;
     private final LicenciaService licenciaService;
     private final PagoService pagoService;
+    private final AuthorityChecker authorityChecker;
     private Grid<Tramite> grid;
     private ListDataProvider<Tramite> dataProvider;
     private TextField searchField;
 
-    public TramitesView(TramiteService tramiteService, TitularService titularService, LicenciaService licenciaService, PagoService pagoService) {
+    public TramitesView(TramiteService tramiteService, TitularService titularService, LicenciaService licenciaService,
+            PagoService pagoService, AuthorityChecker authorityChecker) {
         this.tramiteService = tramiteService;
         this.titularService = titularService;
         this.licenciaService = licenciaService;
         this.pagoService = pagoService;
+        this.authorityChecker = authorityChecker;
         addClassName("tramites-view");
         setSizeFull();
 
@@ -76,7 +80,10 @@ public class TramitesView extends VerticalLayout {
         addTramiteButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         addTramiteButton.addClickListener(e -> openNuevoTramiteDialog());
 
-        HorizontalLayout header = new HorizontalLayout(title, addTramiteButton);
+        HorizontalLayout header = new HorizontalLayout(title);
+        if (authorityChecker.has(Authorities.TRAMITE_INICIAR)) {
+            header.add(addTramiteButton);
+        }
         header.setAlignItems(Alignment.CENTER);
         header.setJustifyContentMode(JustifyContentMode.BETWEEN);
         header.setWidthFull();
@@ -160,7 +167,8 @@ public class TramitesView extends VerticalLayout {
             acciones.setSpacing(true);
 
             // Botón para validar documentación (solo si está en INICIADO)
-            if (tramite.getEstado() == EstadoTramite.INICIADO) {
+            if (tramite.getEstado() == EstadoTramite.INICIADO
+                    && authorityChecker.has(Authorities.TRAMITE_VALIDAR_DOCUMENTACION)) {
                 Button validarDocsBtn = new Button("Validar Docs", new Icon(VaadinIcon.CHECK));
                 validarDocsBtn.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_SUCCESS);
                 validarDocsBtn.setTooltipText("Validar documentación presentada");
@@ -169,7 +177,8 @@ public class TramitesView extends VerticalLayout {
             }
 
             // Botón para apto médico (solo si está en DOCS_OK y requiere apto médico)
-            if (tramite.getEstado() == EstadoTramite.DOCS_OK && tramite.requiereAptoMedico()) {
+            if (tramite.getEstado() == EstadoTramite.DOCS_OK && tramite.requiereAptoMedico()
+                    && authorityChecker.has(Authorities.APTO_MEDICO_REGISTRAR)) {
                 Button aptoMedicoBtn = new Button("Apto Médico", new Icon(VaadinIcon.STETHOSCOPE));
                 aptoMedicoBtn.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_PRIMARY);
                 aptoMedicoBtn.setTooltipText("Registrar examen médico");
@@ -181,7 +190,8 @@ public class TramitesView extends VerticalLayout {
             // O si está en EX_TEO_RECHAZADO (permite reintento)
             if ((tramite.getEstado() == EstadoTramite.APTO_MED || 
                  tramite.getEstado() == EstadoTramite.EX_TEO_RECHAZADO) && 
-                tramite.requiereExamenTeorico()) {
+                tramite.requiereExamenTeorico()
+                    && authorityChecker.has(Authorities.EXAMEN_TEO_REGISTRAR)) {
                 Button examenTeoricoBtn = new Button("Ex. Teórico", new Icon(VaadinIcon.BOOK));
                 examenTeoricoBtn.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_SUCCESS);
                 examenTeoricoBtn.setTooltipText("Registrar examen teórico");
@@ -199,7 +209,9 @@ public class TramitesView extends VerticalLayout {
                 examenPracticoBtn.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_SUCCESS);
                 examenPracticoBtn.setTooltipText("Registrar examen práctico");
                 examenPracticoBtn.addClickListener(e -> abrirDialogoExamenPractico(tramite));
-                acciones.add(examenPracticoBtn);
+                if (authorityChecker.has(Authorities.EXAMEN_PRA_REGISTRAR)) {
+                    acciones.add(examenPracticoBtn);
+                }
             }
 
             // Botón para pago (si está en EX_PRA_OK o cualquier estado que permita pago)
@@ -210,11 +222,14 @@ public class TramitesView extends VerticalLayout {
                 pagoBtn.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_PRIMARY);
                 pagoBtn.setTooltipText("Registrar pago");
                 pagoBtn.addClickListener(e -> abrirDialogoPago(tramite));
-                acciones.add(pagoBtn);
+                if (authorityChecker.has(Authorities.PAGO_ACREDITAR)) {
+                    acciones.add(pagoBtn);
+                }
             }
 
             // Botón para emitir licencia (si está en PAGO_OK)
-            if (tramite.getEstado() == EstadoTramite.PAGO_OK) {
+            if (tramite.getEstado() == EstadoTramite.PAGO_OK
+                    && authorityChecker.has(Authorities.LICENCIA_EMITIR)) {
                 Button emitirBtn = new Button("Emitir", new Icon(VaadinIcon.DIPLOMA));
                 emitirBtn.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_SUCCESS);
                 emitirBtn.setTooltipText("Emitir licencia");
@@ -226,7 +241,8 @@ public class TramitesView extends VerticalLayout {
             // EXCLUIR exámenes reprobados que ya tienen su botón específico de reintento
             if (tramite.getEstado().esRechazo() && tramite.getEstado().permiteReintento() &&
                 tramite.getEstado() != EstadoTramite.EX_TEO_RECHAZADO &&
-                tramite.getEstado() != EstadoTramite.EX_PRA_RECHAZADO) {
+                tramite.getEstado() != EstadoTramite.EX_PRA_RECHAZADO
+                    && authorityChecker.has(Authorities.EXAMEN_REINTENTO_AUTORIZAR)) {
                 Button reintentoBtn = new Button("Permitir Reintento", new Icon(VaadinIcon.REFRESH));
                 reintentoBtn.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_SUCCESS);
                 reintentoBtn.setTooltipText("Permitir reintento del trámite");
@@ -288,7 +304,8 @@ public class TramitesView extends VerticalLayout {
     }
 
     private void verDetalleTramite(Tramite tramite) {
-        DetalleTramiteDialog dialog = new DetalleTramiteDialog(tramiteService, tramite);
+        DetalleTramiteDialog dialog = new DetalleTramiteDialog(
+                tramiteService, tramite, authorityChecker.has(Authorities.APTO_MEDICO_VER));
         dialog.open();
     }
 

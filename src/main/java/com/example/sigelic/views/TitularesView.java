@@ -4,11 +4,13 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import com.example.sigelic.model.Titular;
+import com.example.sigelic.security.Authorities;
 import com.example.sigelic.service.TitularService;
 import com.example.sigelic.views.dialog.EditarTitularDialog;
 import com.example.sigelic.views.dialog.NuevoTitularDialog;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.H2;
@@ -37,12 +39,14 @@ import jakarta.annotation.security.RolesAllowed;
 public class TitularesView extends VerticalLayout {
 
     private final TitularService titularService;
+    private final AuthorityChecker authorityChecker;
     private Grid<Titular> grid;
     private ListDataProvider<Titular> dataProvider;
     private TextField searchField;
 
-    public TitularesView(TitularService titularService) {
+    public TitularesView(TitularService titularService, AuthorityChecker authorityChecker) {
         this.titularService = titularService;
+        this.authorityChecker = authorityChecker;
         addClassName("titulares-view");
         setSizeFull();
 
@@ -60,7 +64,10 @@ public class TitularesView extends VerticalLayout {
         addTitularButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         addTitularButton.addClickListener(e -> openNuevoTitularDialog());
 
-        HorizontalLayout header = new HorizontalLayout(title, addTitularButton);
+        HorizontalLayout header = new HorizontalLayout(title);
+        if (authorityChecker.has(Authorities.TITULAR_GESTIONAR)) {
+            header.add(addTitularButton);
+        }
         header.setAlignItems(Alignment.CENTER);
         header.setJustifyContentMode(JustifyContentMode.BETWEEN);
         header.setWidthFull();
@@ -191,12 +198,21 @@ public class TitularesView extends VerticalLayout {
             editButton.getElement().setAttribute("title", "Editar titular");
             editButton.addClickListener(e -> editTitular(titular));
 
-            HorizontalLayout actions = new HorizontalLayout(viewButton, editButton);
+            Button deleteButton = new Button(new Icon(VaadinIcon.TRASH));
+            deleteButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR, ButtonVariant.LUMO_SMALL);
+            deleteButton.getElement().setAttribute("aria-label", "Eliminar titular");
+            deleteButton.getElement().setAttribute("title", "Eliminar titular");
+            deleteButton.addClickListener(e -> confirmDeleteTitular(titular));
+
+            HorizontalLayout actions = new HorizontalLayout(viewButton);
+            if (authorityChecker.has(Authorities.TITULAR_GESTIONAR)) {
+                actions.add(editButton, deleteButton);
+            }
             actions.setSpacing(false);
             return actions;
         }))
         .setHeader("Acciones")
-        .setWidth("120px")
+        .setWidth("150px")
         .setFlexGrow(0);
 
         // Configurar selección
@@ -233,6 +249,29 @@ public class TitularesView extends VerticalLayout {
 
     private void editTitular(Titular titular) {
         EditarTitularDialog dialog = new EditarTitularDialog(titular, titularService, unused -> refreshGrid());
+        dialog.open();
+    }
+
+    private void confirmDeleteTitular(Titular titular) {
+        ConfirmDialog dialog = new ConfirmDialog();
+        dialog.setHeader("Confirmar eliminación");
+        dialog.setText("¿Está seguro que desea eliminar el titular "
+                + titular.getNombre() + " " + titular.getApellido()
+                + " (DNI: " + titular.getDni() + ")?");
+        dialog.setCancelable(true);
+        dialog.setConfirmText("Eliminar");
+        dialog.setConfirmButtonTheme("error primary");
+
+        dialog.addConfirmListener(e -> {
+            try {
+                titularService.delete(titular.getId());
+                showNotification("Titular eliminado exitosamente", NotificationVariant.LUMO_SUCCESS);
+                refreshGrid();
+            } catch (Exception ex) {
+                showNotification("Error al eliminar titular: " + ex.getMessage(), NotificationVariant.LUMO_ERROR);
+            }
+        });
+
         dialog.open();
     }
 

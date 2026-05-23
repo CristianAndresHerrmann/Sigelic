@@ -6,12 +6,14 @@ import com.example.sigelic.mapper.TurnoMapper;
 import com.example.sigelic.model.Turno;
 import com.example.sigelic.model.Titular;
 import com.example.sigelic.model.Tramite;
+import com.example.sigelic.security.Authorities;
 import com.example.sigelic.service.TurnoService;
 import com.example.sigelic.service.TitularService;
 import com.example.sigelic.service.TramiteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
@@ -43,6 +45,7 @@ public class TurnoController {
      * Obtiene un turno por ID
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('" + Authorities.TURNO_VER + "')")
     public ResponseEntity<TurnoResponseDTO> obtenerTurnoPorId(@PathVariable Long id) {
         Optional<Turno> turnoOpt = turnoService.findById(id);
         if (turnoOpt.isPresent()) {
@@ -56,6 +59,7 @@ public class TurnoController {
      * Crea un nuevo turno
      */
     @PostMapping
+    @PreAuthorize("hasAuthority('" + Authorities.TURNO_ASIGNAR + "')")
     public ResponseEntity<TurnoResponseDTO> crearTurno(@Valid @RequestBody TurnoRequestDTO turnoRequest) {
         // Obtener titular
         Optional<Titular> titularOpt = titularService.findById(turnoRequest.getTitularId());
@@ -91,6 +95,7 @@ public class TurnoController {
      * Actualiza un turno existente
      */
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('" + Authorities.TURNO_REPROGRAMAR + "')")
     public ResponseEntity<TurnoResponseDTO> actualizarTurno(
             @PathVariable Long id,
             @Valid @RequestBody TurnoRequestDTO turnoRequest) {
@@ -110,6 +115,7 @@ public class TurnoController {
      * Confirma la asistencia a un turno
      */
     @PatchMapping("/{id}/confirmar")
+    @PreAuthorize("hasAuthority('" + Authorities.TURNO_REPROGRAMAR + "')")
     public ResponseEntity<TurnoResponseDTO> confirmarTurno(@PathVariable Long id) {
         try {
             Turno turno = turnoService.confirmarTurno(id);
@@ -124,6 +130,7 @@ public class TurnoController {
      * Cancela un turno
      */
     @PatchMapping("/{id}/cancelar")
+    @PreAuthorize("hasAuthority('" + Authorities.TURNO_CANCELAR + "')")
     public ResponseEntity<TurnoResponseDTO> cancelarTurno(
             @PathVariable Long id,
             @RequestParam(required = false) String motivo) {
@@ -141,6 +148,7 @@ public class TurnoController {
      * Marca un turno como ausente
      */
     @PatchMapping("/{id}/ausente")
+    @PreAuthorize("hasAuthority('" + Authorities.TURNO_REPROGRAMAR + "')")
     public ResponseEntity<TurnoResponseDTO> marcarAusente(@PathVariable Long id) {
         try {
             Turno turno = turnoService.marcarAusente(id);
@@ -155,6 +163,7 @@ public class TurnoController {
      * Obtiene turnos de un titular
      */
     @GetMapping("/titular/{titularId}")
+    @PreAuthorize("hasAuthority('" + Authorities.TURNO_VER + "')")
     public ResponseEntity<List<TurnoResponseDTO>> obtenerTurnosPorTitular(@PathVariable Long titularId) {
         List<Turno> turnos = turnoService.findByTitular(titularId);
         List<TurnoResponseDTO> dtos = turnoMapper.toResponseDTOList(turnos);
@@ -165,6 +174,7 @@ public class TurnoController {
      * Obtiene turnos por fecha
      */
     @GetMapping("/fecha")
+    @PreAuthorize("hasAuthority('" + Authorities.TURNO_VER + "')")
     public ResponseEntity<List<TurnoResponseDTO>> obtenerTurnosPorFecha(
             @RequestParam LocalDateTime fechaDesde,
             @RequestParam LocalDateTime fechaHasta) {
@@ -178,6 +188,7 @@ public class TurnoController {
      * Obtiene turnos disponibles para una fecha específica
      */
     @GetMapping("/disponibles")
+    @PreAuthorize("hasAnyAuthority('" + Authorities.TURNO_VER + "', '" + Authorities.TURNO_ASIGNAR + "')")
     public ResponseEntity<List<LocalDateTime>> obtenerTurnosDisponibles(
             @RequestParam String tipoRecurso,
             @RequestParam LocalDateTime fechaDesde,
@@ -197,6 +208,7 @@ public class TurnoController {
      * Obtiene los próximos turnos de un titular
      */
     @GetMapping("/titular/{titularId}/proximos")
+    @PreAuthorize("hasAuthority('" + Authorities.TURNO_VER + "')")
     public ResponseEntity<List<TurnoResponseDTO>> obtenerProximosTurnos(@PathVariable Long titularId) {
         List<Turno> turnos = turnoService.getProximosTurnos(titularId);
         List<TurnoResponseDTO> dtos = turnoMapper.toResponseDTOList(turnos);
@@ -207,6 +219,7 @@ public class TurnoController {
      * Elimina un turno
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('" + Authorities.TURNO_CANCELAR + "')")
     public ResponseEntity<Void> eliminarTurno(@PathVariable Long id) {
         Optional<Turno> turnoOpt = turnoService.findById(id);
         if (turnoOpt.isPresent()) {

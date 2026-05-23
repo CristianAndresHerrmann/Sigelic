@@ -1,6 +1,7 @@
 package com.example.sigelic.config;
 
 import com.example.sigelic.service.CustomUserDetailsService;
+import com.example.sigelic.security.Authorities;
 import com.example.sigelic.views.LoginView;
 import com.vaadin.flow.spring.security.VaadinWebSecurity;
 import lombok.RequiredArgsConstructor;
@@ -46,44 +47,15 @@ public class SecurityConfig extends VaadinWebSecurity {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        // Configurar URLs públicas específicas para API
         http.authorizeHttpRequests(authz -> authz
-            // API endpoints específicos
             .requestMatchers("/api/auth/**").permitAll()
             .requestMatchers("/api/public/**").permitAll()
-            
-            // Endpoints de gestión de usuarios - requieren permisos específicos
-            .requestMatchers("/api/usuarios/**").hasAnyAuthority("USUARIOS_LEER", "USUARIOS_CREAR", "USUARIOS_EDITAR", "USUARIOS_ELIMINAR")
-            
-            // Endpoints de seguridad y auditoria
-            .requestMatchers("/api/seguridad/**").hasAuthority("SEGURIDAD_GESTIONAR_ROLES")
-            .requestMatchers("/api/auditoria/**").hasAuthority("AUDITORIA_ACCEDER_LOGS")
-            
-            // Endpoints de licencias
-            .requestMatchers("/api/licencias/crear").hasAuthority("LICENCIAS_CREAR")
-            .requestMatchers("/api/licencias/editar/**").hasAuthority("LICENCIAS_EDITAR")
-            .requestMatchers("/api/licencias/eliminar/**").hasAuthority("LICENCIAS_ELIMINAR")
-            .requestMatchers("/api/licencias/**").hasAnyAuthority("LICENCIAS_LEER", "LICENCIAS_CREAR", "LICENCIAS_EDITAR")
-            
-            // Endpoints de exámenes
-            .requestMatchers("/api/examenes/crear").hasAuthority("EXAMENES_CREAR")
-            .requestMatchers("/api/examenes/editar/**").hasAuthority("EXAMENES_EDITAR")
-            .requestMatchers("/api/examenes/calificar/**").hasAuthority("EXAMENES_CALIFICAR")
-            .requestMatchers("/api/examenes/**").hasAnyAuthority("EXAMENES_LEER", "EXAMENES_CREAR", "EXAMENES_EDITAR")
-            
-            // Endpoints de pagos
-            .requestMatchers("/api/pagos/procesar").hasAuthority("PAGOS_PROCESAR")
-            .requestMatchers("/api/pagos/reembolsar/**").hasAuthority("PAGOS_REEMBOLSAR")
-            .requestMatchers("/api/pagos/**").hasAnyAuthority("PAGOS_LEER", "PAGOS_PROCESAR")
-            
-            // Endpoints de reportes
-            .requestMatchers("/api/reportes/**").hasAuthority("REPORTES_GENERAR")
-            
-            // Actuator para monitoreo (solo administradores)
-            .requestMatchers("/actuator/**").hasAuthority("SISTEMA_CONFIGURAR")
-            
-            // Consola H2 (solo para desarrollo)
-            .requestMatchers("/h2-console/**").hasAuthority("SISTEMA_CONFIGURAR")
+            .requestMatchers("/api/usuarios/perfil", "/api/usuarios/cambiar-password").authenticated()
+            .requestMatchers("/api/usuarios/**").hasAuthority(Authorities.SEGURIDAD_GESTIONAR_ROLES)
+            .requestMatchers("/api/seguridad/**").hasAuthority(Authorities.SEGURIDAD_GESTIONAR_ROLES)
+            .requestMatchers("/api/auditoria/**").hasAuthority(Authorities.AUDITORIA_VER)
+            .requestMatchers("/api/**").authenticated()
+            .requestMatchers("/actuator/**", "/h2-console/**").hasAuthority(Authorities.PARAMETROS_EDITAR)
         );
 
         // Configuración de headers de seguridad

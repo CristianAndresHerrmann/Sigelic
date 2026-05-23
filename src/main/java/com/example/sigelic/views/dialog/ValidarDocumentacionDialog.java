@@ -176,7 +176,7 @@ public class ValidarDocumentacionDialog extends Dialog {
                 return;
             }
 
-            tramiteService.rechazarTramite(tramite.getId(), "Documentación rechazada: " + observaciones.trim());
+            tramiteService.rechazarDocumentacion(tramite.getId(), "Documentación rechazada: " + observaciones.trim());
             
             showNotification("Trámite rechazado por documentación incompleta", NotificationVariant.LUMO_ERROR);
             onSuccess.accept(null);

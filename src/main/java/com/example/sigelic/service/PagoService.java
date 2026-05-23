@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.sigelic.model.ClaseLicencia;
@@ -18,6 +19,7 @@ import com.example.sigelic.model.TipoTramite;
 import com.example.sigelic.model.Tramite;
 import com.example.sigelic.repository.CostoTramiteRepository;
 import com.example.sigelic.repository.PagoRepository;
+import com.example.sigelic.security.Authorities;
 import com.example.sigelic.util.ComprobanteNumberGenerator;
 
 import lombok.RequiredArgsConstructor;
@@ -40,6 +42,7 @@ public class PagoService {
      * Busca un pago por ID
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.PAGO_VER + "')")
     public Optional<Pago> findById(Long id) {
         return pagoRepository.findById(id);
     }
@@ -48,6 +51,7 @@ public class PagoService {
      * Obtiene todos los pagos
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.PAGO_VER + "')")
     public List<Pago> findAll() {
         return pagoRepository.findAllWithDetails();
     }
@@ -56,6 +60,7 @@ public class PagoService {
      * Obtiene pagos por trámite
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.PAGO_VER + "')")
     public List<Pago> findByTramite(Tramite tramite) {
         return pagoRepository.findByTramite(tramite);
     }
@@ -64,6 +69,7 @@ public class PagoService {
      * Obtiene pagos por estado
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.PAGO_VER + "')")
     public List<Pago> findByEstado(EstadoPago estado) {
         return pagoRepository.findByEstado(estado);
     }
@@ -71,6 +77,7 @@ public class PagoService {
     /**
      * Crea una orden de pago para un trámite
      */
+    @PreAuthorize("hasAuthority('" + Authorities.PAGO_ORDEN_GENERAR + "')")
     public Pago crearOrdenPago(Tramite tramite, MedioPago medio) {
         // Verificar que no exista una orden de pago pendiente
         Optional<Pago> pagoExistente = pagoRepository.findByTramiteAndEstado(tramite, EstadoPago.PENDIENTE);
@@ -101,6 +108,7 @@ public class PagoService {
     /**
      * Acredita un pago con número de comprobante manual
      */
+    @PreAuthorize("hasAuthority('" + Authorities.PAGO_ACREDITAR + "')")
     public Pago acreditarPago(Long pagoId, String numeroComprobante, String cajero) {
         Pago pago = pagoRepository.findById(pagoId)
                 .orElseThrow(() -> new IllegalArgumentException("Pago no encontrado con ID: " + pagoId));
@@ -125,6 +133,7 @@ public class PagoService {
     /**
      * Acredita un pago generando automáticamente el número de comprobante
      */
+    @PreAuthorize("hasAuthority('" + Authorities.PAGO_ACREDITAR + "')")
     public Pago acreditarPagoConComprobanteAutomatico(Long pagoId, String cajero) {
         String numeroComprobante = comprobanteGenerator.generarNumeroComprobante();
         return acreditarPago(pagoId, numeroComprobante, cajero);
@@ -133,6 +142,7 @@ public class PagoService {
     /**
      * Rechaza un pago
      */
+    @PreAuthorize("hasAuthority('" + Authorities.PAGO_RECHAZAR + "')")
     public Pago rechazarPago(Long pagoId, String motivo) {
         Pago pago = pagoRepository.findById(pagoId)
                 .orElseThrow(() -> new IllegalArgumentException("Pago no encontrado con ID: " + pagoId));
@@ -150,6 +160,7 @@ public class PagoService {
     /**
      * Procesa pagos vencidos
      */
+    @PreAuthorize("hasAuthority('" + Authorities.PROCESO_VENCIMIENTOS_EJECUTAR + "')")
     public void procesarPagosVencidos() {
         LocalDateTime fechaLimite = LocalDateTime.now();
         List<Pago> pagosVencidos = pagoRepository.findPagosVencidos(fechaLimite);
@@ -166,6 +177,7 @@ public class PagoService {
      * Busca un pago por número de transacción
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.PAGO_VER + "')")
     public Optional<Pago> findByNumeroTransaccion(String numeroTransaccion) {
         return pagoRepository.findByNumeroTransaccion(numeroTransaccion);
     }
@@ -174,6 +186,7 @@ public class PagoService {
      * Busca un pago por número de comprobante
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.PAGO_VER + "')")
     public Optional<Pago> findByNumeroComprobante(String numeroComprobante) {
         return pagoRepository.findByNumeroComprobante(numeroComprobante);
     }
@@ -182,6 +195,7 @@ public class PagoService {
      * Obtiene el monto total recaudado en un período
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.PAGO_VER + "')")
     public BigDecimal getRecaudacionEnPeriodo(LocalDateTime desde, LocalDateTime hasta) {
         BigDecimal total = pagoRepository.sumMontoAcreditadoEnPeriodo(desde, hasta);
         return total != null ? total : BigDecimal.ZERO;
@@ -191,6 +205,7 @@ public class PagoService {
      * Obtiene pagos acreditados en un período
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.PAGO_VER + "')")
     public List<Pago> getPagosAcreditadosEnPeriodo(LocalDateTime desde, LocalDateTime hasta) {
         return pagoRepository.findPagosAcreditadosEnPeriodo(desde, hasta);
     }
@@ -199,6 +214,7 @@ public class PagoService {
      * Obtiene estadísticas de pagos por medio en un período
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.PAGO_VER + "')")
     public Long getCountByMedioEnPeriodo(MedioPago medio, LocalDateTime desde, LocalDateTime hasta) {
         return pagoRepository.countByMedioEnPeriodo(medio, desde, hasta);
     }
@@ -207,6 +223,7 @@ public class PagoService {
      * Verifica si un trámite tiene pagos pendientes
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAnyAuthority('" + Authorities.PAGO_VER + "', '" + Authorities.PAGO_ORDEN_GENERAR + "', '" + Authorities.PAGO_ACREDITAR + "')")
     public boolean tienePagosPendientes(Tramite tramite) {
         Optional<Pago> pagoPendiente = pagoRepository.findByTramiteAndEstado(tramite, EstadoPago.PENDIENTE);
         return pagoPendiente.isPresent() && !pagoPendiente.get().isVencido();
@@ -216,6 +233,7 @@ public class PagoService {
      * Verifica si un trámite tiene pagos acreditados
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAnyAuthority('" + Authorities.PAGO_VER + "', '" + Authorities.PAGO_ACREDITAR + "')")
     public boolean tienePagosAcreditados(Tramite tramite) {
         Optional<Pago> pagoAcreditado = pagoRepository.findByTramiteAndEstado(tramite, EstadoPago.ACREDITADO);
         return pagoAcreditado.isPresent();
@@ -225,6 +243,7 @@ public class PagoService {
      * Obtiene el costo de un trámite
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAnyAuthority('" + Authorities.PAGO_ORDEN_GENERAR + "', '" + Authorities.PAGO_ACREDITAR + "')")
     public BigDecimal obtenerCostoTramite(TipoTramite tipo, ClaseLicencia clase) {
         Optional<CostoTramite> costo = costoTramiteRepository.findCostoVigente(tipo, clase, LocalDate.now());
         
@@ -239,6 +258,7 @@ public class PagoService {
     /**
      * Crea un pago manual (pago en caja) con número de comprobante manual
      */
+    @PreAuthorize("hasAuthority('" + Authorities.PAGO_ACREDITAR + "')")
     public Pago crearPagoManual(Tramite tramite, BigDecimal monto, String numeroComprobante, String cajero) {
         Pago pago = new Pago();
         pago.setTramite(tramite);
@@ -259,6 +279,7 @@ public class PagoService {
     /**
      * Crea un pago manual (pago en caja) generando automáticamente el número de comprobante
      */
+    @PreAuthorize("hasAuthority('" + Authorities.PAGO_ACREDITAR + "')")
     public Pago crearPagoManualConComprobanteAutomatico(Tramite tramite, BigDecimal monto, String cajero) {
         String numeroComprobante = comprobanteGenerator.generarNumeroComprobante();
         return crearPagoManual(tramite, monto, numeroComprobante, cajero);
@@ -267,6 +288,7 @@ public class PagoService {
     /**
      * Procesa un pago online
      */
+    @PreAuthorize("hasAuthority('" + Authorities.PAGO_ACREDITAR + "')")
     public Pago procesarPagoOnline(Long pagoId, String numeroTransaccionExterno, boolean exitoso) {
         Pago pago = pagoRepository.findById(pagoId)
                 .orElseThrow(() -> new IllegalArgumentException("Pago no encontrado con ID: " + pagoId));
@@ -312,6 +334,7 @@ public class PagoService {
      * Obtiene el total de pagos realizados en el día actual
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("isAuthenticated()")
     public double getTotalPagosDiarios() {
         LocalDateTime inicioDelDia = LocalDate.now().atStartOfDay();
         LocalDateTime finDelDia = inicioDelDia.plusDays(1).minusSeconds(1);
@@ -338,6 +361,7 @@ public class PagoService {
     /**
      * Obtiene una previsualización del siguiente número de comprobante que se asignará
      */
+    @PreAuthorize("hasAuthority('" + Authorities.PAGO_ACREDITAR + "')")
     public String previsualizarSiguienteComprobante() {
         return comprobanteGenerator.previsualizarSiguienteComprobante();
     }
@@ -345,6 +369,7 @@ public class PagoService {
     /**
      * Obtiene información sobre la secuencia actual de comprobantes
      */
+    @PreAuthorize("hasAuthority('" + Authorities.PAGO_ACREDITAR + "')")
     public String obtenerInfoSecuenciaActual() {
         return comprobanteGenerator.obtenerInfoEstado();
     }

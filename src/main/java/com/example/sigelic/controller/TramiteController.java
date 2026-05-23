@@ -7,6 +7,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -23,6 +24,7 @@ import com.example.sigelic.mapper.TramiteMapper;
 import com.example.sigelic.model.EstadoTramite;
 import com.example.sigelic.model.TipoTramite;
 import com.example.sigelic.model.Tramite;
+import com.example.sigelic.security.Authorities;
 import com.example.sigelic.service.TramiteService;
 
 import jakarta.validation.Valid;
@@ -45,6 +47,7 @@ public class TramiteController {
      * Obtiene un trámite por ID
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('" + Authorities.TRAMITE_VER + "')")
     public ResponseEntity<TramiteResponseDTO> obtenerTramitePorId(@PathVariable Long id) {
         Optional<Tramite> tramiteOpt = tramiteService.findById(id);
         if (tramiteOpt.isPresent()) {
@@ -58,6 +61,7 @@ public class TramiteController {
      * Inicia un nuevo trámite
      */
     @PostMapping
+    @PreAuthorize("hasAuthority('" + Authorities.TRAMITE_INICIAR + "')")
     public ResponseEntity<TramiteResponseDTO> iniciarTramite(@Valid @RequestBody TramiteRequestDTO tramiteRequest) {
         Tramite tramite = tramiteService.iniciarTramite(
             tramiteRequest.getTitularId(),
@@ -73,6 +77,7 @@ public class TramiteController {
      * Valida la documentación de un trámite
      */
     @PatchMapping("/{id}/validar-documentacion")
+    @PreAuthorize("hasAuthority('" + Authorities.TRAMITE_VALIDAR_DOCUMENTACION + "')")
     public ResponseEntity<TramiteResponseDTO> validarDocumentacion(
             @PathVariable Long id,
             @RequestParam String agente) {
@@ -86,6 +91,7 @@ public class TramiteController {
      * Rechaza un trámite
      */
     @PatchMapping("/{id}/rechazar")
+    @PreAuthorize("hasAuthority('" + Authorities.TRAMITE_RECHAZAR + "')")
     public ResponseEntity<TramiteResponseDTO> rechazarTramite(
             @PathVariable Long id,
             @RequestParam String motivo) {
@@ -99,6 +105,7 @@ public class TramiteController {
      * Rechaza el examen teórico de un trámite
      */
     @PatchMapping("/{id}/rechazar-examen-teorico")
+    @PreAuthorize("hasAuthority('" + Authorities.EXAMEN_TEO_REGISTRAR + "')")
     public ResponseEntity<TramiteResponseDTO> rechazarExamenTeorico(
             @PathVariable Long id,
             @RequestParam String motivo) {
@@ -112,6 +119,7 @@ public class TramiteController {
      * Permite el reintento para un trámite con examen teórico rechazado
      */
     @PatchMapping("/{id}/permitir-reintento")
+    @PreAuthorize("hasAuthority('" + Authorities.EXAMEN_REINTENTO_AUTORIZAR + "')")
     public ResponseEntity<TramiteResponseDTO> permitirReintento(
             @PathVariable Long id,
             @RequestParam String motivo) {
@@ -125,6 +133,7 @@ public class TramiteController {
      * Emite una licencia a partir de un trámite
      */
     @PostMapping("/{id}/emitir-licencia")
+    @PreAuthorize("hasAuthority('" + Authorities.LICENCIA_EMITIR + "')")
     public ResponseEntity<?> emitirLicencia(@PathVariable Long id) {
         try {
             tramiteService.emitirLicencia(id);
@@ -138,6 +147,7 @@ public class TramiteController {
      * Obtiene trámites por estado
      */
     @GetMapping("/estado/{estado}")
+    @PreAuthorize("hasAuthority('" + Authorities.TRAMITE_VER + "')")
     public ResponseEntity<List<TramiteResponseDTO>> obtenerTramitesPorEstado(@PathVariable EstadoTramite estado) {
         List<Tramite> tramites = tramiteService.findByEstado(estado);
         List<TramiteResponseDTO> dtos = tramiteMapper.toResponseDTOList(tramites);
@@ -148,6 +158,7 @@ public class TramiteController {
      * Obtiene trámites de un titular
      */
     @GetMapping("/titular/{titularId}")
+    @PreAuthorize("hasAuthority('" + Authorities.TRAMITE_VER + "')")
     public ResponseEntity<List<TramiteResponseDTO>> obtenerTramitesPorTitular(@PathVariable Long titularId) {
         List<Tramite> tramites = tramiteService.findByTitular(titularId);
         List<TramiteResponseDTO> dtos = tramiteMapper.toResponseDTOList(tramites);
@@ -158,6 +169,7 @@ public class TramiteController {
      * Obtiene el trámite activo de un titular
      */
     @GetMapping("/titular/{titularId}/activo")
+    @PreAuthorize("hasAuthority('" + Authorities.TRAMITE_VER + "')")
     public ResponseEntity<TramiteResponseDTO> obtenerTramiteActivoPorTitular(@PathVariable Long titularId) {
         Optional<Tramite> tramiteOpt = tramiteService.getTramiteActivo(titularId);
         if (tramiteOpt.isPresent()) {
@@ -171,6 +183,7 @@ public class TramiteController {
      * Obtiene conteo de trámites por estado
      */
     @GetMapping("/contador/estado/{estado}")
+    @PreAuthorize("hasAuthority('" + Authorities.TRAMITE_VER + "')")
     public ResponseEntity<Long> obtenerContadorPorEstado(@PathVariable EstadoTramite estado) {
         Long contador = tramiteService.getCountByEstado(estado);
         return ResponseEntity.ok(contador);
@@ -180,6 +193,7 @@ public class TramiteController {
      * Obtiene conteo de trámites por tipo en un período
      */
     @GetMapping("/contador/tipo/{tipo}")
+    @PreAuthorize("hasAuthority('" + Authorities.TRAMITE_VER + "')")
     public ResponseEntity<Long> obtenerContadorPorTipoEnPeriodo(
             @PathVariable TipoTramite tipo,
             @RequestParam LocalDateTime desde,

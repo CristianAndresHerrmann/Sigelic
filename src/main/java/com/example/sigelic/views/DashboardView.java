@@ -4,6 +4,7 @@ import com.example.sigelic.service.ExamenService;
 import com.example.sigelic.service.LicenciaService;
 import com.example.sigelic.service.PagoService;
 import com.example.sigelic.service.TramiteService;
+import com.example.sigelic.security.Authorities;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Paragraph;
@@ -28,17 +29,19 @@ import org.springframework.security.core.userdetails.UserDetails;
 public class DashboardView extends VerticalLayout {
 
     private final AuthenticationContext authContext;
+    private final AuthorityChecker authorityChecker;
     private final TramiteService tramiteService;
     private final LicenciaService licenciaService;
     private final ExamenService examenService;
     private final PagoService pagoService;
 
-    public DashboardView(AuthenticationContext authContext, 
+    public DashboardView(AuthenticationContext authContext, AuthorityChecker authorityChecker,
                         TramiteService tramiteService,
                         LicenciaService licenciaService,
                         ExamenService examenService,
                         PagoService pagoService) {
         this.authContext = authContext;
+        this.authorityChecker = authorityChecker;
         this.tramiteService = tramiteService;
         this.licenciaService = licenciaService;
         this.examenService = examenService;
@@ -126,7 +129,7 @@ public class DashboardView extends VerticalLayout {
 
         // Tarjetas de acciones rápidas basadas en permisos
         authContext.getAuthenticatedUser(UserDetails.class).ifPresent(user -> {
-            if (hasAuthority(user, "LICENCIAS_CREAR")) {
+            if (authorityChecker.has(Authorities.LICENCIA_EMITIR)) {
                 Div newLicenseCard = createActionCard(
                     "Nueva Licencia", 
                     "Iniciar proceso de emisión", 
@@ -136,7 +139,7 @@ public class DashboardView extends VerticalLayout {
                 actionsLayout.add(newLicenseCard);
             }
 
-            if (hasAuthority(user, "TRAMITES_LEER")) {
+            if (authorityChecker.has(Authorities.TRAMITE_VER)) {
                 Div viewTramitesCard = createActionCard(
                     "Ver Trámites", 
                     "Consultar estado de trámites", 
@@ -146,7 +149,7 @@ public class DashboardView extends VerticalLayout {
                 actionsLayout.add(viewTramitesCard);
             }
 
-            if (hasAuthority(user, "USUARIOS_LEER")) {
+            if (authorityChecker.has(Authorities.SEGURIDAD_GESTIONAR_ROLES)) {
                 Div usersCard = createActionCard(
                     "Gestionar Usuarios", 
                     "Administrar usuarios del sistema", 
@@ -156,7 +159,7 @@ public class DashboardView extends VerticalLayout {
                 actionsLayout.add(usersCard);
             }
 
-            if (hasAuthority(user, "REPORTES_GENERAR")) {
+            if (authorityChecker.has(Authorities.REPORTE_VER)) {
                 Div reportsCard = createActionCard(
                     "Generar Reportes", 
                     "Crear reportes del sistema", 
@@ -199,8 +202,4 @@ public class DashboardView extends VerticalLayout {
         return card;
     }
 
-    private boolean hasAuthority(UserDetails user, String authority) {
-        return user.getAuthorities().stream()
-                .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals(authority));
-    }
 }

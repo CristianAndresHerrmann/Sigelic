@@ -103,7 +103,7 @@ public class MainLayout extends AppLayout {
 
         // Gestión de Usuarios (solo para administradores y supervisores)
         authContext.getAuthenticatedUser(UserDetails.class).ifPresent(user -> {
-            if (hasAnyRole(user, "ADMINISTRADOR", "SUPERVISOR")) {
+            if (hasAnyRole(user, "ADMINISTRADOR")) {
                 nav.addItem(new SideNavItem("Usuarios", UsuariosView.class, VaadinIcon.USERS.create()));
             }
         });
@@ -124,14 +124,14 @@ public class MainLayout extends AppLayout {
 
         // Gestión de Trámites
         authContext.getAuthenticatedUser(UserDetails.class).ifPresent(user -> {
-            if (hasAnyRole(user, "ADMINISTRADOR", "SUPERVISOR", "AGENTE", "EXAMINADOR", "CAJERO")) {
+            if (hasAnyRole(user, "ADMINISTRADOR", "SUPERVISOR", "AGENTE", "MEDICO", "EXAMINADOR", "CAJERO")) {
                 nav.addItem(new SideNavItem("Trámites", TramitesView.class, VaadinIcon.CLIPBOARD_TEXT.create()));
             }
         });
 
         // Exámenes (solo para médicos y examinadores)
         authContext.getAuthenticatedUser(UserDetails.class).ifPresent(user -> {
-            if (hasAnyRole(user, "ADMINISTRADOR", "SUPERVISOR", "MEDICO", "EXAMINADOR")) {
+            if (hasAnyRole(user, "ADMINISTRADOR", "SUPERVISOR", "EXAMINADOR")) {
                 nav.addItem(new SideNavItem("Exámenes", ExamenesView.class, VaadinIcon.CLIPBOARD_CHECK.create()));
             }
         });

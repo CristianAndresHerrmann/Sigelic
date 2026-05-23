@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.sigelic.dto.request.AptoMedicoRequestDTO;
@@ -27,6 +28,7 @@ import com.example.sigelic.repository.ExamenPracticoRepository;
 import com.example.sigelic.repository.ExamenTeoricoRepository;
 import com.example.sigelic.repository.PagoRepository;
 import com.example.sigelic.repository.TramiteRepository;
+import com.example.sigelic.security.Authorities;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -52,6 +54,7 @@ public class TramiteService {
      * Busca un trámite por ID
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.TRAMITE_VER + "')")
     public Optional<Tramite> findById(Long id) {
         return tramiteRepository.findById(id);
     }
@@ -60,6 +63,7 @@ public class TramiteService {
      * Obtiene todos los trámites
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.TRAMITE_VER + "')")
     public List<Tramite> findAll() {
         return tramiteRepository.findAllWithTitular();
     }
@@ -68,6 +72,7 @@ public class TramiteService {
      * Obtiene todos los trámites de un titular
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.TRAMITE_VER + "')")
     public List<Tramite> findByTitular(Long titularId) {
         Titular titular = titularService.findById(titularId)
                 .orElseThrow(() -> new IllegalArgumentException("Titular no encontrado con ID: " + titularId));
@@ -78,6 +83,7 @@ public class TramiteService {
      * Obtiene trámites por estado
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.TRAMITE_VER + "')")
     public List<Tramite> findByEstado(EstadoTramite estado) {
         return tramiteRepository.findByEstado(estado);
     }
@@ -85,6 +91,7 @@ public class TramiteService {
     /**
      * Inicia un nuevo trámite
      */
+    @PreAuthorize("hasAuthority('" + Authorities.TRAMITE_INICIAR + "')")
     public Tramite iniciarTramite(Long titularId, TipoTramite tipo, ClaseLicencia clase) {
         Titular titular = titularService.findById(titularId)
                 .orElseThrow(() -> new IllegalArgumentException("Titular no encontrado con ID: " + titularId));
@@ -234,6 +241,7 @@ public class TramiteService {
     /**
      * Valida la documentación de un trámite
      */
+    @PreAuthorize("hasAuthority('" + Authorities.TRAMITE_VALIDAR_DOCUMENTACION + "')")
     public Tramite validarDocumentacion(Long tramiteId, String agenteResponsable) {
         Tramite tramite = tramiteRepository.findById(tramiteId)
                 .orElseThrow(() -> new IllegalArgumentException("Trámite no encontrado con ID: " + tramiteId));
@@ -253,6 +261,7 @@ public class TramiteService {
     /**
      * Valida la documentación de un trámite (versión simplificada)
      */
+    @PreAuthorize("hasAuthority('" + Authorities.TRAMITE_VALIDAR_DOCUMENTACION + "')")
     public Tramite validarDocumentacion(Long tramiteId) {
         return validarDocumentacion(tramiteId, "Sistema"); // Agente por defecto
     }
@@ -260,6 +269,7 @@ public class TramiteService {
     /**
      * Registra un examen teórico
      */
+    @PreAuthorize("hasAuthority('" + Authorities.EXAMEN_TEO_REGISTRAR + "')")
     public Tramite registrarExamenTeorico(Long tramiteId, ExamenTeorico examen) {
         Tramite tramite = tramiteRepository.findById(tramiteId)
                 .orElseThrow(() -> new IllegalArgumentException("Trámite no encontrado con ID: " + tramiteId));
@@ -289,6 +299,7 @@ public class TramiteService {
     /**
      * Registra un examen práctico
      */
+    @PreAuthorize("hasAuthority('" + Authorities.EXAMEN_PRA_REGISTRAR + "')")
     public Tramite registrarExamenPractico(Long tramiteId, ExamenPractico examen) {
         Tramite tramite = tramiteRepository.findById(tramiteId)
                 .orElseThrow(() -> new IllegalArgumentException("Trámite no encontrado con ID: " + tramiteId));
@@ -318,6 +329,7 @@ public class TramiteService {
     /**
      * Registra un apto médico
      */
+    @PreAuthorize("hasAuthority('" + Authorities.APTO_MEDICO_REGISTRAR + "')")
     public Tramite registrarAptoMedico(Long tramiteId, AptoMedico apto) {
         Tramite tramite = tramiteRepository.findById(tramiteId)
                 .orElseThrow(() -> new IllegalArgumentException("Trámite no encontrado con ID: " + tramiteId));
@@ -344,6 +356,7 @@ public class TramiteService {
     /**
      * Registra un pago
      */
+    @PreAuthorize("hasAuthority('" + Authorities.PAGO_ACREDITAR + "')")
     public Tramite registrarPago(Long tramiteId, Pago pago) {
         Tramite tramite = tramiteRepository.findById(tramiteId)
                 .orElseThrow(() -> new IllegalArgumentException("Trámite no encontrado con ID: " + tramiteId));
@@ -371,6 +384,7 @@ public class TramiteService {
     /**
      * Emite una licencia si todos los requisitos están cumplidos
      */
+    @PreAuthorize("hasAuthority('" + Authorities.LICENCIA_EMITIR + "')")
     public Licencia emitirLicencia(Long tramiteId) {
         Tramite tramite = tramiteRepository.findById(tramiteId)
                 .orElseThrow(() -> new IllegalArgumentException("Trámite no encontrado con ID: " + tramiteId));
@@ -394,6 +408,7 @@ public class TramiteService {
     /**
      * Rechaza un trámite (método genérico mantenido por compatibilidad)
      */
+    @PreAuthorize("hasAuthority('" + Authorities.TRAMITE_RECHAZAR + "')")
     public Tramite rechazarTramite(Long tramiteId, String motivo) {
         Tramite tramite = tramiteRepository.findById(tramiteId)
                 .orElseThrow(() -> new IllegalArgumentException("Trámite no encontrado con ID: " + tramiteId));
@@ -446,6 +461,7 @@ public class TramiteService {
     /**
      * Rechaza la documentación de un trámite
      */
+    @PreAuthorize("hasAuthority('" + Authorities.TRAMITE_VALIDAR_DOCUMENTACION + "')")
     public Tramite rechazarDocumentacion(Long tramiteId, String motivo) {
         Tramite tramite = tramiteRepository.findById(tramiteId)
                 .orElseThrow(() -> new IllegalArgumentException("Trámite no encontrado con ID: " + tramiteId));
@@ -464,6 +480,7 @@ public class TramiteService {
     /**
      * Rechaza el examen teórico de un trámite
      */
+    @PreAuthorize("hasAuthority('" + Authorities.EXAMEN_TEO_REGISTRAR + "')")
     public Tramite rechazarExamenTeorico(Long tramiteId, String motivo) {
         Tramite tramite = tramiteRepository.findById(tramiteId)
                 .orElseThrow(() -> new IllegalArgumentException("Trámite no encontrado con ID: " + tramiteId));
@@ -477,6 +494,7 @@ public class TramiteService {
     /**
      * Rechaza el examen práctico de un trámite
      */
+    @PreAuthorize("hasAuthority('" + Authorities.EXAMEN_PRA_REGISTRAR + "')")
     public Tramite rechazarExamenPractico(Long tramiteId, String motivo) {
         Tramite tramite = tramiteRepository.findById(tramiteId)
                 .orElseThrow(() -> new IllegalArgumentException("Trámite no encontrado con ID: " + tramiteId));
@@ -490,6 +508,7 @@ public class TramiteService {
     /**
      * Permite el reintento de un trámite rechazado
      */
+    @PreAuthorize("hasAuthority('" + Authorities.EXAMEN_REINTENTO_AUTORIZAR + "')")
     public Tramite permitirReintento(Long tramiteId, String motivo) {
         Tramite tramite = tramiteRepository.findById(tramiteId)
                 .orElseThrow(() -> new IllegalArgumentException("Trámite no encontrado con ID: " + tramiteId));
@@ -504,6 +523,7 @@ public class TramiteService {
      * Obtiene el trámite activo de un titular
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.TRAMITE_VER + "')")
     public Optional<Tramite> getTramiteActivo(Long titularId) {
         Titular titular = titularService.findById(titularId)
                 .orElseThrow(() -> new IllegalArgumentException("Titular no encontrado con ID: " + titularId));
@@ -520,6 +540,7 @@ public class TramiteService {
      * Obtiene estadísticas de trámites por período
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.TRAMITE_VER + "')")
     public Long getCountByTipoEnPeriodo(TipoTramite tipo, LocalDateTime desde, LocalDateTime hasta) {
         return tramiteRepository.countByTipoEnPeriodo(tipo, desde, hasta);
     }
@@ -528,6 +549,7 @@ public class TramiteService {
      * Obtiene estadísticas de trámites por estado
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.TRAMITE_VER + "')")
     public Long getCountByEstado(EstadoTramite estado) {
         return tramiteRepository.countByEstado(estado);
     }
@@ -536,6 +558,7 @@ public class TramiteService {
      * Cuenta los trámites activos (en progreso, pendientes)
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("isAuthenticated()")
     public long countTramitesActivos() {
         List<EstadoTramite> estadosActivos = Arrays.asList(
             EstadoTramite.INICIADO,
@@ -553,6 +576,7 @@ public class TramiteService {
     /**
      * Registra un apto médico usando DTO
      */
+    @PreAuthorize("hasAuthority('" + Authorities.APTO_MEDICO_REGISTRAR + "')")
     public AptoMedicoResponseDTO registrarAptoMedico(Long tramiteId, AptoMedicoRequestDTO request) {
         Tramite tramite = tramiteRepository.findById(tramiteId)
                 .orElseThrow(() -> new IllegalArgumentException("Trámite no encontrado con ID: " + tramiteId));
@@ -607,6 +631,7 @@ public class TramiteService {
      * Obtiene el apto médico de un trámite
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.APTO_MEDICO_VER + "')")
     public Optional<AptoMedicoResponseDTO> obtenerAptoMedico(Long tramiteId) {
         Tramite tramite = tramiteRepository.findById(tramiteId)
                 .orElseThrow(() -> new IllegalArgumentException("Trámite no encontrado con ID: " + tramiteId));
@@ -619,6 +644,7 @@ public class TramiteService {
      * Obtiene lista de aptos médicos próximos a vencer
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.APTO_MEDICO_VER + "')")
     public List<AptoMedicoResponseDTO> obtenerAptosProximosAVencer() {
         LocalDate desde = LocalDate.now();
         LocalDate hasta = LocalDate.now().plusDays(30);

@@ -2,6 +2,7 @@ package com.example.sigelic.views;
 
 import com.example.sigelic.model.Pago;
 import com.example.sigelic.model.EstadoPago;
+import com.example.sigelic.security.Authorities;
 import com.example.sigelic.service.PagoService;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -38,14 +39,16 @@ import java.util.Locale;
 public class PagosView extends VerticalLayout {
 
     private final PagoService pagoService;
+    private final AuthorityChecker authorityChecker;
     private Grid<Pago> grid;
     private TextField searchField;
     private ListDataProvider<Pago> dataProvider;
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     private static final NumberFormat CURRENCY_FORMAT = NumberFormat.getCurrencyInstance(Locale.of("es", "AR"));
 
-    public PagosView(PagoService pagoService) {
+    public PagosView(PagoService pagoService, AuthorityChecker authorityChecker) {
         this.pagoService = pagoService;
+        this.authorityChecker = authorityChecker;
         addClassName("pagos-view");
         setSizeFull();
 
@@ -65,7 +68,10 @@ public class PagosView extends VerticalLayout {
             // TODO: Implementar diálogo para registrar pago
         });
 
-        HorizontalLayout header = new HorizontalLayout(title, addPagoButton);
+        HorizontalLayout header = new HorizontalLayout(title);
+        if (authorityChecker.has(Authorities.PAGO_ACREDITAR)) {
+            header.add(addPagoButton);
+        }
         header.setAlignItems(Alignment.CENTER);
         header.setJustifyContentMode(JustifyContentMode.BETWEEN);
         header.setWidthFull();

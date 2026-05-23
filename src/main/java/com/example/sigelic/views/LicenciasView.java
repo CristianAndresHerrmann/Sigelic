@@ -4,6 +4,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import com.example.sigelic.model.Licencia;
+import com.example.sigelic.security.Authorities;
 import com.example.sigelic.service.LicenciaService;
 import com.example.sigelic.views.dialog.VerLicenciaDialog;
 import com.vaadin.flow.component.button.Button;
@@ -36,12 +37,14 @@ import jakarta.annotation.security.RolesAllowed;
 public class LicenciasView extends VerticalLayout {
 
     private final LicenciaService licenciaService;
+    private final AuthorityChecker authorityChecker;
     private Grid<Licencia> grid;
     private ListDataProvider<Licencia> dataProvider;
     private TextField searchField;
 
-    public LicenciasView(LicenciaService licenciaService) {
+    public LicenciasView(LicenciaService licenciaService, AuthorityChecker authorityChecker) {
         this.licenciaService = licenciaService;
+        this.authorityChecker = authorityChecker;
         addClassName("licencias-view");
         setSizeFull();
 
@@ -61,7 +64,10 @@ public class LicenciasView extends VerticalLayout {
             // TODO: Implementar diálogo para nueva licencia
         });
 
-        HorizontalLayout header = new HorizontalLayout(title, addLicenseButton);
+        HorizontalLayout header = new HorizontalLayout(title);
+        if (authorityChecker.has(Authorities.LICENCIA_EMITIR)) {
+            header.add(addLicenseButton);
+        }
         header.setAlignItems(Alignment.CENTER);
         header.setJustifyContentMode(JustifyContentMode.BETWEEN);
         header.setWidthFull();
@@ -151,7 +157,10 @@ public class LicenciasView extends VerticalLayout {
                 showNotification("Funcionalidad en desarrollo", NotificationVariant.LUMO_CONTRAST);
             });
 
-            actions.add(verButton, editButton);
+            actions.add(verButton);
+            if (authorityChecker.has(Authorities.LICENCIA_GESTIONAR_ESTADO)) {
+                actions.add(editButton);
+            }
             return actions;
         })).setHeader("Acciones").setWidth("120px").setFlexGrow(0);
 

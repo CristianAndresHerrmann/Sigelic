@@ -12,9 +12,12 @@ import java.util.Map;
 import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.example.sigelic.security.Authorities;
 
 @RestController
 @RequestMapping("/api/data")
@@ -24,6 +27,7 @@ public class DataController {
     private DataSource dataSource;
 
     @GetMapping("/titulares")
+    @PreAuthorize("hasAuthority('" + Authorities.TITULAR_VER + "')")
     public List<Map<String, Object>> getTitulares() {
         List<Map<String, Object>> titulares = new ArrayList<>();
         
@@ -53,6 +57,7 @@ public class DataController {
     }
 
     @GetMapping("/recursos")
+    @PreAuthorize("hasAuthority('" + Authorities.TURNO_VER + "')")
     public List<Map<String, Object>> getRecursos() {
         List<Map<String, Object>> recursos = new ArrayList<>();
         
@@ -80,6 +85,7 @@ public class DataController {
     }
 
     @GetMapping("/tramites")
+    @PreAuthorize("hasAuthority('" + Authorities.TRAMITE_VER + "')")
     public List<Map<String, Object>> getTramites() {
         List<Map<String, Object>> tramites = new ArrayList<>();
         

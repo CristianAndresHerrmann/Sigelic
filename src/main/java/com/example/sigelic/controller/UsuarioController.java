@@ -5,6 +5,7 @@ import com.example.sigelic.model.Permiso;
 import com.example.sigelic.model.RolSistema;
 import com.example.sigelic.model.Usuario;
 import com.example.sigelic.service.UsuarioService;
+import com.example.sigelic.security.Authorities;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +37,7 @@ public class UsuarioController {
      * Crear un nuevo usuario
      */
     @PostMapping
-    @PreAuthorize("hasAuthority('USUARIOS_CREAR')")
+    @PreAuthorize("hasAuthority('" + Authorities.SEGURIDAD_GESTIONAR_ROLES + "')")
     public ResponseEntity<UsuarioDTO> crearUsuario(
             @Valid @RequestBody CrearUsuarioDTO crearUsuarioDTO,
             Principal principal) {
@@ -64,7 +65,7 @@ public class UsuarioController {
      * Obtener todos los usuarios con paginación
      */
     @GetMapping
-    @PreAuthorize("hasAuthority('USUARIOS_LEER')")
+    @PreAuthorize("hasAuthority('" + Authorities.SEGURIDAD_GESTIONAR_ROLES + "')")
     public ResponseEntity<Page<UsuarioDTO>> obtenerUsuarios(
             Pageable pageable,
             @RequestParam(required = false) String busqueda,
@@ -91,7 +92,7 @@ public class UsuarioController {
      * Obtener usuario por ID
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('USUARIOS_LEER')")
+    @PreAuthorize("hasAuthority('" + Authorities.SEGURIDAD_GESTIONAR_ROLES + "')")
     public ResponseEntity<UsuarioDTO> obtenerUsuario(@PathVariable Long id) {
         Usuario usuario = usuarioService.obtenerUsuario(id);
         return ResponseEntity.ok(convertirADTO(usuario));
@@ -111,7 +112,7 @@ public class UsuarioController {
      * Actualizar usuario
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('USUARIOS_EDITAR')")
+    @PreAuthorize("hasAuthority('" + Authorities.SEGURIDAD_GESTIONAR_ROLES + "')")
     public ResponseEntity<UsuarioDTO> actualizarUsuario(
             @PathVariable Long id,
             @Valid @RequestBody ActualizarUsuarioDTO actualizarUsuarioDTO,
@@ -156,7 +157,7 @@ public class UsuarioController {
      * Eliminar usuario
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('USUARIOS_ELIMINAR')")
+    @PreAuthorize("hasAuthority('" + Authorities.SEGURIDAD_GESTIONAR_ROLES + "')")
     public ResponseEntity<Void> eliminarUsuario(@PathVariable Long id, Principal principal) {
         log.info("Eliminando usuario ID: {} por: {}", id, principal.getName());
         usuarioService.eliminarUsuario(id);
@@ -191,7 +192,7 @@ public class UsuarioController {
      * Resetear contraseña de un usuario (solo administradores)
      */
     @PostMapping("/{id}/resetear-password")
-    @PreAuthorize("hasAuthority('USUARIOS_RESETEAR_PASSWORD')")
+    @PreAuthorize("hasAuthority('" + Authorities.SEGURIDAD_GESTIONAR_ROLES + "')")
     public ResponseEntity<String> resetearPassword(@PathVariable Long id, Principal principal) {
         log.info("Reseteando contraseña para usuario ID: {} por: {}", id, principal.getName());
         
@@ -203,7 +204,7 @@ public class UsuarioController {
      * Activar usuario
      */
     @PostMapping("/{id}/activar")
-    @PreAuthorize("hasAuthority('USUARIOS_EDITAR')")
+    @PreAuthorize("hasAuthority('" + Authorities.SEGURIDAD_GESTIONAR_ROLES + "')")
     public ResponseEntity<UsuarioDTO> activarUsuario(@PathVariable Long id, Principal principal) {
         log.info("Activando usuario ID: {} por: {}", id, principal.getName());
         
@@ -215,7 +216,7 @@ public class UsuarioController {
      * Desactivar usuario
      */
     @PostMapping("/{id}/desactivar")
-    @PreAuthorize("hasAuthority('USUARIOS_EDITAR')")
+    @PreAuthorize("hasAuthority('" + Authorities.SEGURIDAD_GESTIONAR_ROLES + "')")
     public ResponseEntity<UsuarioDTO> desactivarUsuario(@PathVariable Long id, Principal principal) {
         log.info("Desactivando usuario ID: {} por: {}", id, principal.getName());
         
@@ -227,7 +228,7 @@ public class UsuarioController {
      * Bloquear cuenta de usuario
      */
     @PostMapping("/{id}/bloquear")
-    @PreAuthorize("hasAuthority('USUARIOS_BLOQUEAR')")
+    @PreAuthorize("hasAuthority('" + Authorities.SEGURIDAD_GESTIONAR_ROLES + "')")
     public ResponseEntity<UsuarioDTO> bloquearCuenta(@PathVariable Long id, Principal principal) {
         log.info("Bloqueando cuenta de usuario ID: {} por: {}", id, principal.getName());
         
@@ -239,7 +240,7 @@ public class UsuarioController {
      * Desbloquear cuenta de usuario
      */
     @PostMapping("/{id}/desbloquear")
-    @PreAuthorize("hasAuthority('USUARIOS_BLOQUEAR')")
+    @PreAuthorize("hasAuthority('" + Authorities.SEGURIDAD_GESTIONAR_ROLES + "')")
     public ResponseEntity<UsuarioDTO> desbloquearCuenta(@PathVariable Long id, Principal principal) {
         log.info("Desbloqueando cuenta de usuario ID: {} por: {}", id, principal.getName());
         
@@ -251,7 +252,7 @@ public class UsuarioController {
      * Obtener roles disponibles
      */
     @GetMapping("/roles")
-    @PreAuthorize("hasAuthority('USUARIOS_LEER')")
+    @PreAuthorize("hasAuthority('" + Authorities.SEGURIDAD_GESTIONAR_ROLES + "')")
     public ResponseEntity<List<RolSistema>> obtenerRoles() {
         List<RolSistema> roles = Arrays.asList(RolSistema.values());
         return ResponseEntity.ok(roles);
@@ -261,7 +262,7 @@ public class UsuarioController {
      * Obtener permisos de un rol
      */
     @GetMapping("/roles/{rol}/permisos")
-    @PreAuthorize("hasAuthority('SEGURIDAD_GESTIONAR_ROLES')")
+    @PreAuthorize("hasAuthority('" + Authorities.SEGURIDAD_GESTIONAR_ROLES + "')")
     public ResponseEntity<List<String>> obtenerPermisosRol(@PathVariable RolSistema rol) {
         List<String> permisos = rol.getPermisos().stream()
                 .map(Permiso::getAuthority)
@@ -273,7 +274,7 @@ public class UsuarioController {
      * Obtener usuarios inactivos para limpieza
      */
     @GetMapping("/inactivos")
-    @PreAuthorize("hasAuthority('AUDITORIA_ACCEDER_LOGS')")
+    @PreAuthorize("hasAuthority('" + Authorities.SEGURIDAD_GESTIONAR_ROLES + "')")
     public ResponseEntity<List<UsuarioDTO>> obtenerUsuariosInactivos(
             @RequestParam(defaultValue = "90") int diasInactividad) {
         

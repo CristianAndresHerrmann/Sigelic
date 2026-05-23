@@ -6,11 +6,13 @@ import com.example.sigelic.mapper.PagoMapper;
 import com.example.sigelic.model.Pago;
 import com.example.sigelic.model.Tramite;
 import com.example.sigelic.model.EstadoPago;
+import com.example.sigelic.security.Authorities;
 import com.example.sigelic.service.PagoService;
 import com.example.sigelic.service.TramiteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
@@ -39,6 +41,7 @@ public class PagoController {
      * Obtiene un pago por ID
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('" + Authorities.PAGO_VER + "')")
     public ResponseEntity<PagoResponseDTO> obtenerPagoPorId(@PathVariable Long id) {
         Optional<Pago> pagoOpt = pagoService.findById(id);
         if (pagoOpt.isPresent()) {
@@ -52,6 +55,7 @@ public class PagoController {
      * Crea una nueva orden de pago
      */
     @PostMapping
+    @PreAuthorize("hasAnyAuthority('" + Authorities.PAGO_ORDEN_GENERAR + "', '" + Authorities.PAGO_ACREDITAR + "')")
     public ResponseEntity<PagoResponseDTO> crearOrdenPago(@Valid @RequestBody PagoRequestDTO pagoRequest) {
         // Obtener trámite
         Optional<Tramite> tramiteOpt = tramiteService.findById(pagoRequest.getTramiteId());
@@ -85,6 +89,7 @@ public class PagoController {
      * Acredita un pago
      */
     @PatchMapping("/{id}/acreditar")
+    @PreAuthorize("hasAuthority('" + Authorities.PAGO_ACREDITAR + "')")
     public ResponseEntity<PagoResponseDTO> acreditarPago(
             @PathVariable Long id,
             @RequestParam(required = false) String numeroComprobante,
@@ -103,6 +108,7 @@ public class PagoController {
      * Rechaza un pago
      */
     @PatchMapping("/{id}/rechazar")
+    @PreAuthorize("hasAuthority('" + Authorities.PAGO_RECHAZAR + "')")
     public ResponseEntity<PagoResponseDTO> rechazarPago(
             @PathVariable Long id,
             @RequestParam String motivo) {
@@ -120,6 +126,7 @@ public class PagoController {
      * Obtiene pagos de un trámite
      */
     @GetMapping("/tramite/{tramiteId}")
+    @PreAuthorize("hasAuthority('" + Authorities.PAGO_VER + "')")
     public ResponseEntity<List<PagoResponseDTO>> obtenerPagosPorTramite(@PathVariable Long tramiteId) {
         Optional<Tramite> tramiteOpt = tramiteService.findById(tramiteId);
         if (tramiteOpt.isPresent()) {
@@ -134,6 +141,7 @@ public class PagoController {
      * Obtiene pagos por estado
      */
     @GetMapping("/estado/{estado}")
+    @PreAuthorize("hasAuthority('" + Authorities.PAGO_VER + "')")
     public ResponseEntity<List<PagoResponseDTO>> obtenerPagosPorEstado(@PathVariable EstadoPago estado) {
         List<Pago> pagos = pagoService.findByEstado(estado);
         List<PagoResponseDTO> dtos = pagoMapper.toResponseDTOList(pagos);
@@ -144,6 +152,7 @@ public class PagoController {
      * Obtiene pagos por fecha
      */
     @GetMapping("/fecha")
+    @PreAuthorize("hasAuthority('" + Authorities.PAGO_VER + "')")
     public ResponseEntity<List<PagoResponseDTO>> obtenerPagosPorFecha(
             @RequestParam LocalDateTime fechaDesde,
             @RequestParam LocalDateTime fechaHasta) {
@@ -157,6 +166,7 @@ public class PagoController {
      * Obtiene pagos vencidos
      */
     @GetMapping("/vencidos")
+    @PreAuthorize("hasAuthority('" + Authorities.PAGO_VER + "')")
     public ResponseEntity<List<PagoResponseDTO>> obtenerPagosVencidos() {
         List<Pago> pagos = pagoService.findByEstado(EstadoPago.VENCIDO);
         List<PagoResponseDTO> dtos = pagoMapper.toResponseDTOList(pagos);
@@ -167,6 +177,7 @@ public class PagoController {
      * Obtiene el resumen de pagos del mes actual
      */
     @GetMapping("/resumen/mes-actual")
+    @PreAuthorize("hasAuthority('" + Authorities.PAGO_VER + "')")
     public ResponseEntity<?> obtenerResumenPagosMesActual() {
         // Este endpoint podría devolver estadísticas de pagos del mes
         return ResponseEntity.ok().build();
@@ -176,6 +187,7 @@ public class PagoController {
      * Procesa pagos vencidos masivamente
      */
     @PostMapping("/procesar-vencidos")
+    @PreAuthorize("hasAuthority('" + Authorities.PROCESO_VENCIMIENTOS_EJECUTAR + "')")
     public ResponseEntity<Void> procesarPagosVencidos() {
         pagoService.procesarPagosVencidos();
         return ResponseEntity.ok().build();

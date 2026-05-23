@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.Random;
 
 import org.springframework.stereotype.Service;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.sigelic.model.ClaseLicencia;
@@ -16,6 +17,7 @@ import com.example.sigelic.model.TipoTramite;
 import com.example.sigelic.model.Titular;
 import com.example.sigelic.model.Tramite;
 import com.example.sigelic.repository.LicenciaRepository;
+import com.example.sigelic.security.Authorities;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +37,7 @@ public class LicenciaService {
      * Busca una licencia por ID
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.LICENCIA_VER + "')")
     public Optional<Licencia> findById(Long id) {
         return licenciaRepository.findById(id);
     }
@@ -43,6 +46,7 @@ public class LicenciaService {
      * Obtiene todas las licencias
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.LICENCIA_VER + "')")
     public List<Licencia> findAll() {
         try {
             log.info("Iniciando búsqueda de todas las licencias...");
@@ -59,6 +63,7 @@ public class LicenciaService {
      * Busca una licencia por número
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.LICENCIA_VER + "')")
     public Optional<Licencia> findByNumero(String numeroLicencia) {
         return licenciaRepository.findByNumeroLicencia(numeroLicencia);
     }
@@ -67,6 +72,7 @@ public class LicenciaService {
      * Obtiene todas las licencias de un titular
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.LICENCIA_VER + "')")
     public List<Licencia> findByTitular(Titular titular) {
         return licenciaRepository.findByTitular(titular);
     }
@@ -75,6 +81,7 @@ public class LicenciaService {
      * Obtiene las licencias vigentes de un titular
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.LICENCIA_VER + "')")
     public List<Licencia> findLicenciasVigentesByTitular(Titular titular) {
         return licenciaRepository.findLicenciasVigentesByTitular(titular);
     }
@@ -82,6 +89,7 @@ public class LicenciaService {
     /**
      * Emite una nueva licencia basada en un trámite
      */
+    @PreAuthorize("hasAuthority('" + Authorities.LICENCIA_EMITIR + "')")
     public Licencia emitirLicencia(Tramite tramite) {
         if (!tramite.todosLosRequisitosCumplidos()) {
             throw new IllegalStateException("No se puede emitir licencia sin cumplir todos los requisitos");
@@ -123,6 +131,7 @@ public class LicenciaService {
     /**
      * Renueva una licencia existente
      */
+    @PreAuthorize("hasAuthority('" + Authorities.LICENCIA_EMITIR + "')")
     public Licencia renovarLicencia(Licencia licenciaAnterior, Tramite tramite) {
         // Marcar la licencia anterior como duplicada
         licenciaAnterior.setEstado(EstadoLicencia.DUPLICADA);
@@ -135,6 +144,7 @@ public class LicenciaService {
     /**
      * Duplica una licencia (por pérdida, robo o deterioro)
      */
+    @PreAuthorize("hasAuthority('" + Authorities.LICENCIA_EMITIR + "')")
     public Licencia duplicarLicencia(Licencia licenciaOriginal, Tramite tramite) {
         if (licenciaOriginal.getEstado() != EstadoLicencia.VIGENTE) {
             throw new IllegalStateException("Solo se pueden duplicar licencias vigentes");
@@ -164,6 +174,7 @@ public class LicenciaService {
     /**
      * Actualiza el domicilio en una licencia (requiere reimpresión)
      */
+    @PreAuthorize("hasAuthority('" + Authorities.LICENCIA_EMITIR + "')")
     public Licencia actualizarDomicilio(Licencia licencia, String nuevoDomicilio) {
         if (licencia.getEstado() != EstadoLicencia.VIGENTE) {
             throw new IllegalStateException("Solo se puede actualizar el domicilio de licencias vigentes");
@@ -195,6 +206,7 @@ public class LicenciaService {
     /**
      * Suspende una licencia
      */
+    @PreAuthorize("hasAuthority('" + Authorities.LICENCIA_GESTIONAR_ESTADO + "')")
     public Licencia suspenderLicencia(Long licenciaId, String motivo) {
         Licencia licencia = licenciaRepository.findById(licenciaId)
                 .orElseThrow(() -> new IllegalArgumentException("Licencia no encontrada con ID: " + licenciaId));
@@ -214,6 +226,7 @@ public class LicenciaService {
     /**
      * Inhabilita una licencia
      */
+    @PreAuthorize("hasAuthority('" + Authorities.LICENCIA_GESTIONAR_ESTADO + "')")
     public Licencia inhabilitarLicencia(Long licenciaId, String motivo) {
         Licencia licencia = licenciaRepository.findById(licenciaId)
                 .orElseThrow(() -> new IllegalArgumentException("Licencia no encontrada con ID: " + licenciaId));
@@ -230,6 +243,7 @@ public class LicenciaService {
      * Obtiene licencias próximas a vencer
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.LICENCIA_VER + "')")
     public List<Licencia> getLicenciasProximasAVencer(int dias) {
         LocalDate hoy = LocalDate.now();
         LocalDate fechaLimite = hoy.plusDays(dias);
@@ -240,6 +254,7 @@ public class LicenciaService {
      * Obtiene licencias vencidas
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.LICENCIA_VER + "')")
     public List<Licencia> getLicenciasVencidas() {
         return licenciaRepository.findLicenciasVencidas(LocalDate.now());
     }
@@ -247,6 +262,7 @@ public class LicenciaService {
     /**
      * Actualiza el estado de licencias vencidas
      */
+    @PreAuthorize("hasAuthority('" + Authorities.PROCESO_VENCIMIENTOS_EJECUTAR + "')")
     public void actualizarLicenciasVencidas() {
         List<Licencia> licenciasVencidas = getLicenciasVencidas();
         for (Licencia licencia : licenciasVencidas) {
@@ -260,6 +276,7 @@ public class LicenciaService {
      * Obtiene estadísticas de licencias emitidas en un período
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.LICENCIA_VER + "')")
     public Long getCountLicenciasEmitidasEnPeriodo(LocalDate desde, LocalDate hasta) {
         return licenciaRepository.countLicenciasEmitidasEnPeriodo(desde, hasta);
     }
@@ -297,6 +314,7 @@ public class LicenciaService {
      * Cuenta las licencias emitidas actualmente vigentes
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("isAuthenticated()")
     public long countLicenciasEmitidas() {
         LocalDate hoy = LocalDate.now();
         return licenciaRepository.countByFechaVencimientoAfter(hoy);

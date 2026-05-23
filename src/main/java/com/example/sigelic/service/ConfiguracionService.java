@@ -2,9 +2,11 @@ package com.example.sigelic.service;
 
 import com.example.sigelic.model.Configuracion;
 import com.example.sigelic.repository.ConfiguracionRepository;
+import com.example.sigelic.security.Authorities;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -27,6 +29,7 @@ public class ConfiguracionService {
      * Obtiene todas las configuraciones
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.PARAMETROS_EDITAR + "')")
     public List<Configuracion> findAll() {
         log.debug("Obteniendo todas las configuraciones");
         return configuracionRepository.findAllOrderedByCategoriaAndClave();
@@ -36,6 +39,7 @@ public class ConfiguracionService {
      * Obtiene configuraciones por categoría
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.PARAMETROS_EDITAR + "')")
     public List<Configuracion> findByCategoria(String categoria) {
         log.debug("Obteniendo configuraciones de la categoría: {}", categoria);
         return configuracionRepository.findByCategoriaOrderByClave(categoria);
@@ -45,6 +49,7 @@ public class ConfiguracionService {
      * Obtiene una configuración por su clave
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.PARAMETROS_EDITAR + "')")
     public Optional<Configuracion> findByClave(String clave) {
         log.debug("Obteniendo configuración con clave: {}", clave);
         return configuracionRepository.findByClave(clave);
@@ -54,6 +59,7 @@ public class ConfiguracionService {
      * Obtiene el valor de una configuración por su clave
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.PARAMETROS_EDITAR + "')")
     public Optional<String> getValor(String clave) {
         log.debug("Obteniendo valor de configuración con clave: {}", clave);
         return configuracionRepository.findValorByClave(clave);
@@ -63,6 +69,7 @@ public class ConfiguracionService {
      * Obtiene el valor de una configuración como String con valor por defecto
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.PARAMETROS_EDITAR + "')")
     public String getValor(String clave, String valorPorDefecto) {
         return getValor(clave).orElse(valorPorDefecto);
     }
@@ -71,6 +78,7 @@ public class ConfiguracionService {
      * Obtiene el valor de una configuración como Integer
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.PARAMETROS_EDITAR + "')")
     public Optional<Integer> getValorComoInteger(String clave) {
         return findByClave(clave)
                 .map(Configuracion::getValorComoInteger);
@@ -80,6 +88,7 @@ public class ConfiguracionService {
      * Obtiene el valor de una configuración como Integer con valor por defecto
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.PARAMETROS_EDITAR + "')")
     public Integer getValorComoInteger(String clave, Integer valorPorDefecto) {
         return getValorComoInteger(clave).orElse(valorPorDefecto);
     }
@@ -88,6 +97,7 @@ public class ConfiguracionService {
      * Obtiene el valor de una configuración como Boolean
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.PARAMETROS_EDITAR + "')")
     public Optional<Boolean> getValorComoBoolean(String clave) {
         return findByClave(clave)
                 .map(Configuracion::getValorComoBoolean);
@@ -97,6 +107,7 @@ public class ConfiguracionService {
      * Obtiene el valor de una configuración como Boolean con valor por defecto
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.PARAMETROS_EDITAR + "')")
     public Boolean getValorComoBoolean(String clave, Boolean valorPorDefecto) {
         return getValorComoBoolean(clave).orElse(valorPorDefecto);
     }
@@ -104,6 +115,7 @@ public class ConfiguracionService {
     /**
      * Guarda o actualiza una configuración
      */
+    @PreAuthorize("hasAuthority('" + Authorities.PARAMETROS_EDITAR + "')")
     public Configuracion save(Configuracion configuracion) {
         log.info("Guardando configuración: {} = {}", configuracion.getClave(), configuracion.getValor());
         return configuracionRepository.save(configuracion);
@@ -112,6 +124,7 @@ public class ConfiguracionService {
     /**
      * Actualiza el valor de una configuración existente
      */
+    @PreAuthorize("hasAuthority('" + Authorities.PARAMETROS_EDITAR + "')")
     public Optional<Configuracion> actualizarValor(String clave, String nuevoValor, String usuario) {
         Optional<Configuracion> configOpt = findByClave(clave);
         
@@ -140,6 +153,7 @@ public class ConfiguracionService {
     /**
      * Actualiza múltiples configuraciones
      */
+    @PreAuthorize("hasAuthority('" + Authorities.PARAMETROS_EDITAR + "')")
     public void actualizarConfiguraciones(Map<String, String> configuraciones, String usuario) {
         log.info("Actualizando {} configuraciones por usuario '{}'", configuraciones.size(), usuario);
         
@@ -157,6 +171,7 @@ public class ConfiguracionService {
      * Obtiene todas las configuraciones modificables agrupadas por categoría
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.PARAMETROS_EDITAR + "')")
     public Map<String, List<Configuracion>> getConfiguracionesModificablesPorCategoria() {
         log.debug("Obteniendo configuraciones modificables agrupadas por categoría");
         

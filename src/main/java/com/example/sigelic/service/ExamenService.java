@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.sigelic.model.ExamenPractico;
@@ -13,6 +14,7 @@ import com.example.sigelic.model.ExamenTeorico;
 import com.example.sigelic.model.Tramite;
 import com.example.sigelic.repository.ExamenPracticoRepository;
 import com.example.sigelic.repository.ExamenTeoricoRepository;
+import com.example.sigelic.security.Authorities;
 
 /**
  * Servicio para gestión de exámenes teóricos y prácticos
@@ -33,6 +35,7 @@ public class ExamenService {
      * Obtiene todos los exámenes teóricos
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.EXAMEN_VER + "')")
     public List<ExamenTeorico> findAllTeoricos() {
         return examenTeoricoRepository.findAllWithTramite();
     }
@@ -41,6 +44,7 @@ public class ExamenService {
      * Obtiene todos los exámenes prácticos
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.EXAMEN_VER + "')")
     public List<ExamenPractico> findAllPracticos() {
         return examenPracticoRepository.findAllWithTramite();
     }
@@ -48,6 +52,7 @@ public class ExamenService {
     /**
      * Guarda un examen teórico
      */
+    @PreAuthorize("hasAuthority('" + Authorities.EXAMEN_TEO_REGISTRAR + "')")
     public ExamenTeorico saveExamenTeorico(ExamenTeorico examen) {
         return examenTeoricoRepository.save(examen);
     }
@@ -55,6 +60,7 @@ public class ExamenService {
     /**
      * Guarda un examen práctico
      */
+    @PreAuthorize("hasAuthority('" + Authorities.EXAMEN_PRA_REGISTRAR + "')")
     public ExamenPractico saveExamenPractico(ExamenPractico examen) {
         return examenPracticoRepository.save(examen);
     }
@@ -63,6 +69,7 @@ public class ExamenService {
      * Busca exámenes teóricos por trámite
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.EXAMEN_VER + "')")
     public List<ExamenTeorico> findTeoricosByTramite(Tramite tramite) {
         return examenTeoricoRepository.findByTramite(tramite);
     }
@@ -71,6 +78,7 @@ public class ExamenService {
      * Busca exámenes prácticos por trámite
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.EXAMEN_VER + "')")
     public List<ExamenPractico> findPracticosByTramite(Tramite tramite) {
         return examenPracticoRepository.findByTramite(tramite);
     }
@@ -79,6 +87,7 @@ public class ExamenService {
      * Busca exámenes teóricos por examinador
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.EXAMEN_VER + "')")
     public List<ExamenTeorico> findTeoricosByExaminador(String examinador) {
         return examenTeoricoRepository.findByExaminador(examinador);
     }
@@ -87,6 +96,7 @@ public class ExamenService {
      * Busca exámenes teóricos en un período
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.EXAMEN_VER + "')")
     public List<ExamenTeorico> findTeoricosByPeriodo(LocalDateTime desde, LocalDateTime hasta) {
         return examenTeoricoRepository.findExamenesEnPeriodo(desde, hasta);
     }
@@ -95,6 +105,7 @@ public class ExamenService {
      * Obtiene el último examen teórico aprobado para un trámite
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.EXAMEN_VER + "')")
     public Optional<ExamenTeorico> findUltimoTeoricoAprobado(Tramite tramite) {
         return examenTeoricoRepository.findUltimoExamenAprobado(tramite);
     }
@@ -103,6 +114,7 @@ public class ExamenService {
      * Calcula el promedio de puntajes en un período
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.EXAMEN_VER + "')")
     public Double calcularPromedioTeoricos(LocalDateTime desde, LocalDateTime hasta) {
         return examenTeoricoRepository.findPuntajePromedioEnPeriodo(desde, hasta);
     }
@@ -111,6 +123,7 @@ public class ExamenService {
      * Cuenta exámenes teóricos aprobados en un período
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.EXAMEN_VER + "')")
     public Long contarTeoricosAprobados(LocalDateTime desde, LocalDateTime hasta) {
         return examenTeoricoRepository.countAprobadosEnPeriodo(desde, hasta);
     }
@@ -119,6 +132,7 @@ public class ExamenService {
      * Cuenta todos los exámenes teóricos en un período
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.EXAMEN_VER + "')")
     public Long contarTeoricosTotal(LocalDateTime desde, LocalDateTime hasta) {
         return examenTeoricoRepository.countTotalEnPeriodo(desde, hasta);
     }
@@ -126,6 +140,7 @@ public class ExamenService {
     /**
      * Elimina un examen teórico
      */
+    @PreAuthorize("hasAuthority('" + Authorities.EXAMEN_TEO_REGISTRAR + "')")
     public void deleteExamenTeorico(Long id) {
         examenTeoricoRepository.deleteById(id);
     }
@@ -133,6 +148,7 @@ public class ExamenService {
     /**
      * Elimina un examen práctico
      */
+    @PreAuthorize("hasAuthority('" + Authorities.EXAMEN_PRA_REGISTRAR + "')")
     public void deleteExamenPractico(Long id) {
         examenPracticoRepository.deleteById(id);
     }
@@ -141,6 +157,7 @@ public class ExamenService {
      * Busca un examen teórico por ID
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.EXAMEN_VER + "')")
     public Optional<ExamenTeorico> findExamenTeoricoById(Long id) {
         return examenTeoricoRepository.findById(id);
     }
@@ -149,6 +166,7 @@ public class ExamenService {
      * Busca un examen práctico por ID
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.EXAMEN_VER + "')")
     public Optional<ExamenPractico> findExamenPracticoById(Long id) {
         return examenPracticoRepository.findById(id);
     }
@@ -157,6 +175,7 @@ public class ExamenService {
      * Cuenta los exámenes pendientes (no aprobados)
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("isAuthenticated()")
     public long countExamenesPendientes() {
         long teoricosPendientes = examenTeoricoRepository.countByAprobadoFalseOrNull();
         long practicosPendientes = examenPracticoRepository.countByAprobadoFalseOrNull();

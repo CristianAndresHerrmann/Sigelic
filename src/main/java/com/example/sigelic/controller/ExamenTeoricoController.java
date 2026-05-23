@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -23,6 +24,7 @@ import com.example.sigelic.mapper.ExamenTeoricoMapper;
 import com.example.sigelic.mapper.TramiteMapper;
 import com.example.sigelic.model.ExamenTeorico;
 import com.example.sigelic.model.Tramite;
+import com.example.sigelic.security.Authorities;
 import com.example.sigelic.service.ExamenService;
 import com.example.sigelic.service.TramiteService;
 
@@ -52,6 +54,7 @@ public class ExamenTeoricoController {
      * Registra un examen teórico para un trámite
      */
     @PostMapping("/tramite/{tramiteId}")
+    @PreAuthorize("hasAuthority('" + Authorities.EXAMEN_TEO_REGISTRAR + "')")
     public ResponseEntity<TramiteResponseDTO> registrarExamenTeorico(
             @PathVariable Long tramiteId,
             @Valid @RequestBody ExamenTeoricoRequestDTO request) {
@@ -70,6 +73,7 @@ public class ExamenTeoricoController {
      * Rechaza el examen teórico de un trámite
      */
     @PatchMapping("/tramite/{tramiteId}/rechazar")
+    @PreAuthorize("hasAuthority('" + Authorities.EXAMEN_TEO_REGISTRAR + "')")
     public ResponseEntity<TramiteResponseDTO> rechazarExamenTeorico(
             @PathVariable Long tramiteId,
             @RequestParam String motivo) {
@@ -87,6 +91,7 @@ public class ExamenTeoricoController {
      * Obtiene todos los exámenes teóricos
      */
     @GetMapping
+    @PreAuthorize("hasAuthority('" + Authorities.EXAMEN_VER + "')")
     public ResponseEntity<List<ExamenTeoricoResponseDTO>> obtenerTodosLosExamenes() {
         List<ExamenTeorico> examenes = examenService.findAllTeoricos();
         List<ExamenTeoricoResponseDTO> dtos = examenTeoricoMapper.toResponseDTOList(examenes);
@@ -97,6 +102,7 @@ public class ExamenTeoricoController {
      * Obtiene un examen teórico por ID
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('" + Authorities.EXAMEN_VER + "')")
     public ResponseEntity<ExamenTeoricoResponseDTO> obtenerExamenPorId(@PathVariable Long id) {
         Optional<ExamenTeorico> examenOpt = examenService.findExamenTeoricoById(id);
         if (examenOpt.isPresent()) {
@@ -110,6 +116,7 @@ public class ExamenTeoricoController {
      * Obtiene exámenes teóricos por trámite
      */
     @GetMapping("/tramite/{tramiteId}")
+    @PreAuthorize("hasAuthority('" + Authorities.EXAMEN_VER + "')")
     public ResponseEntity<List<ExamenTeoricoResponseDTO>> obtenerExamenesPorTramite(@PathVariable Long tramiteId) {
         try {
             Optional<Tramite> tramiteOpt = tramiteService.findById(tramiteId);
@@ -129,6 +136,7 @@ public class ExamenTeoricoController {
      * Obtiene exámenes teóricos por examinador
      */
     @GetMapping("/examinador/{examinador}")
+    @PreAuthorize("hasAuthority('" + Authorities.EXAMEN_VER + "')")
     public ResponseEntity<List<ExamenTeoricoResponseDTO>> obtenerExamenesPorExaminador(@PathVariable String examinador) {
         List<ExamenTeorico> examenes = examenService.findTeoricosByExaminador(examinador);
         List<ExamenTeoricoResponseDTO> dtos = examenTeoricoMapper.toResponseDTOList(examenes);

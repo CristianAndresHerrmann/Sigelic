@@ -9,12 +9,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import com.example.sigelic.security.Authorities;
 
 /**
  * Servicio para la gestión de usuarios del sistema
@@ -35,6 +37,7 @@ public class UsuarioService {
      * Busca un usuario por ID
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.SEGURIDAD_GESTIONAR_ROLES + "')")
     public Optional<Usuario> findById(Long id) {
         return usuarioRepository.findById(id);
     }
@@ -43,6 +46,7 @@ public class UsuarioService {
      * Busca un usuario por username
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.SEGURIDAD_GESTIONAR_ROLES + "')")
     public Optional<Usuario> findByUsername(String username) {
         return usuarioRepository.findByUsername(username);
     }
@@ -51,6 +55,7 @@ public class UsuarioService {
      * Busca un usuario por email
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.SEGURIDAD_GESTIONAR_ROLES + "')")
     public Optional<Usuario> findByEmail(String email) {
         return usuarioRepository.findByEmail(email);
     }
@@ -59,6 +64,7 @@ public class UsuarioService {
      * Obtiene todos los usuarios
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.SEGURIDAD_GESTIONAR_ROLES + "')")
     public List<Usuario> findAll() {
         return usuarioRepository.findAll();
     }
@@ -67,6 +73,7 @@ public class UsuarioService {
      * Obtiene usuarios activos
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.SEGURIDAD_GESTIONAR_ROLES + "')")
     public List<Usuario> findUsuariosActivos() {
         return usuarioRepository.findByActivoTrue();
     }
@@ -75,6 +82,7 @@ public class UsuarioService {
      * Busca usuarios por rol
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.SEGURIDAD_GESTIONAR_ROLES + "')")
     public List<Usuario> findByRol(RolSistema rol) {
         return usuarioRepository.findByRol(rol);
     }
@@ -82,7 +90,7 @@ public class UsuarioService {
     /**
      * Crea un nuevo usuario
      */
-    public Usuario crearUsuario(Usuario usuario) {
+    Usuario crearUsuario(Usuario usuario) {
         log.info("Creando nuevo usuario: {}", usuario.getUsername());
         
         // Validar que no exista el username
@@ -114,6 +122,7 @@ public class UsuarioService {
     /**
      * Actualiza un usuario existente
      */
+    @PreAuthorize("hasAuthority('" + Authorities.SEGURIDAD_GESTIONAR_ROLES + "')")
     public Usuario actualizarUsuario(Usuario usuario) {
         log.info("Actualizando usuario: {}", usuario.getUsername());
         
@@ -150,6 +159,7 @@ public class UsuarioService {
     /**
      * Cambia la contraseña de un usuario
      */
+    @PreAuthorize("hasAuthority('" + Authorities.SEGURIDAD_GESTIONAR_ROLES + "')")
     public void cambiarPassword(Long usuarioId, String passwordActual, String passwordNueva) {
         log.info("Cambiando contraseña para usuario ID: {}", usuarioId);
         
@@ -177,6 +187,7 @@ public class UsuarioService {
     /**
      * Resetea la contraseña de un usuario (solo para administradores)
      */
+    @PreAuthorize("hasAuthority('" + Authorities.SEGURIDAD_GESTIONAR_ROLES + "')")
     public String resetearPassword(Long usuarioId) {
         log.info("Reseteando contraseña para usuario ID: {}", usuarioId);
         
@@ -199,6 +210,7 @@ public class UsuarioService {
     /**
      * Activa o desactiva un usuario
      */
+    @PreAuthorize("hasAuthority('" + Authorities.SEGURIDAD_GESTIONAR_ROLES + "')")
     public Usuario cambiarEstadoActivo(Long usuarioId, boolean activo) {
         log.info("Cambiando estado activo del usuario ID: {} a {}", usuarioId, activo);
         
@@ -222,6 +234,7 @@ public class UsuarioService {
     /**
      * Bloquea o desbloquea una cuenta de usuario
      */
+    @PreAuthorize("hasAuthority('" + Authorities.SEGURIDAD_GESTIONAR_ROLES + "')")
     public Usuario cambiarBloqueo(Long usuarioId, boolean bloquear) {
         log.info("Cambiando bloqueo del usuario ID: {} a {}", usuarioId, bloquear);
         
@@ -245,6 +258,7 @@ public class UsuarioService {
     /**
      * Asigna un rol a un usuario
      */
+    @PreAuthorize("hasAuthority('" + Authorities.SEGURIDAD_GESTIONAR_ROLES + "')")
     public Usuario asignarRol(Long usuarioId, RolSistema rol) {
         log.info("Asignando rol al usuario ID: {}", usuarioId);
         
@@ -310,6 +324,7 @@ public class UsuarioService {
      * Obtiene usuarios inactivos (sin acceso reciente)
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.SEGURIDAD_GESTIONAR_ROLES + "')")
     public List<Usuario> getUsuariosInactivos() {
         LocalDateTime fechaLimite = LocalDateTime.now().minusDays(DIAS_INACTIVIDAD);
         return usuarioRepository.findUsuariosInactivos(fechaLimite);
@@ -319,6 +334,7 @@ public class UsuarioService {
      * Busca usuarios por término de búsqueda
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.SEGURIDAD_GESTIONAR_ROLES + "')")
     public List<Usuario> buscarUsuarios(String termino) {
         if (termino == null || termino.trim().isEmpty()) {
             return findAll();
@@ -330,6 +346,7 @@ public class UsuarioService {
      * Busca usuarios con paginación
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.SEGURIDAD_GESTIONAR_ROLES + "')")
     public Page<Usuario> buscarUsuarios(String termino, Pageable pageable) {
         if (termino == null || termino.trim().isEmpty()) {
             return usuarioRepository.findAll(pageable);
@@ -342,6 +359,7 @@ public class UsuarioService {
      * Obtiene todos los usuarios con paginación
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.SEGURIDAD_GESTIONAR_ROLES + "')")
     public Page<Usuario> obtenerTodosLosUsuarios(Pageable pageable) {
         return usuarioRepository.findAll(pageable);
     }
@@ -350,6 +368,7 @@ public class UsuarioService {
      * Obtiene usuarios por rol con paginación
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.SEGURIDAD_GESTIONAR_ROLES + "')")
     public Page<Usuario> obtenerUsuariosPorRol(RolSistema rol, Pageable pageable) {
         return usuarioRepository.findByRol(rol, pageable);
     }
@@ -358,6 +377,7 @@ public class UsuarioService {
      * Obtiene usuarios por estado con paginación
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.SEGURIDAD_GESTIONAR_ROLES + "')")
     public Page<Usuario> obtenerUsuariosPorEstado(Boolean activo, Pageable pageable) {
         return usuarioRepository.findByActivo(activo, pageable);
     }
@@ -366,6 +386,7 @@ public class UsuarioService {
      * Obtiene usuario por ID
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.SEGURIDAD_GESTIONAR_ROLES + "')")
     public Usuario obtenerUsuario(Long id) {
         return usuarioRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + id));
@@ -383,6 +404,7 @@ public class UsuarioService {
     /**
      * Crea un nuevo usuario con parámetros individuales
      */
+    @PreAuthorize("hasAuthority('" + Authorities.SEGURIDAD_GESTIONAR_ROLES + "')")
     public Usuario crearUsuario(String username, String password, String email, String nombre, 
                                String apellido, String telefono, String dni, String direccion,
                                RolSistema rol, boolean cambioPasswordRequerido, String creadoPor) {
@@ -405,6 +427,7 @@ public class UsuarioService {
     /**
      * Actualiza un usuario con parámetros individuales
      */
+    @PreAuthorize("hasAuthority('" + Authorities.SEGURIDAD_GESTIONAR_ROLES + "')")
     public Usuario actualizarUsuario(Long id, String email, String nombre, String apellido,
                                    String telefono, String dni, String direccion, RolSistema rol,
                                    String actualizadoPor) {
@@ -424,6 +447,7 @@ public class UsuarioService {
     /**
      * Elimina un usuario
      */
+    @PreAuthorize("hasAuthority('" + Authorities.SEGURIDAD_GESTIONAR_ROLES + "')")
     public void eliminarUsuario(Long id) {
         Usuario usuario = obtenerUsuario(id);
         usuarioRepository.delete(usuario);
@@ -433,6 +457,7 @@ public class UsuarioService {
     /**
      * Activa un usuario
      */
+    @PreAuthorize("hasAuthority('" + Authorities.SEGURIDAD_GESTIONAR_ROLES + "')")
     public Usuario activarUsuario(Long id, String actualizadoPor) {
         Usuario usuario = obtenerUsuario(id);
         usuario.setActivo(true);
@@ -446,6 +471,7 @@ public class UsuarioService {
     /**
      * Desactiva un usuario
      */
+    @PreAuthorize("hasAuthority('" + Authorities.SEGURIDAD_GESTIONAR_ROLES + "')")
     public Usuario desactivarUsuario(Long id, String actualizadoPor) {
         Usuario usuario = obtenerUsuario(id);
         usuario.setActivo(false);
@@ -459,6 +485,7 @@ public class UsuarioService {
     /**
      * Bloquea la cuenta de un usuario
      */
+    @PreAuthorize("hasAuthority('" + Authorities.SEGURIDAD_GESTIONAR_ROLES + "')")
     public Usuario bloquearCuenta(Long id, String actualizadoPor) {
         Usuario usuario = obtenerUsuario(id);
         usuario.setCuentaBloqueada(true);
@@ -472,6 +499,7 @@ public class UsuarioService {
     /**
      * Desbloquea la cuenta de un usuario
      */
+    @PreAuthorize("hasAuthority('" + Authorities.SEGURIDAD_GESTIONAR_ROLES + "')")
     public Usuario desbloquearCuenta(Long id, String actualizadoPor) {
         Usuario usuario = obtenerUsuario(id);
         usuario.setCuentaBloqueada(false);
@@ -494,6 +522,7 @@ public class UsuarioService {
     /**
      * Resetea la contraseña de un usuario
      */
+    @PreAuthorize("hasAuthority('" + Authorities.SEGURIDAD_GESTIONAR_ROLES + "')")
     public String resetearPassword(Long usuarioId, String actualizadoPor) {
         String nuevaPassword = resetearPassword(usuarioId);
         Usuario usuario = obtenerUsuario(usuarioId);
@@ -507,6 +536,7 @@ public class UsuarioService {
      * Obtiene usuarios inactivos
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.SEGURIDAD_GESTIONAR_ROLES + "')")
     public List<Usuario> obtenerUsuariosInactivos(int diasInactividad) {
         LocalDateTime fechaCorte = LocalDateTime.now().minusDays(diasInactividad);
         return usuarioRepository.findUsuariosInactivos(fechaCorte);
@@ -523,6 +553,7 @@ public class UsuarioService {
      * Cuenta usuarios por rol
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.SEGURIDAD_GESTIONAR_ROLES + "')")
     public Long contarUsuariosPorRol(RolSistema rol) {
         return usuarioRepository.countByRol(rol);
     }
@@ -531,7 +562,7 @@ public class UsuarioService {
      * Verifica si existe un usuario con el username dado
      */
     @Transactional(readOnly = true)
-    public boolean existsByUsername(String username) {
+    boolean existsByUsername(String username) {
         return usuarioRepository.existsByUsername(username);
     }
 
@@ -539,14 +570,14 @@ public class UsuarioService {
      * Verifica si existe un usuario con el email dado
      */
     @Transactional(readOnly = true)
-    public boolean existsByEmail(String email) {
+    boolean existsByEmail(String email) {
         return usuarioRepository.existsByEmail(email);
     }
     
     /**
      * Actualiza la contraseña de un usuario
      */
-    public void actualizarPassword(String username, String nuevaPassword) {
+    void actualizarPassword(String username, String nuevaPassword) {
         Optional<Usuario> usuarioOpt = usuarioRepository.findByUsername(username);
         if (usuarioOpt.isPresent()) {
             Usuario usuario = usuarioOpt.get();

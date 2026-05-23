@@ -5,6 +5,7 @@ import com.example.sigelic.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
+import com.example.sigelic.security.Authorities;
 
 /**
  * Servicio para generar reportes y estadísticas del sistema
@@ -23,6 +25,7 @@ import static java.util.stream.Collectors.groupingBy;
 @RequiredArgsConstructor
 @Slf4j
 @Transactional(readOnly = true)
+@PreAuthorize("hasAuthority('" + Authorities.REPORTE_VER + "')")
 public class ReporteService {
 
     private final TramiteRepository tramiteRepository;

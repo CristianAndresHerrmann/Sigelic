@@ -28,10 +28,12 @@ public class DetalleTramiteDialog extends Dialog {
 
     private final TramiteService tramiteService;
     private final Tramite tramite;
+    private final boolean puedeVerAptoMedico;
 
-    public DetalleTramiteDialog(TramiteService tramiteService, Tramite tramite) {
+    public DetalleTramiteDialog(TramiteService tramiteService, Tramite tramite, boolean puedeVerAptoMedico) {
         this.tramiteService = tramiteService;
         this.tramite = tramite;
+        this.puedeVerAptoMedico = puedeVerAptoMedico;
 
         setHeaderTitle("Detalle del Trámite");
         setModal(true);
@@ -181,7 +183,8 @@ public class DetalleTramiteDialog extends Dialog {
         layout.setPadding(false);
         layout.setSpacing(false);
 
-        if (tramite.requiereAptoMedico() && tramite.getEstado().ordinal() >= EstadoTramite.APTO_MED.ordinal()) {
+        if (puedeVerAptoMedico && tramite.requiereAptoMedico()
+                && tramite.getEstado().ordinal() >= EstadoTramite.APTO_MED.ordinal()) {
             H4 titulo = new H4("Apto Médico");
             titulo.getStyle().set("margin-bottom", "var(--lumo-space-s)");
             layout.add(titulo);

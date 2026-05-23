@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.sigelic.dto.request.TitularRequestDTO;
@@ -11,6 +12,7 @@ import com.example.sigelic.model.Inhabilitacion;
 import com.example.sigelic.model.Titular;
 import com.example.sigelic.repository.InhabilitacionRepository;
 import com.example.sigelic.repository.TitularRepository;
+import com.example.sigelic.security.Authorities;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +33,7 @@ public class TitularService {
      * Busca un titular por ID
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.TITULAR_VER + "')")
     public Optional<Titular> findById(Long id) {
         return titularRepository.findById(id);
     }
@@ -39,6 +42,7 @@ public class TitularService {
      * Busca un titular por DNI
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.TITULAR_VER + "')")
     public Optional<Titular> findByDni(String dni) {
         return titularRepository.findByDni(dni);
     }
@@ -47,6 +51,7 @@ public class TitularService {
      * Busca titulares por nombre o apellido
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.TITULAR_VER + "')")
     public List<Titular> findByNombre(String nombre) {
         return titularRepository.findByNombreContainingIgnoreCaseOrApellidoContainingIgnoreCase(nombre, nombre);
     }
@@ -55,6 +60,7 @@ public class TitularService {
      * Busca titulares por nombre o apellido con inhabilitaciones cargadas
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.TITULAR_VER + "')")
     public List<Titular> findByNombreWithInhabilitaciones(String nombre) {
         List<Titular> titulares = titularRepository.findByNombreContainingIgnoreCaseOrApellidoContainingIgnoreCase(nombre, nombre);
         // Forzar la carga de inhabilitaciones mientras estamos en sesión
@@ -66,6 +72,7 @@ public class TitularService {
      * Busca titulares por DNI con inhabilitaciones cargadas
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.TITULAR_VER + "')")
     public List<Titular> findByDniWithInhabilitaciones(String dni) {
         List<Titular> titulares = titularRepository.findByDniContainingIgnoreCase(dni);
         // Forzar la carga de inhabilitaciones mientras estamos en sesión
@@ -77,6 +84,7 @@ public class TitularService {
      * Busca titulares por nombre completo
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.TITULAR_VER + "')")
     public List<Titular> findByNombreCompleto(String nombreCompleto) {
         return titularRepository.findByNombreCompletoContainingIgnoreCase(nombreCompleto);
     }
@@ -85,6 +93,7 @@ public class TitularService {
      * Obtiene todos los titulares
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.TITULAR_VER + "')")
     public List<Titular> findAll() {
         return titularRepository.findAll();
     }
@@ -93,6 +102,7 @@ public class TitularService {
      * Obtiene todos los titulares con inhabilitaciones cargadas para vistas
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.TITULAR_VER + "')")
     public List<Titular> findAllWithInhabilitaciones() {
         List<Titular> titulares = titularRepository.findAll();
         // Forzar la carga de inhabilitaciones mientras estamos en sesión
@@ -103,6 +113,7 @@ public class TitularService {
     /**
      * Guarda un titular
      */
+    @PreAuthorize("hasAuthority('" + Authorities.TITULAR_GESTIONAR + "')")
     public Titular save(Titular titular) {
         validateTitular(titular);
         log.info("Guardando titular: {} {}", titular.getNombre(), titular.getApellido());
@@ -112,6 +123,7 @@ public class TitularService {
     /**
      * Actualiza un titular
      */
+    @PreAuthorize("hasAuthority('" + Authorities.TITULAR_GESTIONAR + "')")
     public Titular update(Titular titular) {
         if (titular.getId() == null) {
             throw new IllegalArgumentException("El titular debe tener un ID para ser actualizado");
@@ -124,6 +136,7 @@ public class TitularService {
     /**
      * Elimina un titular
      */
+    @PreAuthorize("hasAuthority('" + Authorities.TITULAR_GESTIONAR + "')")
     public void delete(Long id) {
         Titular titular = titularRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Titular no encontrado con ID: " + id));
@@ -141,6 +154,7 @@ public class TitularService {
      * Verifica si un titular puede iniciar un trámite
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('" + Authorities.TITULAR_VER + "')")
     public boolean puedeIniciarTramite(Long titularId) {
         Titular titular = titularRepository.findById(titularId)
                 .orElseThrow(() -> new IllegalArgumentException("Titular no encontrado con ID: " + titularId));
@@ -152,6 +166,7 @@ public class TitularService {
      * Obtiene las inhabilitaciones activas de un titular
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAnyAuthority('" + Authorities.TITULAR_VER + "', '" + Authorities.INHABILITACION_GESTIONAR + "')")
     public List<Inhabilitacion> getInhabilitacionesActivas(Long titularId) {
         Titular titular = titularRepository.findById(titularId)
                 .orElseThrow(() -> new IllegalArgumentException("Titular no encontrado con ID: " + titularId));
@@ -162,6 +177,7 @@ public class TitularService {
     /**
      * Agrega una inhabilitación a un titular
      */
+    @PreAuthorize("hasAuthority('" + Authorities.INHABILITACION_GESTIONAR + "')")
     public Inhabilitacion agregarInhabilitacion(Long titularId, Inhabilitacion inhabilitacion) {
         Titular titular = titularRepository.findById(titularId)
                 .orElseThrow(() -> new IllegalArgumentException("Titular no encontrado con ID: " + titularId));
@@ -175,6 +191,7 @@ public class TitularService {
      * Verifica si existe un titular con el DNI dado
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAnyAuthority('" + Authorities.TITULAR_VER + "', '" + Authorities.TITULAR_GESTIONAR + "')")
     public boolean existsByDni(String dni) {
         return titularRepository.existsByDni(dni);
     }
@@ -183,6 +200,7 @@ public class TitularService {
      * Verifica si existe un titular con el email dado
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAnyAuthority('" + Authorities.TITULAR_VER + "', '" + Authorities.TITULAR_GESTIONAR + "')")
     public boolean existsByEmail(String email) {
         return titularRepository.existsByEmail(email);
     }
@@ -191,6 +209,7 @@ public class TitularService {
      * Obtiene titulares con inhabilitaciones activas
      */
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAnyAuthority('" + Authorities.TITULAR_VER + "', '" + Authorities.INHABILITACION_GESTIONAR + "')")
     public List<Titular> getTitularesConInhabilitacionesActivas() {
         return titularRepository.findTitularesConInhabilitacionesActivas();
     }
@@ -198,6 +217,7 @@ public class TitularService {
     /**
      * Crea un titular a partir de un DTO
      */
+    @PreAuthorize("hasAuthority('" + Authorities.TITULAR_GESTIONAR + "')")
     public Titular createFromDTO(TitularRequestDTO dto) {
         Titular titular = new Titular();
         titular.setNombre(dto.getNombre().trim());

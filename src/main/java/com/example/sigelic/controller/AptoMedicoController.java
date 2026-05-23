@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.sigelic.dto.request.AptoMedicoRequestDTO;
 import com.example.sigelic.dto.response.AptoMedicoResponseDTO;
 import com.example.sigelic.service.TramiteService;
+import com.example.sigelic.security.Authorities;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -34,7 +35,7 @@ public class AptoMedicoController {
     private final TramiteService tramiteService;
 
     @PostMapping("/tramites/{tramiteId}/apto-medico")
-    @PreAuthorize("hasAnyAuthority('TRAMITES_ESCRIBIR', 'MEDICO')")
+    @PreAuthorize("hasAuthority('" + Authorities.APTO_MEDICO_REGISTRAR + "')")
     @Operation(summary = "Registrar apto médico", 
                description = "Registra el resultado del examen médico para un trámite")
     @ApiResponse(responseCode = "200", description = "Apto médico registrado exitosamente")
@@ -49,7 +50,7 @@ public class AptoMedicoController {
     }
 
     @GetMapping("/tramites/{tramiteId}/apto-medico")
-    @PreAuthorize("hasAnyAuthority('TRAMITES_LEER', 'MEDICO')")
+    @PreAuthorize("hasAuthority('" + Authorities.APTO_MEDICO_VER + "')")
     @Operation(summary = "Obtener apto médico del trámite", 
                description = "Recupera la información del apto médico de un trámite")
     @ApiResponse(responseCode = "200", description = "Apto médico encontrado")
@@ -63,7 +64,7 @@ public class AptoMedicoController {
     }
 
     @GetMapping("/aptos-medicos/proximos-vencer")
-    @PreAuthorize("hasAnyAuthority('TRAMITES_LEER', 'MEDICO', 'ADMINISTRADOR')")
+    @PreAuthorize("hasAuthority('" + Authorities.APTO_MEDICO_VER + "')")
     @Operation(summary = "Listar aptos médicos próximos a vencer", 
                description = "Obtiene lista de aptos médicos que vencen pronto para alertas")
     @ApiResponse(responseCode = "200", description = "Lista de aptos próximos a vencer")
@@ -74,7 +75,7 @@ public class AptoMedicoController {
     }
 
     @GetMapping("/aptos-medicos/estadisticas")
-    @PreAuthorize("hasAnyAuthority('REPORTES_LEER', 'ADMINISTRADOR')")
+    @PreAuthorize("hasAuthority('" + Authorities.REPORTE_VER + "')")
     @Operation(summary = "Estadísticas de aptos médicos", 
                description = "Obtiene estadísticas generales de exámenes médicos")
     @ApiResponse(responseCode = "200", description = "Estadísticas de aptos médicos")
