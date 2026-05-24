@@ -103,21 +103,21 @@ public class MainLayout extends AppLayout {
 
         // Gestión de Usuarios (solo para administradores y supervisores)
         authContext.getAuthenticatedUser(UserDetails.class).ifPresent(user -> {
-            if (hasAnyRole(user, "ADMINISTRADOR")) {
+            if (hasAnyRole(user, "ADMINISTRADOR", "SUPERVISOR")) {
                 nav.addItem(new SideNavItem("Usuarios", UsuariosView.class, VaadinIcon.USERS.create()));
             }
         });
 
         // Gestión de Titulares (para agentes y superiores)
         authContext.getAuthenticatedUser(UserDetails.class).ifPresent(user -> {
-            if (hasAnyRole(user, "ADMINISTRADOR", "SUPERVISOR", "AGENTE")) {
+            if (hasAnyRole(user, "ADMINISTRADOR", "SUPERVISOR", "AGENTE", "AUDITOR")) {
                 nav.addItem(new SideNavItem("Titulares", TitularesView.class, VaadinIcon.USER_CHECK.create()));
             }
         });
 
         // Gestión de Licencias (para la mayoría de roles)
         authContext.getAuthenticatedUser(UserDetails.class).ifPresent(user -> {
-            if (hasAnyRole(user, "ADMINISTRADOR", "SUPERVISOR", "AGENTE", "EXAMINADOR")) {
+            if (hasAnyRole(user, "ADMINISTRADOR", "SUPERVISOR", "AGENTE", "EXAMINADOR", "AUDITOR")) {
                 nav.addItem(new SideNavItem("Licencias", LicenciasView.class, VaadinIcon.FILE_TEXT.create()));
             }
         });
@@ -126,6 +126,20 @@ public class MainLayout extends AppLayout {
         authContext.getAuthenticatedUser(UserDetails.class).ifPresent(user -> {
             if (hasAnyRole(user, "ADMINISTRADOR", "SUPERVISOR", "AGENTE", "MEDICO", "EXAMINADOR", "CAJERO")) {
                 nav.addItem(new SideNavItem("Trámites", TramitesView.class, VaadinIcon.CLIPBOARD_TEXT.create()));
+            }
+        });
+
+        // Gestión de Turnos
+        authContext.getAuthenticatedUser(UserDetails.class).ifPresent(user -> {
+            if (hasAnyRole(user, "ADMINISTRADOR", "SUPERVISOR", "AGENTE")) {
+                nav.addItem(new SideNavItem("Turnos", TurnosView.class, VaadinIcon.CALENDAR.create()));
+            }
+        });
+
+        // Gestión de Inhabilitaciones
+        authContext.getAuthenticatedUser(UserDetails.class).ifPresent(user -> {
+            if (hasAnyRole(user, "ADMINISTRADOR", "SUPERVISOR", "AUDITOR")) {
+                nav.addItem(new SideNavItem("Inhabilitaciones", InhabilitacionesView.class, VaadinIcon.BAN.create()));
             }
         });
 

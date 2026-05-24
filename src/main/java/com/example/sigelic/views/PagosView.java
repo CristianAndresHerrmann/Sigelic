@@ -4,6 +4,8 @@ import com.example.sigelic.model.Pago;
 import com.example.sigelic.model.EstadoPago;
 import com.example.sigelic.security.Authorities;
 import com.example.sigelic.service.PagoService;
+import com.example.sigelic.service.TramiteService;
+import com.example.sigelic.views.dialog.CrearPagoDialog;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
@@ -39,6 +41,7 @@ import java.util.Locale;
 public class PagosView extends VerticalLayout {
 
     private final PagoService pagoService;
+    private final TramiteService tramiteService;
     private final AuthorityChecker authorityChecker;
     private Grid<Pago> grid;
     private TextField searchField;
@@ -46,8 +49,9 @@ public class PagosView extends VerticalLayout {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     private static final NumberFormat CURRENCY_FORMAT = NumberFormat.getCurrencyInstance(Locale.of("es", "AR"));
 
-    public PagosView(PagoService pagoService, AuthorityChecker authorityChecker) {
+    public PagosView(PagoService pagoService, TramiteService tramiteService, AuthorityChecker authorityChecker) {
         this.pagoService = pagoService;
+        this.tramiteService = tramiteService;
         this.authorityChecker = authorityChecker;
         addClassName("pagos-view");
         setSizeFull();
@@ -65,14 +69,14 @@ public class PagosView extends VerticalLayout {
         Button addPagoButton = new Button("Registrar Pago", new Icon(VaadinIcon.PLUS));
         addPagoButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         addPagoButton.addClickListener(e -> {
-            // TODO: Implementar diálogo para registrar pago
+            CrearPagoDialog dialog = new CrearPagoDialog(tramiteService, pagoService, unused -> loadPagos());
+            dialog.open();
         });
 
         HorizontalLayout header = new HorizontalLayout(title);
         if (authorityChecker.has(Authorities.PAGO_ACREDITAR)) {
             header.add(addPagoButton);
         }
-        header.setAlignItems(Alignment.CENTER);
         header.setJustifyContentMode(JustifyContentMode.BETWEEN);
         header.setWidthFull();
 

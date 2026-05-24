@@ -83,7 +83,8 @@ public enum RolSistema {
         Permiso.REPORTE_VER,
         Permiso.AUDITORIA_VER,
         Permiso.EXAMEN_REINTENTO_AUTORIZAR,
-        Permiso.LICENCIA_GESTIONAR_ESTADO
+        Permiso.LICENCIA_GESTIONAR_ESTADO,
+        Permiso.SEGURIDAD_GESTIONAR_ROLES
         
         // Override limitado se puede agregar según necesidad
         // Permiso.OVERRIDE_TRANSICION_ESTADO

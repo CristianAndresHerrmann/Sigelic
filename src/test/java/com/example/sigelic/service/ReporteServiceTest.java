@@ -83,6 +83,10 @@ class ReporteServiceTest {
             when(tramiteRepository.countByEstado(EstadoTramite.PAGO_OK)).thenReturn(1L);
             when(tramiteRepository.countByEstado(EstadoTramite.EMITIDA)).thenReturn(7L);
             when(tramiteRepository.countByEstado(EstadoTramite.RECHAZADA)).thenReturn(1L);
+            when(tramiteRepository.countByEstado(EstadoTramite.DOCS_RECHAZADAS)).thenReturn(0L);
+            when(tramiteRepository.countByEstado(EstadoTramite.APTO_MED_RECHAZADO)).thenReturn(0L);
+            when(tramiteRepository.countByEstado(EstadoTramite.EX_TEO_RECHAZADO)).thenReturn(0L);
+            when(tramiteRepository.countByEstado(EstadoTramite.EX_PRA_RECHAZADO)).thenReturn(0L);
 
             // When
             Map<String, Object> reporte = reporteService.getReporteTramitesPorPeriodo(fechaDesde, fechaHasta);

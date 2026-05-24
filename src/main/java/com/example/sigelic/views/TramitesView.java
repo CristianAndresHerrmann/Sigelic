@@ -29,7 +29,32 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.example.sigelic.service.LicenciaService;
+import com.example.sigelic.service.PagoService;
+import com.example.sigelic.service.TitularService;
+import com.example.sigelic.service.TramiteService;
+import com.example.sigelic.views.dialog.DetalleTramiteDialog;
+import com.example.sigelic.views.dialog.EmitirLicenciaDialog;
+import com.example.sigelic.views.dialog.NuevoTramiteDialog;
+import com.example.sigelic.views.dialog.RegistrarAptoMedicoDialog;
+import com.example.sigelic.views.dialog.RegistrarExamenPracticoDialog;
+import com.example.sigelic.views.dialog.RegistrarExamenTeoricoDialog;
+import com.example.sigelic.views.dialog.RegistrarPagoDialog;
+import com.example.sigelic.views.dialog.ValidarDocumentacionDialog;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.tabs.Tab;
+import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
@@ -55,6 +80,13 @@ public class TramitesView extends VerticalLayout {
     private Grid<Tramite> grid;
     private ListDataProvider<Tramite> dataProvider;
     private TextField searchField;
+    private Tabs tabs;
+    private Tab tabTodos;
+    private Tab tabDocs;
+    private Tab tabAptoMed;
+    private Tab tabExamenes;
+    private Tab tabPagos;
+    private Tab tabEmision;
 
     public TramitesView(TramiteService tramiteService, TitularService titularService, LicenciaService licenciaService,
             PagoService pagoService, AuthorityChecker authorityChecker) {
@@ -68,6 +100,7 @@ public class TramitesView extends VerticalLayout {
 
         createHeader();
         createSearchBar();
+        createTabs();
         createGrid();
         refreshGrid();
     }
@@ -98,22 +131,105 @@ public class TramitesView extends VerticalLayout {
         searchField.setWidthFull();
         searchField.setMaxWidth("400px");
         
-        searchField.addValueChangeListener(e -> {
-            if (dataProvider != null) {
-                dataProvider.setFilter(tramite -> {
-                    String searchTerm = e.getValue().toLowerCase();
-                    String numeroTramite = "T" + String.format("%06d", tramite.getId());
-                    return numeroTramite.toLowerCase().contains(searchTerm) ||
-                           (tramite.getTitular() != null && 
-                            (tramite.getTitular().getNombre().toLowerCase().contains(searchTerm) ||
-                             tramite.getTitular().getApellido().toLowerCase().contains(searchTerm))) ||
-                           tramite.getTipo().toString().toLowerCase().contains(searchTerm) ||
-                           tramite.getEstado().getDescripcion().toLowerCase().contains(searchTerm);
-                });
-            }
-        });
+        searchField.addValueChangeListener(e -> applyFilters());
 
         add(searchField);
+    }
+
+    private void createTabs() {
+        tabs = new Tabs();
+        tabs.setWidthFull();
+        tabs.addClassName(LumoUtility.Margin.Bottom.MEDIUM);
+
+        tabTodos = new Tab("Todos");
+        tabs.add(tabTodos);
+
+        if (authorityChecker.has(Authorities.TRAMITE_VALIDAR_DOCUMENTACION)) {
+            tabDocs = new Tab("Ptes. Documentación");
+            tabs.add(tabDocs);
+        }
+        if (authorityChecker.has(Authorities.APTO_MEDICO_REGISTRAR)) {
+            tabAptoMed = new Tab("Ptes. Apto Médico");
+            tabs.add(tabAptoMed);
+        }
+        if (authorityChecker.has(Authorities.EXAMEN_TEO_REGISTRAR) || authorityChecker.has(Authorities.EXAMEN_PRA_REGISTRAR)) {
+            tabExamenes = new Tab("Ptes. Exámenes");
+            tabs.add(tabExamenes);
+        }
+        if (authorityChecker.has(Authorities.PAGO_ACREDITAR)) {
+            tabPagos = new Tab("Ptes. Pago");
+            tabs.add(tabPagos);
+        }
+        if (authorityChecker.has(Authorities.LICENCIA_EMITIR)) {
+            tabEmision = new Tab("Ptes. Emisión");
+            tabs.add(tabEmision);
+        }
+
+        // Seleccionar pestaña por defecto según rol
+        if (authorityChecker.has(Authorities.APTO_MEDICO_REGISTRAR) && !authorityChecker.has(Authorities.TRAMITE_INICIAR)) {
+            tabs.setSelectedTab(tabAptoMed);
+        } else if ((authorityChecker.has(Authorities.EXAMEN_TEO_REGISTRAR) || authorityChecker.has(Authorities.EXAMEN_PRA_REGISTRAR)) 
+                && !authorityChecker.has(Authorities.TRAMITE_INICIAR)) {
+            tabs.setSelectedTab(tabExamenes);
+        } else if (authorityChecker.has(Authorities.PAGO_ACREDITAR) && !authorityChecker.has(Authorities.TRAMITE_INICIAR)) {
+            tabs.setSelectedTab(tabPagos);
+        } else if (tabDocs != null) {
+            tabs.setSelectedTab(tabDocs);
+        } else {
+            tabs.setSelectedTab(tabTodos);
+        }
+
+        tabs.addSelectedChangeListener(event -> applyFilters());
+        add(tabs);
+    }
+
+    private void applyFilters() {
+        if (dataProvider == null) {
+            return;
+        }
+        String searchTerm = searchField.getValue();
+        Tab selectedTab = tabs.getSelectedTab();
+        dataProvider.setFilter(tramite -> matchesSearch(tramite, searchTerm) && matchesTab(tramite, selectedTab));
+    }
+
+    private boolean matchesSearch(Tramite tramite, String searchTerm) {
+        if (searchTerm == null || searchTerm.trim().isEmpty()) {
+            return true;
+        }
+        String term = searchTerm.toLowerCase().trim();
+        String numeroTramite = "T" + String.format("%06d", tramite.getId());
+        return numeroTramite.toLowerCase().contains(term) ||
+               (tramite.getTitular() != null && 
+                (tramite.getTitular().getNombre().toLowerCase().contains(term) ||
+                 tramite.getTitular().getApellido().toLowerCase().contains(term))) ||
+               tramite.getTipo().toString().toLowerCase().contains(term) ||
+               tramite.getEstado().getDescripcion().toLowerCase().contains(term);
+    }
+
+    private boolean matchesTab(Tramite tramite, Tab selectedTab) {
+        if (selectedTab == tabTodos) {
+            return true;
+        }
+        if (selectedTab == tabDocs && tabDocs != null) {
+            return tramite.getEstado() == EstadoTramite.INICIADO;
+        }
+        if (selectedTab == tabAptoMed && tabAptoMed != null) {
+            return tramite.getEstado() == EstadoTramite.DOCS_OK && tramite.requiereAptoMedico();
+        }
+        if (selectedTab == tabExamenes && tabExamenes != null) {
+            boolean necesitaTeorico = (tramite.getEstado() == EstadoTramite.APTO_MED || tramite.getEstado() == EstadoTramite.EX_TEO_RECHAZADO) && tramite.requiereExamenTeorico();
+            boolean necesitaPractico = ((tramite.getEstado() == EstadoTramite.EX_TEO_OK) || (tramite.getEstado() == EstadoTramite.EX_PRA_RECHAZADO)) && tramite.requiereExamenPractico();
+            return necesitaTeorico || necesitaPractico;
+        }
+        if (selectedTab == tabPagos && tabPagos != null) {
+            return (tramite.getEstado() == EstadoTramite.EX_PRA_OK) || 
+                   (tramite.getEstado() == EstadoTramite.APTO_MED && !tramite.requiereExamenTeorico() && !tramite.requiereExamenPractico()) ||
+                   (tramite.getEstado() == EstadoTramite.EX_TEO_OK && !tramite.requiereExamenPractico());
+        }
+        if (selectedTab == tabEmision && tabEmision != null) {
+            return tramite.getEstado() == EstadoTramite.PAGO_OK;
+        }
+        return true;
     }
 
     private void createGrid() {
@@ -309,22 +425,6 @@ public class TramitesView extends VerticalLayout {
         dialog.open();
     }
 
-    private void refreshGrid() {
-        try {
-            List<Tramite> tramites = tramiteService.findAll();
-            dataProvider = new ListDataProvider<>(tramites);
-            grid.setDataProvider(dataProvider);
-        } catch (Exception e) {
-            showNotification("Error al cargar trámites: " + e.getMessage(), NotificationVariant.LUMO_ERROR);
-        }
-    }
-
-    private void showNotification(String message, NotificationVariant variant) {
-        Notification notification = Notification.show(message);
-        notification.addThemeVariants(variant);
-        notification.setPosition(Notification.Position.TOP_CENTER);
-    }
-
     private void openNuevoTramiteDialog() {
         NuevoTramiteDialog dialog = new NuevoTramiteDialog(tramiteService, titularService, licenciaService, unused -> refreshGrid());
         dialog.open();
@@ -339,5 +439,22 @@ public class TramitesView extends VerticalLayout {
         } catch (Exception e) {
             showNotification("Error al autorizar reintento: " + e.getMessage(), NotificationVariant.LUMO_ERROR);
         }
+    }
+
+    private void refreshGrid() {
+        try {
+            List<Tramite> tramites = tramiteService.findAll();
+            dataProvider = new ListDataProvider<>(tramites);
+            grid.setDataProvider(dataProvider);
+            applyFilters();
+        } catch (Exception e) {
+            showNotification("Error al cargar trámites: " + e.getMessage(), NotificationVariant.LUMO_ERROR);
+        }
+    }
+
+    private void showNotification(String message, NotificationVariant variant) {
+        Notification notification = Notification.show(message);
+        notification.addThemeVariants(variant);
+        notification.setPosition(Notification.Position.TOP_CENTER);
     }
 }

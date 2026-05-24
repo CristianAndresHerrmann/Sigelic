@@ -124,10 +124,6 @@ class RegistrarExamenTeoricoDialogTest {
         examen.setRespuestasCorrectas(20);
         int puntaje = (examen.getRespuestasCorrectas() * 100) / examen.getCantidadPreguntas();
         examen.setPuntaje(puntaje);
-        
-        when(tramiteService.registrarExamenTeorico(eq(1L), any(ExamenTeorico.class)))
-                .thenReturn(tramite);
-        
         // When: se registra el examen reprobado
         // El servicio debe guardarlo sin cambiar estado del trámite
         
