@@ -123,11 +123,12 @@ class RegistrarExamenPracticoDialogTest {
         // Verificar que el examen debe ser aprobado
         assertTrue(examenAprobado.calcularAprobacion());
 
+        // Simular registro
+        tramiteService.registrarExamenPractico(123L, examenAprobado);
+
         // Verificar que se llamó al servicio con los parámetros correctos
         ArgumentCaptor<ExamenPractico> examenCaptor = ArgumentCaptor.forClass(ExamenPractico.class);
-        
-        // Simular registro exitoso
-        tramiteService.registrarExamenPractico(eq(123L), examenCaptor.capture());
+        verify(tramiteService).registrarExamenPractico(eq(123L), examenCaptor.capture());
         
         // Verificar las propiedades del examen
         ExamenPractico examenCapturado = examenCaptor.getValue();
@@ -156,11 +157,12 @@ class RegistrarExamenPracticoDialogTest {
         // Verificar que el examen debe ser reprobado
         assertFalse(examenReprobado.calcularAprobacion());
 
+        // Simular registro
+        tramiteService.registrarExamenPractico(123L, examenReprobado);
+
         // Verificar que se llamó al servicio con los parámetros correctos
         ArgumentCaptor<ExamenPractico> examenCaptor = ArgumentCaptor.forClass(ExamenPractico.class);
-        
-        // Simular registro exitoso
-        tramiteService.registrarExamenPractico(eq(123L), examenCaptor.capture());
+        verify(tramiteService).registrarExamenPractico(eq(123L), examenCaptor.capture());
         
         // Verificar las propiedades del examen
         ExamenPractico examenCapturado = examenCaptor.getValue();
