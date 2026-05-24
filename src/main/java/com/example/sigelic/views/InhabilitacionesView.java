@@ -138,7 +138,7 @@ public class InhabilitacionesView extends VerticalLayout {
 
     private void refreshGrid() {
         try {
-            List<Inhabilitacion> inhabilitaciones = inhabilitacionRepository.findAll();
+            List<Inhabilitacion> inhabilitaciones = inhabilitacionRepository.findAllWithTitular();
             dataProvider = new ListDataProvider<>(inhabilitaciones);
             grid.setDataProvider(dataProvider);
             applyFilters();

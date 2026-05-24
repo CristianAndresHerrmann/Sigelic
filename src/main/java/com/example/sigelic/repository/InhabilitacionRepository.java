@@ -16,6 +16,9 @@ import java.util.List;
 @Repository
 public interface InhabilitacionRepository extends JpaRepository<Inhabilitacion, Long> {
     
+    @Query("SELECT i FROM Inhabilitacion i LEFT JOIN FETCH i.titular ORDER BY i.fechaInicio DESC")
+    List<Inhabilitacion> findAllWithTitular();
+    
     List<Inhabilitacion> findByTitular(Titular titular);
     
     @Query("SELECT i FROM Inhabilitacion i WHERE i.titular = :titular AND (i.fechaFin IS NULL OR i.fechaFin >= CURRENT_DATE)")
