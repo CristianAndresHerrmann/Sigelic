@@ -98,19 +98,34 @@ public class LicenciaService {
         Titular titular = tramite.getTitular();
         ClaseLicencia clase = tramite.getClaseSolicitada();
         
-        // Para duplicados, mantener fecha de vencimiento original
+        // Buscar si existe una licencia vigente previa para la misma clase
+        List<Licencia> licenciasVigentes = licenciaRepository.findLicenciasVigentesByTitular(titular);
+        Optional<Licencia> licenciaPreviaOpt = licenciasVigentes.stream()
+                .filter(l -> l.getClase() == clase)
+                .findFirst();
+
         LocalDate fechaVencimiento;
-        if (tramite.getTipo() == TipoTramite.DUPLICADO) {
-            fechaVencimiento = calcularVencimientoParaDuplicado(titular, clase);
+        
+        if (tramite.getTipo() == TipoTramite.DUPLICADO || tramite.getTipo() == TipoTramite.CAMBIO_DOMICILIO) {
+            if (licenciaPreviaOpt.isPresent()) {
+                fechaVencimiento = licenciaPreviaOpt.get().getFechaVencimiento();
+            } else {
+                // Fallback si no hay previa
+                int vigenciaAnios = Licencia.calcularVigenciaEnAnios(titular.getEdad(), false);
+                fechaVencimiento = Licencia.calcularFechaVencimiento(titular.getFechaNacimiento(), LocalDate.now(), vigenciaAnios);
+            }
         } else {
-            // Para emisión y renovación, calcular nueva vigencia
+            // EMISION o RENOVACION
             boolean esPrimeraVez = tramite.getTipo() == TipoTramite.EMISION;
             int vigenciaAnios = Licencia.calcularVigenciaEnAnios(titular.getEdad(), esPrimeraVez);
-            fechaVencimiento = Licencia.calcularFechaVencimiento(
-                titular.getFechaNacimiento(), 
-                LocalDate.now(), 
-                vigenciaAnios
-            );
+            fechaVencimiento = Licencia.calcularFechaVencimiento(titular.getFechaNacimiento(), LocalDate.now(), vigenciaAnios);
+        }
+
+        // Si existe una licencia previa vigente, marcarla como DUPLICADA
+        if (licenciaPreviaOpt.isPresent()) {
+            Licencia licenciaPrevia = licenciaPreviaOpt.get();
+            licenciaPrevia.setEstado(EstadoLicencia.DUPLICADA);
+            licenciaRepository.save(licenciaPrevia);
         }
 
         Licencia licencia = new Licencia();
@@ -121,9 +136,18 @@ public class LicenciaService {
         licencia.setEstado(EstadoLicencia.VIGENTE);
         licencia.setNumeroLicencia(generarNumeroLicencia());
         licencia.setTramite(tramite);
+        
+        if (tramite.getTipo() == TipoTramite.DUPLICADO) {
+            licenciaPreviaOpt.ifPresent(prev -> 
+                licencia.setObservaciones("Duplicado de licencia N° " + prev.getNumeroLicencia())
+            );
+        } else if (tramite.getTipo() == TipoTramite.CAMBIO_DOMICILIO) {
+            licencia.setObservaciones("Cambio de domicilio - Licencia anterior N° " + 
+                licenciaPreviaOpt.map(Licencia::getNumeroLicencia).orElse("N/A"));
+        }
 
-        log.info("Emitiendo licencia clase {} para titular: {} {}", 
-                clase.name(), titular.getNombre(), titular.getApellido());
+        log.info("Emitiendo licencia clase {} (Trámite: {}) para titular: {} {}", 
+                clase.name(), tramite.getTipo().name(), titular.getNombre(), titular.getApellido());
         
         return licenciaRepository.save(licencia);
     }
@@ -272,27 +296,10 @@ public class LicenciaService {
         log.info("Actualizadas {} licencias vencidas", licenciasVencidas.size());
     }
 
-    /**
-     * Obtiene estadísticas de licencias emitidas en un período
-     */
     @Transactional(readOnly = true)
     @PreAuthorize("hasAuthority('" + Authorities.LICENCIA_VER + "')")
     public Long getCountLicenciasEmitidasEnPeriodo(LocalDate desde, LocalDate hasta) {
         return licenciaRepository.countLicenciasEmitidasEnPeriodo(desde, hasta);
-    }
-
-    private LocalDate calcularVencimientoParaDuplicado(Titular titular, ClaseLicencia clase) {
-        // Buscar la licencia vigente anterior para mantener el vencimiento
-        Optional<Licencia> licenciaAnterior = licenciaRepository.findByTitularAndClaseAndEstado(
-                titular, clase, EstadoLicencia.DUPLICADA);
-        
-        if (licenciaAnterior.isPresent()) {
-            return licenciaAnterior.get().getFechaVencimiento();
-        }
-        
-        // Si no hay licencia anterior, calcular nueva vigencia
-        int vigenciaAnios = Licencia.calcularVigenciaEnAnios(titular.getEdad(), false);
-        return Licencia.calcularFechaVencimiento(titular.getFechaNacimiento(), LocalDate.now(), vigenciaAnios);
     }
 
     private String generarNumeroLicencia() {

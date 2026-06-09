@@ -35,13 +35,13 @@ public interface TurnoRepository extends JpaRepository<Turno, Long> {
     List<Turno> findTurnosEnPeriodo(@Param("desde") LocalDateTime desde, @Param("hasta") LocalDateTime hasta);
     
     @Query("SELECT t FROM Turno t WHERE t.recurso = :recurso AND t.estado IN ('RESERVADO', 'CONFIRMADO') AND " +
-           "((t.inicio <= :fin AND t.fin >= :inicio))")
+           "((t.inicio < :fin AND t.fin > :inicio))")
     List<Turno> findTurnosConflictivos(@Param("recurso") Recurso recurso, 
                                       @Param("inicio") LocalDateTime inicio, 
                                       @Param("fin") LocalDateTime fin);
     
     @Query("SELECT t FROM Turno t WHERE t.titular = :titular AND t.tipo = :tipo AND t.estado IN ('RESERVADO', 'CONFIRMADO') AND " +
-           "((t.inicio <= :fin AND t.fin >= :inicio))")
+           "((t.inicio < :fin AND t.fin > :inicio))")
     List<Turno> findTurnosSolapadosDelTitular(@Param("titular") Titular titular,
                                              @Param("tipo") TipoTurno tipo,
                                              @Param("inicio") LocalDateTime inicio,

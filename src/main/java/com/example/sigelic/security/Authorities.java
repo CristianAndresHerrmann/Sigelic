@@ -20,7 +20,7 @@ public final class Authorities {
     public static final String TRAMITE_RECHAZAR = "TRAMITE_RECHAZAR";
     public static final String TURNO_VER = "TURNO_VER";
     public static final String TURNO_ASIGNAR = "TURNO_ASIGNAR";
-    public static final String TURNO_REPROGRAMAR = "TURNO_REPROGRAMAR";
+    public static final String TURNO_GESTIONAR = "TURNO_GESTIONAR";
     public static final String TURNO_CANCELAR = "TURNO_CANCELAR";
     public static final String EXAMEN_VER = "EXAMEN_VER";
     public static final String EXAMEN_TEO_REGISTRAR = "EXAMEN_TEO_REGISTRAR";

@@ -95,7 +95,7 @@ public class TurnoController {
      * Actualiza un turno existente
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('" + Authorities.TURNO_REPROGRAMAR + "')")
+    @PreAuthorize("hasAuthority('" + Authorities.TURNO_GESTIONAR + "')")
     public ResponseEntity<TurnoResponseDTO> actualizarTurno(
             @PathVariable Long id,
             @Valid @RequestBody TurnoRequestDTO turnoRequest) {
@@ -115,7 +115,7 @@ public class TurnoController {
      * Confirma la asistencia a un turno
      */
     @PatchMapping("/{id}/confirmar")
-    @PreAuthorize("hasAuthority('" + Authorities.TURNO_REPROGRAMAR + "')")
+    @PreAuthorize("hasAuthority('" + Authorities.TURNO_GESTIONAR + "')")
     public ResponseEntity<TurnoResponseDTO> confirmarTurno(@PathVariable Long id) {
         try {
             Turno turno = turnoService.confirmarTurno(id);
@@ -148,7 +148,7 @@ public class TurnoController {
      * Marca un turno como ausente
      */
     @PatchMapping("/{id}/ausente")
-    @PreAuthorize("hasAuthority('" + Authorities.TURNO_REPROGRAMAR + "')")
+    @PreAuthorize("hasAuthority('" + Authorities.TURNO_GESTIONAR + "')")
     public ResponseEntity<TurnoResponseDTO> marcarAusente(@PathVariable Long id) {
         try {
             Turno turno = turnoService.marcarAusente(id);

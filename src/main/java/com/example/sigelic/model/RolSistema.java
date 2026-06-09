@@ -32,7 +32,7 @@ public enum RolSistema {
         // Turnos
         Permiso.TURNO_VER,
         Permiso.TURNO_ASIGNAR,
-        Permiso.TURNO_REPROGRAMAR,
+        Permiso.TURNO_GESTIONAR,
         Permiso.TURNO_CANCELAR,
         
         // Exámenes y Apto Médico
@@ -76,7 +76,7 @@ public enum RolSistema {
         // Turnos
         Permiso.TURNO_VER,
         Permiso.TURNO_ASIGNAR,
-        Permiso.TURNO_REPROGRAMAR,
+        Permiso.TURNO_GESTIONAR,
         Permiso.TURNO_CANCELAR,
         
         // Reportes y auditoría
@@ -103,7 +103,7 @@ public enum RolSistema {
         // Turnos
         Permiso.TURNO_VER,
         Permiso.TURNO_ASIGNAR,
-        Permiso.TURNO_REPROGRAMAR,
+        Permiso.TURNO_GESTIONAR,
         Permiso.TURNO_CANCELAR,
         
         // Pagos

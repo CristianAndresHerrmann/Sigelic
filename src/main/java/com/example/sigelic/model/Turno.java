@@ -88,8 +88,8 @@ public class Turno {
             return false;
         }
         
-        return !(this.fin.isBefore(otroTurno.inicio) || 
-                 this.inicio.isAfter(otroTurno.fin));
+        return !(this.fin.isBefore(otroTurno.inicio) || this.fin.equals(otroTurno.inicio) ||
+                 this.inicio.isAfter(otroTurno.fin) || this.inicio.equals(otroTurno.fin));
     }
 
     /**

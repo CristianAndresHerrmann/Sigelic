@@ -431,14 +431,36 @@ public class TramitesView extends VerticalLayout {
     }
 
     private void permitirReintento(Tramite tramite) {
-        try {
-            String motivo = "Reintento autorizado por el sistema";
-            tramiteService.permitirReintento(tramite.getId(), motivo);
-            showNotification("Reintento autorizado exitosamente", NotificationVariant.LUMO_SUCCESS);
-            refreshGrid();
-        } catch (Exception e) {
-            showNotification("Error al autorizar reintento: " + e.getMessage(), NotificationVariant.LUMO_ERROR);
-        }
+        com.vaadin.flow.component.dialog.Dialog dialog = new com.vaadin.flow.component.dialog.Dialog();
+        dialog.setHeaderTitle("Autorizar Reintento");
+        
+        com.vaadin.flow.component.textfield.TextArea motivoField = new com.vaadin.flow.component.textfield.TextArea("Motivo del reintento");
+        motivoField.setRequired(true);
+        motivoField.setWidthFull();
+        motivoField.setPlaceholder("Escriba el motivo aquí...");
+        
+        Button confirmButton = new Button("Autorizar", event -> {
+            String motivo = motivoField.getValue();
+            if (motivo == null || motivo.trim().isEmpty()) {
+                showNotification("El motivo es obligatorio", NotificationVariant.LUMO_ERROR);
+                return;
+            }
+            try {
+                tramiteService.permitirReintento(tramite.getId(), motivo.trim());
+                showNotification("Reintento autorizado exitosamente", NotificationVariant.LUMO_SUCCESS);
+                dialog.close();
+                refreshGrid();
+            } catch (Exception e) {
+                showNotification("Error al autorizar reintento: " + e.getMessage(), NotificationVariant.LUMO_ERROR);
+            }
+        });
+        confirmButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        
+        Button cancelButton = new Button("Cancelar", event -> dialog.close());
+        
+        dialog.add(new VerticalLayout(motivoField));
+        dialog.getFooter().add(cancelButton, confirmButton);
+        dialog.open();
     }
 
     private void refreshGrid() {

@@ -185,6 +185,37 @@ public class UsuarioService {
     }
 
     /**
+     * Cambia la contraseña del propio usuario autenticado
+     */
+    @PreAuthorize("isAuthenticated()")
+    public void cambiarPasswordPropia(String passwordActual, String passwordNueva) {
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            throw new IllegalStateException("Usuario no autenticado");
+        }
+        String username = auth.getName();
+        Usuario usuario = usuarioRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+
+        // Verificar contraseña actual
+        if (!passwordEncoder.matches(passwordActual, usuario.getPassword())) {
+            throw new IllegalArgumentException("La contraseña actual es incorrecta");
+        }
+
+        // Validar nueva contraseña
+        if (passwordNueva == null || passwordNueva.length() < 8) {
+            throw new IllegalArgumentException("La nueva contraseña debe tener al menos 8 caracteres");
+        }
+
+        usuario.setPassword(passwordEncoder.encode(passwordNueva));
+        usuario.setCambioPasswordRequerido(false);
+        usuario.setFechaActualizacion(LocalDateTime.now());
+        
+        usuarioRepository.save(usuario);
+        log.info("Contraseña propia cambiada exitosamente para usuario: {}", usuario.getUsername());
+    }
+
+    /**
      * Resetea la contraseña de un usuario (solo para administradores)
      */
     @PreAuthorize("hasAuthority('" + Authorities.SEGURIDAD_GESTIONAR_ROLES + "')")

@@ -159,7 +159,7 @@ public class TurnosView extends VerticalLayout {
         HorizontalLayout actions = new HorizontalLayout();
         actions.setSpacing(true);
 
-        if (turno.getEstado() == EstadoTurno.RESERVADO && authorityChecker.has(Authorities.TURNO_REPROGRAMAR)) {
+        if (turno.getEstado() == EstadoTurno.RESERVADO && authorityChecker.has(Authorities.TURNO_GESTIONAR)) {
             Button confirmarBtn = new Button(new Icon(VaadinIcon.CHECK));
             confirmarBtn.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_SUCCESS);
             confirmarBtn.setTooltipText("Confirmar turno");
@@ -168,7 +168,7 @@ public class TurnosView extends VerticalLayout {
         }
 
         if ((turno.getEstado() == EstadoTurno.RESERVADO || turno.getEstado() == EstadoTurno.CONFIRMADO) 
-                && authorityChecker.has(Authorities.TURNO_REPROGRAMAR)) {
+                && authorityChecker.has(Authorities.TURNO_GESTIONAR)) {
             
             Button absentBtn = new Button(new Icon(VaadinIcon.USER));
             absentBtn.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_CONTRAST);
@@ -192,7 +192,7 @@ public class TurnosView extends VerticalLayout {
             actions.add(cancelBtn);
         }
 
-        if (turno.getEstado() != EstadoTurno.CANCELADO && authorityChecker.has(Authorities.TURNO_REPROGRAMAR)) {
+        if (turno.getEstado() != EstadoTurno.CANCELADO && authorityChecker.has(Authorities.TURNO_GESTIONAR)) {
             Button asignarProfBtn = new Button(new Icon(VaadinIcon.DOCTOR));
             asignarProfBtn.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);
             asignarProfBtn.setTooltipText("Asignar profesional");

@@ -36,7 +36,7 @@ import java.util.Locale;
  */
 @Route(value = "pagos", layout = MainLayout.class)
 @PageTitle("Pagos | SIGELIC")
-@RolesAllowed({"ADMINISTRADOR", "SUPERVISOR", "CAJERO", "AUDITOR"})
+@RolesAllowed({"ADMINISTRADOR", "SUPERVISOR", "CAJERO", "AUDITOR", "AGENTE"})
 @Slf4j
 public class PagosView extends VerticalLayout {
 
@@ -74,7 +74,7 @@ public class PagosView extends VerticalLayout {
         });
 
         HorizontalLayout header = new HorizontalLayout(title);
-        if (authorityChecker.has(Authorities.PAGO_ACREDITAR)) {
+        if (authorityChecker.has(Authorities.PAGO_ACREDITAR) || authorityChecker.has(Authorities.PAGO_ORDEN_GENERAR)) {
             header.add(addPagoButton);
         }
         header.setJustifyContentMode(JustifyContentMode.BETWEEN);

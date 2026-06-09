@@ -123,7 +123,7 @@ public class TurnoService {
     /**
      * Confirma un turno reservado
      */
-    @PreAuthorize("hasAuthority('" + Authorities.TURNO_REPROGRAMAR + "')")
+    @PreAuthorize("hasAuthority('" + Authorities.TURNO_GESTIONAR + "')")
     public Turno confirmarTurno(Long turnoId) {
         Turno turno = turnoRepository.findById(turnoId)
                 .orElseThrow(() -> new IllegalArgumentException("Turno no encontrado con ID: " + turnoId));
@@ -145,7 +145,7 @@ public class TurnoService {
     /**
      * Completa un turno
      */
-    @PreAuthorize("hasAuthority('" + Authorities.TURNO_REPROGRAMAR + "')")
+    @PreAuthorize("hasAuthority('" + Authorities.TURNO_GESTIONAR + "')")
     public Turno completarTurno(Long turnoId, String observaciones) {
         Turno turno = turnoRepository.findById(turnoId)
                 .orElseThrow(() -> new IllegalArgumentException("Turno no encontrado con ID: " + turnoId));
@@ -185,7 +185,7 @@ public class TurnoService {
     /**
      * Marca un turno como ausente
      */
-    @PreAuthorize("hasAuthority('" + Authorities.TURNO_REPROGRAMAR + "')")
+    @PreAuthorize("hasAuthority('" + Authorities.TURNO_GESTIONAR + "')")
     public Turno marcarAusente(Long turnoId) {
         Turno turno = turnoRepository.findById(turnoId)
                 .orElseThrow(() -> new IllegalArgumentException("Turno no encontrado con ID: " + turnoId));
@@ -203,7 +203,7 @@ public class TurnoService {
     /**
      * Asigna un profesional a un turno
      */
-    @PreAuthorize("hasAuthority('" + Authorities.TURNO_REPROGRAMAR + "')")
+    @PreAuthorize("hasAuthority('" + Authorities.TURNO_GESTIONAR + "')")
     public Turno asignarProfesional(Long turnoId, String profesional) {
         Turno turno = turnoRepository.findById(turnoId)
                 .orElseThrow(() -> new IllegalArgumentException("Turno no encontrado con ID: " + turnoId));

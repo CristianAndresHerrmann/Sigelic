@@ -54,32 +54,7 @@ public class ReportesView extends VerticalLayout {
     private List<List<String>> currentData = new ArrayList<>();
     private String currentTitle = "";
 
-    public enum TipoReporte {
-        PAGOS("Pagos Recibidos"),
-        TRAMITES("Trámites por Estado"),
-        LICENCIAS("Licencias Emitidas"),
-        EXAMENES("Exámenes Realizados"),
-        TURNOS("Turnos"),
-        RECAUDACION("Recaudación"),
-        INHABILITACIONES("Inhabilitaciones"),
-        RENDIMIENTO("Rendimiento Examinadores"),
-        DASHBOARD("Dashboard General");
 
-        private final String descripcion;
-
-        TipoReporte(String descripcion) {
-            this.descripcion = descripcion;
-        }
-
-        public String getDescripcion() {
-            return descripcion;
-        }
-
-        @Override
-        public String toString() {
-            return descripcion;
-        }
-    }
 
     public ReportesView(ReporteService reporteService, ExportService exportService) {
         this.reporteService = reporteService;

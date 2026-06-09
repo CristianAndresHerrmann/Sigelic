@@ -28,6 +28,8 @@ public interface LicenciaRepository extends JpaRepository<Licencia, Long> {
     List<Licencia> findByTitularAndEstado(Titular titular, EstadoLicencia estado);
     
     Optional<Licencia> findByTitularAndClaseAndEstado(Titular titular, ClaseLicencia clase, EstadoLicencia estado);
+
+    List<Licencia> findByTitularAndClaseAndEstadoOrderByIdDesc(Titular titular, ClaseLicencia clase, EstadoLicencia estado);
     
     Optional<Licencia> findByNumeroLicencia(String numeroLicencia);
     

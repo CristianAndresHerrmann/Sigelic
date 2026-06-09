@@ -20,12 +20,14 @@ import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.spring.security.AuthenticationContext;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 
 /**
  * Layout principal de la aplicación SIGELIC
  */
-public class MainLayout extends AppLayout {
+public class MainLayout extends AppLayout implements BeforeEnterObserver {
 
     private H2 viewTitle;
     private final AuthenticationContext authContext;
@@ -171,6 +173,9 @@ public class MainLayout extends AppLayout {
             }
         });
 
+        // Cambiar Contraseña
+        nav.addItem(new SideNavItem("Cambiar Contraseña", CambiarContrasenaView.class, VaadinIcon.KEY.create()));
+
         return nav;
     }
 
@@ -202,5 +207,14 @@ public class MainLayout extends AppLayout {
     private String getCurrentPageTitle() {
         PageTitle title = getContent().getClass().getAnnotation(PageTitle.class);
         return title == null ? "" : title.value();
+    }
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        authContext.getAuthenticatedUser(com.example.sigelic.service.CustomUserDetailsService.CustomUserDetails.class).ifPresent(user -> {
+            if (user.requiereCambioPassword() && !event.getNavigationTarget().equals(CambiarContrasenaView.class)) {
+                event.forwardTo(CambiarContrasenaView.class);
+            }
+        });
     }
 }

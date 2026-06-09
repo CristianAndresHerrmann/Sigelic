@@ -29,7 +29,7 @@ public enum Permiso {
     // Gestión de Turnos
     TURNO_VER(Authorities.TURNO_VER, "Ver información de turnos"),
     TURNO_ASIGNAR(Authorities.TURNO_ASIGNAR, "Asignar nuevos turnos"),
-    TURNO_REPROGRAMAR(Authorities.TURNO_REPROGRAMAR, "Reprogramar turnos existentes"),
+    TURNO_GESTIONAR(Authorities.TURNO_GESTIONAR, "Gestionar turnos existentes"),
     TURNO_CANCELAR(Authorities.TURNO_CANCELAR, "Cancelar turnos"),
     
     // Exámenes

@@ -70,7 +70,7 @@ public class Titular {
     @Column(length = 20)
     private String telefono;
 
-    @OneToMany(mappedBy = "titular", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "titular", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Inhabilitacion> inhabilitaciones = new ArrayList<>();
 
     @OneToMany(mappedBy = "titular", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -86,14 +86,14 @@ public class Titular {
      * Calcula la edad del titular a la fecha actual
      */
     public int getEdad() {
-        return LocalDate.now().getYear() - fechaNacimiento.getYear();
+        return java.time.Period.between(fechaNacimiento, LocalDate.now()).getYears();
     }
 
     /**
      * Calcula la edad del titular a una fecha específica
      */
     public int getEdadEn(LocalDate fecha) {
-        return fecha.getYear() - fechaNacimiento.getYear();
+        return java.time.Period.between(fechaNacimiento, fecha).getYears();
     }
 
     /**
