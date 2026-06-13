@@ -23,7 +23,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 /**
  * Vista principal del Dashboard
  */
-@Route(value = "", layout = MainLayout.class)
+@Route(value = "dashboard", layout = MainLayout.class)
 @PageTitle("Dashboard | SIGELIC")
 @PermitAll
 public class DashboardView extends VerticalLayout {

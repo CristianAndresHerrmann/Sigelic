@@ -34,7 +34,7 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
 
     public MainLayout(AuthenticationContext authContext) {
         this.authContext = authContext;
-        
+
         setPrimarySection(Section.DRAWER);
         addDrawerContent();
         addHeaderContent();
@@ -55,9 +55,8 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
         header.expand(viewTitle);
         header.setWidthFull();
         header.addClassNames(
-            LumoUtility.Padding.Vertical.NONE,
-            LumoUtility.Padding.Horizontal.MEDIUM
-        );
+                LumoUtility.Padding.Vertical.NONE,
+                LumoUtility.Padding.Horizontal.MEDIUM);
 
         // Layout completo del header
         HorizontalLayout fullHeader = new HorizontalLayout(header, userLayout);
@@ -193,8 +192,8 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
         Footer layout = new Footer();
         layout.addClassNames(LumoUtility.Padding.Horizontal.MEDIUM,
                 LumoUtility.Padding.Vertical.SMALL);
-        
-        layout.add("SIGELIC © 2025 - Gobierno de Santa Fe");
+
+        layout.add("SIGELIC © " + java.time.LocalDate.now().getYear() + " - Gobierno de Santa Fe");
         return layout;
     }
 
@@ -211,10 +210,12 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
 
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
-        authContext.getAuthenticatedUser(com.example.sigelic.service.CustomUserDetailsService.CustomUserDetails.class).ifPresent(user -> {
-            if (user.requiereCambioPassword() && !event.getNavigationTarget().equals(CambiarContrasenaView.class)) {
-                event.forwardTo(CambiarContrasenaView.class);
-            }
-        });
+        authContext.getAuthenticatedUser(com.example.sigelic.service.CustomUserDetailsService.CustomUserDetails.class)
+                .ifPresent(user -> {
+                    if (user.requiereCambioPassword()
+                            && !event.getNavigationTarget().equals(CambiarContrasenaView.class)) {
+                        event.forwardTo(CambiarContrasenaView.class);
+                    }
+                });
     }
 }
