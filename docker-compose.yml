@@ -1,0 +1,42 @@
+services:
+  # Servicio de Base de Datos MySQL
+  db:
+    image: mysql:8.0
+    container_name: sigelic-db-local
+    ports:
+      - "3307:3306"
+    environment:
+      - MYSQL_DATABASE=sigelic
+      - MYSQL_ROOT_PASSWORD=admin
+    volumes:
+      - mysql_data:/var/lib/mysql
+    # Healthcheck para garantizar que MySQL esté listo para aceptar conexiones
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-padmin"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Servicio de la Aplicación Java (SIGELIC)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sigelic-app-local
+    ports:
+      - "80:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_NAME=sigelic
+      - DB_USERNAME=root
+      - DB_PASSWORD=admin
+      - SERVER_PORT=8080
+      - SPRING_PROFILES_ACTIVE=prod
+    restart: on-failure
+
+volumes:
+  mysql_data:

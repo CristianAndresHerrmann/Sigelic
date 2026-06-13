@@ -1,0 +1,16 @@
+target/
+*.jar
+*.war
+*.class
+.git/
+.gitignore
+.idea/
+.vscode/
+*.iml
+node/
+node_modules/
+frontend/generated/
+package-lock.json
+Dockerfile
+docker-compose.yml
+.env
