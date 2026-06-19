@@ -30,7 +30,7 @@ import lombok.EqualsAndHashCode;
 @Entity
 @Table(name = "tramites")
 @Data
-@EqualsAndHashCode(exclude = {"titular", "exameneseoricos", "examenespracticos", "aptosMedicos", "pagos", "turnos"})
+@EqualsAndHashCode(exclude = {"titular", "examenesTeoricos", "examenesPracticos", "aptosMedicos", "pagos", "turnos"})
 public class Tramite {
 
     @Id
@@ -85,10 +85,10 @@ public class Tramite {
     private LocalDateTime fechaActualizacion;
 
     @OneToMany(mappedBy = "tramite", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<ExamenTeorico> exameneseoricos = new ArrayList<>();
+    private List<ExamenTeorico> examenesTeoricos = new ArrayList<>();
 
     @OneToMany(mappedBy = "tramite", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<ExamenPractico> examenespracticos = new ArrayList<>();
+    private List<ExamenPractico> examenesPracticos = new ArrayList<>();
 
     @OneToMany(mappedBy = "tramite", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<AptoMedico> aptosMedicos = new ArrayList<>();

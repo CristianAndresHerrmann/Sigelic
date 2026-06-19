@@ -35,8 +35,8 @@ public class TramiteResponseDTO {
     
     // Referencias a otras entidades
     private TitularResponseDTO titular;
-    private List<ExamenTeoricoResponseDTO> exameneseoricos;
-    private List<ExamenPracticoResponseDTO> examenespracticos;
+    private List<ExamenTeoricoResponseDTO> examenesTeoricos;
+    private List<ExamenPracticoResponseDTO> examenesPracticos;
     private List<AptoMedicoResponseDTO> aptosMedicos;
     private List<PagoResponseDTO> pagos;
 }
