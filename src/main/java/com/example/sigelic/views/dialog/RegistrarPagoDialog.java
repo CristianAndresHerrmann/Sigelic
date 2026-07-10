@@ -29,6 +29,9 @@ import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.data.validator.StringLengthValidator;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class RegistrarPagoDialog extends Dialog {
     
     private final TramiteService tramiteService;
@@ -82,11 +85,10 @@ public class RegistrarPagoDialog extends Dialog {
         
         // Campos del pago
         montoField = new NumberField("Monto");
-        montoField.setValue(calcularMontoPago());
         montoField.setPrefixComponent(new com.vaadin.flow.component.html.Span("$"));
         montoField.setStep(0.01);
         montoField.setMin(0);
-        montoField.setHelperText("Monto en pesos argentinos");
+        precargarMonto();
         
         medioPagoField = new ComboBox<>("Medio de Pago");
         medioPagoField.setItems(MedioPago.values());
@@ -219,16 +221,18 @@ public class RegistrarPagoDialog extends Dialog {
         actualizarCamposSegunEstado(EstadoPago.ACREDITADO);
     }
     
-    private double calcularMontoPago() {
-        // Este sería el lugar para consultar CostoTramite
-        // Por ahora uso valores fijos según la clase de licencia
-        return switch (tramite.getClaseSolicitada()) {
-            case A -> 15000.0;
-            case B -> 12000.0;
-            case C -> 18000.0;
-            case D -> 20000.0;
-            case E -> 25000.0;
-        };
+    private void precargarMonto() {
+        try {
+            BigDecimal costo = pagoService.obtenerCostoTramite(
+                    tramite.getTipo(), tramite.getClaseSolicitada());
+            montoField.setValue(costo.doubleValue());
+            montoField.setHelperText("Costo vigente según tipo de trámite y clase de licencia");
+        } catch (Exception e) {
+            log.warn("No se pudo obtener el costo vigente para el trámite ID {}: {}",
+                    tramite.getId(), e.getMessage());
+            montoField.setValue(0.0);
+            montoField.setHelperText("No se pudo obtener el costo configurado; ingrese el monto manualmente");
+        }
     }
     
     private void actualizarCamposSegunEstado(EstadoPago estado) {
