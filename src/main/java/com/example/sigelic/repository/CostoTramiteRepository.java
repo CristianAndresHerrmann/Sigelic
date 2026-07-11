@@ -17,23 +17,23 @@ import java.util.Optional;
  */
 @Repository
 public interface CostoTramiteRepository extends JpaRepository<CostoTramite, Long> {
-    
+
     List<CostoTramite> findByTipoTramite(TipoTramite tipoTramite);
-    
+
     List<CostoTramite> findByClaseLicencia(ClaseLicencia claseLicencia);
-    
+
     List<CostoTramite> findByActivo(Boolean activo);
-    
+
     @Query("SELECT c FROM CostoTramite c WHERE c.tipoTramite = :tipo AND c.claseLicencia = :clase AND c.activo = true AND " +
            "c.fechaVigenciaDesde <= :fecha AND (c.fechaVigenciaHasta IS NULL OR c.fechaVigenciaHasta >= :fecha)")
-    Optional<CostoTramite> findCostoVigente(@Param("tipo") TipoTramite tipo, 
-                                           @Param("clase") ClaseLicencia clase, 
+    Optional<CostoTramite> findCostoVigente(@Param("tipo") TipoTramite tipo,
+                                           @Param("clase") ClaseLicencia clase,
                                            @Param("fecha") LocalDate fecha);
-    
+
     @Query("SELECT c FROM CostoTramite c WHERE c.activo = true AND " +
            "c.fechaVigenciaDesde <= CURRENT_DATE AND (c.fechaVigenciaHasta IS NULL OR c.fechaVigenciaHasta >= CURRENT_DATE)")
     List<CostoTramite> findCostosVigentes();
-    
+
     @Query("SELECT c FROM CostoTramite c WHERE c.fechaVigenciaHasta < :fecha AND c.activo = true")
     List<CostoTramite> findCostosVencidos(@Param("fecha") LocalDate fecha);
 }

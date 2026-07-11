@@ -19,6 +19,7 @@ import com.example.sigelic.model.EstadoTramite;
 import com.example.sigelic.model.ExamenPractico;
 import com.example.sigelic.model.ExamenTeorico;
 import com.example.sigelic.model.Licencia;
+import com.example.sigelic.model.MotivoDuplicacion;
 import com.example.sigelic.model.Pago;
 import com.example.sigelic.model.TipoTramite;
 import com.example.sigelic.model.Titular;
@@ -93,6 +94,14 @@ public class TramiteService {
      */
     @PreAuthorize("hasAuthority('" + Authorities.TRAMITE_INICIAR + "')")
     public Tramite iniciarTramite(Long titularId, TipoTramite tipo, ClaseLicencia clase) {
+        return iniciarTramite(titularId, tipo, clase, null);
+    }
+
+    /**
+     * Inicia un nuevo trámite indicando el motivo de duplicación (obligatorio para DUPLICADO)
+     */
+    @PreAuthorize("hasAuthority('" + Authorities.TRAMITE_INICIAR + "')")
+    public Tramite iniciarTramite(Long titularId, TipoTramite tipo, ClaseLicencia clase, MotivoDuplicacion motivoDuplicacion) {
         Titular titular = titularService.findById(titularId)
                 .orElseThrow(() -> new IllegalArgumentException("Titular no encontrado con ID: " + titularId));
 
@@ -120,10 +129,16 @@ public class TramiteService {
         // Validaciones específicas por tipo de trámite
         validarRequisitosPorTipoTramite(titular, tipo, clase);
 
+        // El motivo de duplicación es obligatorio para trámites de duplicado
+        if (tipo == TipoTramite.DUPLICADO && motivoDuplicacion == null) {
+            throw new IllegalArgumentException("Debe indicarse el motivo de duplicación para un trámite de duplicado");
+        }
+
         Tramite tramite = new Tramite();
         tramite.setTitular(titular);
         tramite.setTipo(tipo);
         tramite.setClaseSolicitada(clase);
+        tramite.setMotivoDuplicacion(tipo == TipoTramite.DUPLICADO ? motivoDuplicacion : null);
         tramite.setEstado(EstadoTramite.INICIADO);
 
         log.info("Iniciando trámite de {} para titular: {} {}", tipo.name(), titular.getNombre(), titular.getApellido());

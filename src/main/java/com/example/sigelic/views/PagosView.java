@@ -6,6 +6,7 @@ import com.example.sigelic.security.Authorities;
 import com.example.sigelic.service.PagoService;
 import com.example.sigelic.service.TramiteService;
 import com.example.sigelic.views.dialog.CrearPagoDialog;
+import com.example.sigelic.views.dialog.RechazarPagoDialog;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
@@ -152,7 +153,33 @@ public class PagosView extends VerticalLayout {
             .setWidth("150px")
             .setFlexGrow(0);
 
+        // Columna de acciones
+        if (authorityChecker.has(Authorities.PAGO_RECHAZAR)) {
+            grid.addComponentColumn(this::createAcciones)
+                .setHeader("Acciones")
+                .setWidth("130px")
+                .setFlexGrow(0);
+        }
+
         add(grid);
+    }
+
+    private HorizontalLayout createAcciones(Pago pago) {
+        HorizontalLayout acciones = new HorizontalLayout();
+        acciones.setSpacing(false);
+
+        if (pago.getEstado() == EstadoPago.PENDIENTE) {
+            Button rechazarBtn = new Button("Rechazar", new Icon(VaadinIcon.BAN));
+            rechazarBtn.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_ERROR);
+            rechazarBtn.setTooltipText("Rechazar pago pendiente");
+            rechazarBtn.addClickListener(e -> {
+                RechazarPagoDialog dialog = new RechazarPagoDialog(pagoService, pago, unused -> loadPagos());
+                dialog.open();
+            });
+            acciones.add(rechazarBtn);
+        }
+
+        return acciones;
     }
 
     private Span createEstadoBadge(Pago pago) {

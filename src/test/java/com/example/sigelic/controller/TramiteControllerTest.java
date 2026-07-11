@@ -145,7 +145,7 @@ class TramiteControllerTest {
         @DisplayName("Debe iniciar trámite exitosamente")
         void debeIniciarTramiteExitosamente() throws Exception {
             // Given
-            when(tramiteService.iniciarTramite(1L, TipoTramite.EMISION, ClaseLicencia.B))
+            when(tramiteService.iniciarTramite(1L, TipoTramite.EMISION, ClaseLicencia.B, null))
                     .thenReturn(tramite);
             when(tramiteMapper.toResponseDTO(tramite)).thenReturn(tramiteResponseDTO);
 
@@ -160,7 +160,7 @@ class TramiteControllerTest {
                     .andExpect(jsonPath("$.claseSolicitada").value("B"))
                     .andExpect(jsonPath("$.estado").value("INICIADO"));
 
-            verify(tramiteService).iniciarTramite(1L, TipoTramite.EMISION, ClaseLicencia.B);
+            verify(tramiteService).iniciarTramite(1L, TipoTramite.EMISION, ClaseLicencia.B, null);
             verify(tramiteMapper).toResponseDTO(tramite);
         }
 
@@ -177,14 +177,14 @@ class TramiteControllerTest {
                     .content(objectMapper.writeValueAsString(invalidDTO)))
                     .andExpect(status().isBadRequest());
 
-            verify(tramiteService, never()).iniciarTramite(any(), any(), any());
+            verify(tramiteService, never()).iniciarTramite(any(), any(), any(), any());
         }
 
         @Test
         @DisplayName("Debe retornar 400 cuando titular no puede iniciar trámite")
         void debeRetornar400CuandoTitularNoPuedeIniciarTramite() throws Exception {
             // Given
-            when(tramiteService.iniciarTramite(1L, TipoTramite.EMISION, ClaseLicencia.B))
+            when(tramiteService.iniciarTramite(1L, TipoTramite.EMISION, ClaseLicencia.B, null))
                     .thenThrow(new IllegalArgumentException("Titular no cumple requisitos de edad"));
 
             // When & Then
@@ -193,7 +193,7 @@ class TramiteControllerTest {
                     .content(objectMapper.writeValueAsString(tramiteRequestDTO)))
                     .andExpect(status().isBadRequest());
 
-            verify(tramiteService).iniciarTramite(1L, TipoTramite.EMISION, ClaseLicencia.B);
+            verify(tramiteService).iniciarTramite(1L, TipoTramite.EMISION, ClaseLicencia.B, null);
         }
     }
 

@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import jakarta.validation.constraints.*;
 import com.example.sigelic.model.TipoTramite;
 import com.example.sigelic.model.ClaseLicencia;
+import com.example.sigelic.model.MotivoDuplicacion;
 
 /**
  * DTO de request para iniciar un trámite
@@ -23,7 +24,10 @@ public class TramiteRequestDTO {
     
     @NotNull(message = "La clase de licencia solicitada es obligatoria")
     private ClaseLicencia claseSolicitada;
-    
+
+    // Obligatorio solo para trámites de tipo DUPLICADO (se valida en el servicio)
+    private MotivoDuplicacion motivoDuplicacion;
+
     @Size(max = 500, message = "Las observaciones no pueden exceder 500 caracteres")
     private String observaciones;
 }

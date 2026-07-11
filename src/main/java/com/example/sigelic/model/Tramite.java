@@ -53,6 +53,10 @@ public class Tramite {
     @Column(name = "clase_solicitada", nullable = false, length = 20)
     private ClaseLicencia claseSolicitada;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "motivo_duplicacion", length = 20)
+    private MotivoDuplicacion motivoDuplicacion;
+
     @Column(name = "documentacion_validada")
     private Boolean documentacionValidada = false;
 

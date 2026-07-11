@@ -5,9 +5,12 @@ import java.util.List;
 
 import com.example.sigelic.model.Titular;
 import com.example.sigelic.security.Authorities;
+import com.example.sigelic.service.LicenciaService;
 import com.example.sigelic.service.TitularService;
+import com.example.sigelic.service.TramiteService;
 import com.example.sigelic.views.dialog.EditarTitularDialog;
 import com.example.sigelic.views.dialog.NuevoTitularDialog;
+import com.example.sigelic.views.dialog.VerTitularDialog;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
@@ -39,13 +42,18 @@ import jakarta.annotation.security.RolesAllowed;
 public class TitularesView extends VerticalLayout {
 
     private final TitularService titularService;
+    private final LicenciaService licenciaService;
+    private final TramiteService tramiteService;
     private final AuthorityChecker authorityChecker;
     private Grid<Titular> grid;
     private ListDataProvider<Titular> dataProvider;
     private TextField searchField;
 
-    public TitularesView(TitularService titularService, AuthorityChecker authorityChecker) {
+    public TitularesView(TitularService titularService, LicenciaService licenciaService,
+                         TramiteService tramiteService, AuthorityChecker authorityChecker) {
         this.titularService = titularService;
+        this.licenciaService = licenciaService;
+        this.tramiteService = tramiteService;
         this.authorityChecker = authorityChecker;
         addClassName("titulares-view");
         setSizeFull();
@@ -242,9 +250,15 @@ public class TitularesView extends VerticalLayout {
     }
 
     private void viewTitularDetails(Titular titular) {
-        // TODO: Implementar diálogo de detalles del titular
-        showNotification("Ver detalles de: " + titular.getNombre() + " " + titular.getApellido(), 
-                        NotificationVariant.LUMO_CONTRAST);
+        try {
+            VerTitularDialog dialog = new VerTitularDialog(titular,
+                    licenciaService.findByTitular(titular),
+                    tramiteService.findByTitular(titular.getId()));
+            dialog.open();
+        } catch (Exception e) {
+            showNotification("Error al cargar el detalle del titular: " + e.getMessage(),
+                            NotificationVariant.LUMO_ERROR);
+        }
     }
 
     private void editTitular(Titular titular) {

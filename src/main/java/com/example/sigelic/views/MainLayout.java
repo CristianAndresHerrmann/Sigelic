@@ -165,6 +165,13 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
             }
         });
 
+        // Costos de trámites (solo para administradores)
+        authContext.getAuthenticatedUser(UserDetails.class).ifPresent(user -> {
+            if (hasAnyRole(user, "ADMINISTRADOR")) {
+                nav.addItem(new SideNavItem("Costos", CostosView.class, VaadinIcon.DOLLAR.create()));
+            }
+        });
+
         // Configuración (solo para administradores)
         authContext.getAuthenticatedUser(UserDetails.class).ifPresent(user -> {
             if (hasAnyRole(user, "ADMINISTRADOR")) {

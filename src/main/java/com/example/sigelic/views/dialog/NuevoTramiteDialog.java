@@ -6,6 +6,7 @@ import java.util.function.Consumer;
 
 import com.example.sigelic.model.ClaseLicencia;
 import com.example.sigelic.model.Licencia;
+import com.example.sigelic.model.MotivoDuplicacion;
 import com.example.sigelic.model.TipoTramite;
 import com.example.sigelic.model.Titular;
 import com.example.sigelic.service.LicenciaService;
@@ -42,6 +43,7 @@ public class NuevoTramiteDialog extends Dialog {
     private ComboBox<Titular> titularComboBox;
     private ComboBox<TipoTramite> tipoTramiteComboBox;
     private ComboBox<ClaseLicencia> claseLicenciaComboBox;
+    private ComboBox<MotivoDuplicacion> motivoDuplicacionComboBox;
     private TextArea observacionesField;
     private Span requisitosInfo;
 
@@ -93,6 +95,7 @@ public class NuevoTramiteDialog extends Dialog {
         tipoTramiteComboBox.addValueChangeListener(e -> {
             updateRequisitosInfo();
             actualizarClasesDisponibles();
+            actualizarMotivoDuplicacion();
         });
 
         // ComboBox para clase de licencia
@@ -101,6 +104,13 @@ public class NuevoTramiteDialog extends Dialog {
         claseLicenciaComboBox.setItemLabelGenerator(clase -> 
             clase.name() + " - " + clase.getDescripcion());
         claseLicenciaComboBox.addValueChangeListener(e -> validarEdadParaClase());
+
+        // ComboBox para motivo de duplicación (solo trámites DUPLICADO)
+        motivoDuplicacionComboBox = new ComboBox<>("Motivo de Duplicación");
+        motivoDuplicacionComboBox.setItems(MotivoDuplicacion.values());
+        motivoDuplicacionComboBox.setItemLabelGenerator(MotivoDuplicacion::getDescripcion);
+        motivoDuplicacionComboBox.setPlaceholder("Seleccione el motivo...");
+        motivoDuplicacionComboBox.setVisible(false);
 
         // Campo de observaciones
         observacionesField = new TextArea("Observaciones");
@@ -117,7 +127,8 @@ public class NuevoTramiteDialog extends Dialog {
 
         formLayout.add(
                 titularComboBox, tipoTramiteComboBox,
-                claseLicenciaComboBox, observacionesField
+                claseLicenciaComboBox, motivoDuplicacionComboBox,
+                observacionesField
         );
         formLayout.setColspan(observacionesField, 2);
 
@@ -157,6 +168,9 @@ public class NuevoTramiteDialog extends Dialog {
         binder.forField(claseLicenciaComboBox)
                 .asRequired("La clase de licencia es obligatoria")
                 .bind(TramiteData::getClaseSolicitada, TramiteData::setClaseSolicitada);
+
+        binder.forField(motivoDuplicacionComboBox)
+                .bind(TramiteData::getMotivoDuplicacion, TramiteData::setMotivoDuplicacion);
 
         binder.forField(observacionesField)
                 .bind(TramiteData::getObservaciones, TramiteData::setObservaciones);
@@ -226,6 +240,18 @@ public class NuevoTramiteDialog extends Dialog {
         }
     }
 
+    /**
+     * Muestra el motivo de duplicación solo para trámites de tipo DUPLICADO
+     */
+    private void actualizarMotivoDuplicacion() {
+        boolean esDuplicado = tipoTramiteComboBox.getValue() == TipoTramite.DUPLICADO;
+        motivoDuplicacionComboBox.setVisible(esDuplicado);
+        motivoDuplicacionComboBox.setRequiredIndicatorVisible(esDuplicado);
+        if (!esDuplicado) {
+            motivoDuplicacionComboBox.setValue(null);
+        }
+    }
+
     private String getRequisitosText(TipoTramite tipo) {
         switch (tipo) {
             case EMISION:
@@ -246,10 +272,18 @@ public class NuevoTramiteDialog extends Dialog {
             TramiteData tramiteData = new TramiteData();
             binder.writeBean(tramiteData);
 
+            if (tramiteData.getTipo() == TipoTramite.DUPLICADO && tramiteData.getMotivoDuplicacion() == null) {
+                motivoDuplicacionComboBox.setInvalid(true);
+                motivoDuplicacionComboBox.setErrorMessage("Debe indicar el motivo de duplicación");
+                showNotification("Debe indicar el motivo de duplicación", NotificationVariant.LUMO_ERROR);
+                return;
+            }
+
             tramiteService.iniciarTramite(
                     tramiteData.getTitular().getId(),
                     tramiteData.getTipo(),
-                    tramiteData.getClaseSolicitada()
+                    tramiteData.getClaseSolicitada(),
+                    tramiteData.getMotivoDuplicacion()
             );
 
             showNotification("Trámite creado exitosamente", NotificationVariant.LUMO_SUCCESS);
@@ -388,6 +422,7 @@ public class NuevoTramiteDialog extends Dialog {
         private Titular titular;
         private TipoTramite tipo;
         private ClaseLicencia claseSolicitada;
+        private MotivoDuplicacion motivoDuplicacion;
         private String observaciones;
 
         // Getters y setters
@@ -399,6 +434,9 @@ public class NuevoTramiteDialog extends Dialog {
 
         public ClaseLicencia getClaseSolicitada() { return claseSolicitada; }
         public void setClaseSolicitada(ClaseLicencia claseSolicitada) { this.claseSolicitada = claseSolicitada; }
+
+        public MotivoDuplicacion getMotivoDuplicacion() { return motivoDuplicacion; }
+        public void setMotivoDuplicacion(MotivoDuplicacion motivoDuplicacion) { this.motivoDuplicacion = motivoDuplicacion; }
 
         public String getObservaciones() { return observaciones; }
         public void setObservaciones(String observaciones) { this.observaciones = observaciones; }

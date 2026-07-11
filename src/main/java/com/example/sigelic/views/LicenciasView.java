@@ -13,15 +13,7 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Span;
-import com.example.sigelic.service.LicenciaService;
-import com.example.sigelic.views.dialog.VerLicenciaDialog;
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
-import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.grid.GridVariant;
-import com.vaadin.flow.component.html.H2;
-import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
@@ -68,12 +60,6 @@ public class LicenciasView extends VerticalLayout {
         H2 title = new H2("Gestión de Licencias");
         title.addClassNames(LumoUtility.Margin.Bottom.MEDIUM, LumoUtility.Margin.Top.NONE);
 
-        Button addLicenseButton = new Button("Nueva Licencia", new Icon(VaadinIcon.PLUS));
-        addLicenseButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        addLicenseButton.addClickListener(e -> {
-            // TODO: Implementar diálogo para nueva licencia
-        });
-
         Button actualizarVencidasBtn = new Button("Actualizar Vencidas", new Icon(VaadinIcon.REFRESH));
         actualizarVencidasBtn.addThemeVariants(ButtonVariant.LUMO_CONTRAST);
         actualizarVencidasBtn.addClickListener(e -> ejecutarActualizarVencidas());
@@ -81,9 +67,6 @@ public class LicenciasView extends VerticalLayout {
         HorizontalLayout header = new HorizontalLayout(title);
         
         HorizontalLayout actions = new HorizontalLayout();
-        if (authorityChecker.has(Authorities.LICENCIA_EMITIR)) {
-            actions.add(addLicenseButton);
-        }
         if (authorityChecker.has(Authorities.PROCESO_VENCIMIENTOS_EJECUTAR)) {
             actions.add(actualizarVencidasBtn);
         }

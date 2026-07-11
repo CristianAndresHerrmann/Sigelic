@@ -17,7 +17,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CostoTramiteResponseDTO {
-    
+
     private Long id;
     private TipoTramite tipoTramite;
     private ClaseLicencia claseLicencia;

@@ -66,7 +66,8 @@ public class TramiteController {
         Tramite tramite = tramiteService.iniciarTramite(
             tramiteRequest.getTitularId(),
             tramiteRequest.getTipo(),
-            tramiteRequest.getClaseSolicitada()
+            tramiteRequest.getClaseSolicitada(),
+            tramiteRequest.getMotivoDuplicacion()
         );
         
         TramiteResponseDTO dto = tramiteMapper.toResponseDTO(tramite);

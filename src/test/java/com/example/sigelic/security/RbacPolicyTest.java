@@ -9,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 
 import com.example.sigelic.model.Permiso;
 import com.example.sigelic.model.RolSistema;
+import com.example.sigelic.service.CostoTramiteService;
 import com.example.sigelic.service.LicenciaService;
 import com.example.sigelic.service.PagoService;
 import com.example.sigelic.service.TramiteService;
@@ -73,6 +74,8 @@ class RbacPolicyTest {
         assertGuard(LicenciaService.class, "suspenderLicencia", Authorities.LICENCIA_GESTIONAR_ESTADO);
         assertGuard(LicenciaService.class, "actualizarLicenciasVencidas", Authorities.PROCESO_VENCIMIENTOS_EJECUTAR);
         assertGuard(UsuarioService.class, "asignarRol", Authorities.SEGURIDAD_GESTIONAR_ROLES);
+        assertGuard(CostoTramiteService.class, "actualizarCosto", Authorities.PARAMETROS_EDITAR);
+        assertGuard(CostoTramiteService.class, "desactivarCosto", Authorities.PARAMETROS_EDITAR);
     }
 
     private void assertPermite(RolSistema rol, Permiso... permisos) {

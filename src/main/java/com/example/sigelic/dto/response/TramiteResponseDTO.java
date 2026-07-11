@@ -22,6 +22,7 @@ public class TramiteResponseDTO {
     private TipoTramite tipo;
     private EstadoTramite estado;
     private ClaseLicencia claseSolicitada;
+    private MotivoDuplicacion motivoDuplicacion;
     private Boolean documentacionValidada;
     private Boolean aptoMedicoVigente;
     private Boolean examenTeoricoAprobado;

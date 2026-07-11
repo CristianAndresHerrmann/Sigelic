@@ -246,11 +246,11 @@ public class PagoService {
     @PreAuthorize("hasAnyAuthority('" + Authorities.PAGO_ORDEN_GENERAR + "', '" + Authorities.PAGO_ACREDITAR + "')")
     public BigDecimal obtenerCostoTramite(TipoTramite tipo, ClaseLicencia clase) {
         Optional<CostoTramite> costo = costoTramiteRepository.findCostoVigente(tipo, clase, LocalDate.now());
-        
+
         if (costo.isPresent()) {
             return costo.get().getCosto();
         }
-        
+
         // Si no hay costo configurado, usar valores por defecto
         return obtenerCostoPorDefecto(tipo, clase);
     }

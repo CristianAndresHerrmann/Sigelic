@@ -30,6 +30,7 @@ public class TramiteMapper {
         Tramite tramite = new Tramite();
         tramite.setTipo(dto.getTipo());
         tramite.setClaseSolicitada(dto.getClaseSolicitada());
+        tramite.setMotivoDuplicacion(dto.getMotivoDuplicacion());
         tramite.setEstado(EstadoTramite.INICIADO); // Estado inicial
         tramite.setObservaciones(dto.getObservaciones());
 
@@ -46,6 +47,7 @@ public class TramiteMapper {
 
         tramite.setTipo(dto.getTipo());
         tramite.setClaseSolicitada(dto.getClaseSolicitada());
+        tramite.setMotivoDuplicacion(dto.getMotivoDuplicacion());
         tramite.setObservaciones(dto.getObservaciones());
     }
 
@@ -62,6 +64,7 @@ public class TramiteMapper {
                 .tipo(tramite.getTipo())
                 .estado(tramite.getEstado())
                 .claseSolicitada(tramite.getClaseSolicitada())
+                .motivoDuplicacion(tramite.getMotivoDuplicacion())
                 .fechaCreacion(tramite.getFechaCreacion())
                 .fechaActualizacion(tramite.getFechaActualizacion())
                 .observaciones(tramite.getObservaciones())

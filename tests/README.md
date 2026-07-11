@@ -181,9 +181,9 @@ GET    /contador/emitidas           - Contador emitidas
 ### Clases de Licencia
 - `CLASE_A` - Motocicletas
 - `CLASE_B` - Automóviles
-- `CLASE_C` - Camiones
-- `CLASE_D` - Transporte público
-- `CLASE_E` - Transporte de carga
+- `CLASE_C` - Camiones hasta 7500kg
+- `CLASE_D` - Transporte de pasajeros
+- `CLASE_E` - Camiones pesados
 
 ### Tipos de Turno
 - `EXAMEN_TEORICO` - Examen teórico

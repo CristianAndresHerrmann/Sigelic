@@ -54,10 +54,10 @@ public class CostoTramite {
         if (!activo) {
             return false;
         }
-        
+
         boolean despuesDelInicio = !fecha.isBefore(fechaVigenciaDesde);
         boolean antesDelFin = fechaVigenciaHasta == null || !fecha.isAfter(fechaVigenciaHasta);
-        
+
         return despuesDelInicio && antesDelFin;
     }
 
