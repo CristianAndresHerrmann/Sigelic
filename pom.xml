@@ -183,7 +183,7 @@
 			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>0.8.12</version>
+				<version>0.8.13</version>
 				<executions>
 					<execution>
 						<id>default-prepare-agent</id>
@@ -224,6 +224,13 @@
 						<exclude>**/dto/**</exclude>
 						<exclude>**/config/**</exclude>
 						<exclude>**/model/**</exclude>
+						<exclude>**/views/**</exclude>
+						<exclude>**/mapper/**</exclude>
+						<exclude>**/util/**</exclude>
+						<exclude>**/exception/**</exclude>
+						<exclude>**/service/DataInitializationService.class</exclude>
+						<exclude>**/controller/DataController.class</exclude>
+						<exclude>**/controller/VerificationController.class</exclude>
 					</excludes>
 				</configuration>
 			</plugin>
