@@ -59,6 +59,24 @@ public class DataInitializationService implements CommandLineRunner {
                 usuarioService.actualizarPassword("admin", "Admin123!");
             }
             
+            // Crear usuario superadministrador por defecto (cuenta técnica con todos los permisos)
+            if (!usuarioService.existsByUsername("superadmin")) {
+                Usuario superadmin = new Usuario();
+                superadmin.setUsername("superadmin");
+                superadmin.setPassword("SuperAdmin123!");
+                superadmin.setEmail("superadmin@sigelic.gov.ar");
+                superadmin.setNombre("Super");
+                superadmin.setApellido("Administrador");
+                superadmin.setRol(RolSistema.SUPERADMIN);
+                superadmin.setActivo(true);
+                superadmin.setCuentaBloqueada(false);
+                superadmin.setCambioPasswordRequerido(false);
+                superadmin.setCreadoPor("SISTEMA");
+
+                usuarioService.crearUsuario(superadmin);
+                log.info("Usuario superadministrador creado: superadmin/SuperAdmin123!");
+            }
+
             // Actualizar contraseñas de usuarios de migración si existen
             actualizarPasswordsUsuariosMigracion();
 

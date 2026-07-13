@@ -69,7 +69,7 @@ import jakarta.annotation.security.RolesAllowed;
  */
 @Route(value = "tramites", layout = MainLayout.class)
 @PageTitle("Trámites | SIGELIC")
-@RolesAllowed({"ADMINISTRADOR", "SUPERVISOR", "AGENTE", "MEDICO", "EXAMINADOR", "CAJERO"})
+@RolesAllowed({"SUPERADMIN", "ADMINISTRADOR", "SUPERVISOR", "AGENTE", "MEDICO", "EXAMINADOR", "CAJERO"})
 public class TramitesView extends VerticalLayout {
 
     private final TramiteService tramiteService;

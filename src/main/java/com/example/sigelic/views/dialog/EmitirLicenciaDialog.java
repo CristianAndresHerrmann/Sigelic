@@ -263,6 +263,9 @@ public class EmitirLicenciaDialog extends Dialog {
                 onSuccess.run();
             }
 
+            // Mostrar el carnet de la licencia recién emitida (frente y dorso)
+            new VerLicenciaDialog(licenciaEmitida).open();
+
         } catch (IllegalStateException e) {
             showNotification("Error: " + e.getMessage(), NotificationVariant.LUMO_ERROR);
             log.warn("Error al emitir licencia para trámite ID {}: {}", tramite.getId(), e.getMessage());

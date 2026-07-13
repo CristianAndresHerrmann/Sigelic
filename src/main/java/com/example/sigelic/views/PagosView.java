@@ -37,7 +37,7 @@ import java.util.Locale;
  */
 @Route(value = "pagos", layout = MainLayout.class)
 @PageTitle("Pagos | SIGELIC")
-@RolesAllowed({"ADMINISTRADOR", "SUPERVISOR", "CAJERO", "AUDITOR", "AGENTE"})
+@RolesAllowed({"SUPERADMIN", "ADMINISTRADOR", "SUPERVISOR", "CAJERO", "AUDITOR", "AGENTE"})
 @Slf4j
 public class PagosView extends VerticalLayout {
 

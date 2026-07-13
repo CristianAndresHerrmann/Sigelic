@@ -37,7 +37,7 @@ import jakarta.annotation.security.RolesAllowed;
 
 @Route(value = "turnos", layout = MainLayout.class)
 @PageTitle("Turnos | SIGELIC")
-@RolesAllowed({"ADMINISTRADOR", "SUPERVISOR", "AGENTE"})
+@RolesAllowed({"SUPERADMIN", "ADMINISTRADOR", "SUPERVISOR", "AGENTE"})
 public class TurnosView extends VerticalLayout {
 
     private final TurnoService turnoService;

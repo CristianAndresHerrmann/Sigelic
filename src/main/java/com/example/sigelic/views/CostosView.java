@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Route(value = "costos", layout = MainLayout.class)
 @PageTitle("Costos de Trámites | SIGELIC")
-@RolesAllowed({"ADMINISTRADOR"})
+@RolesAllowed({"SUPERADMIN", "ADMINISTRADOR"})
 @Slf4j
 public class CostosView extends VerticalLayout {
 

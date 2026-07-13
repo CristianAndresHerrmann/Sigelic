@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
  */
 @Route(value = "reportes", layout = MainLayout.class)
 @PageTitle("Reportes | SIGELIC")
-@RolesAllowed({"ADMINISTRADOR", "SUPERVISOR", "AUDITOR"})
+@RolesAllowed({"SUPERADMIN", "ADMINISTRADOR", "SUPERVISOR", "AUDITOR"})
 @Slf4j
 public class ReportesView extends VerticalLayout {
 

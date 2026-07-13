@@ -18,10 +18,10 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
-import com.vaadin.flow.router.PageTitle;
-import com.vaadin.flow.spring.security.AuthenticationContext;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
+import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.spring.security.AuthenticationContext;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 
 /**
@@ -186,6 +186,11 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
     }
 
     private boolean hasAnyRole(UserDetails user, String... roles) {
+        // SUPERADMIN ve todos los ítems del menú sin necesidad de enumerarlo en cada llamada
+        if (user.getAuthorities().stream()
+                .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_SUPERADMIN"))) {
+            return true;
+        }
         for (String role : roles) {
             if (user.getAuthorities().stream()
                     .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_" + role))) {
@@ -200,7 +205,7 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
         layout.addClassNames(LumoUtility.Padding.Horizontal.MEDIUM,
                 LumoUtility.Padding.Vertical.SMALL);
 
-        layout.add("SIGELIC © " + java.time.LocalDate.now().getYear() + " - Gobierno de Santa Fe");
+        layout.add("SIGELIC © " + java.time.LocalDate.now().getYear() + " - Municipalidad X");
         return layout;
     }
 

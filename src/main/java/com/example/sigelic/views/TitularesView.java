@@ -38,7 +38,7 @@ import jakarta.annotation.security.RolesAllowed;
  */
 @Route(value = "titulares", layout = MainLayout.class)
 @PageTitle("Titulares | SIGELIC")
-@RolesAllowed({"ADMINISTRADOR", "SUPERVISOR", "AGENTE", "AUDITOR"})
+@RolesAllowed({"SUPERADMIN", "ADMINISTRADOR", "SUPERVISOR", "AGENTE", "AUDITOR"})
 public class TitularesView extends VerticalLayout {
 
     private final TitularService titularService;

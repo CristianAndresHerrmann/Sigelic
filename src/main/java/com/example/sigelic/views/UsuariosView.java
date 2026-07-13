@@ -44,7 +44,7 @@ import java.util.stream.Collectors;
  */
 @Route(value = "usuarios", layout = MainLayout.class)
 @PageTitle("Usuarios | SIGELIC")
-@RolesAllowed({"ADMINISTRADOR", "SUPERVISOR"})
+@RolesAllowed({"SUPERADMIN", "ADMINISTRADOR", "SUPERVISOR"})
 public class UsuariosView extends VerticalLayout {
 
     private final UsuarioService usuarioService;

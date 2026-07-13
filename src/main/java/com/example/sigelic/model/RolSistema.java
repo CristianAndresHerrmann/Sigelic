@@ -169,7 +169,12 @@ public enum RolSistema {
         Permiso.TURNO_VER,
         Permiso.TRAMITE_VER,
         Permiso.LICENCIA_REIMPRIMIR_PDF_QR
-    ));
+    )),
+
+    SUPERADMIN("SUPERADMIN", "Superadministrador - acceso total",
+        // Cuenta técnica de soporte: excepción explícita al mínimo privilegio.
+        // EnumSet.allOf garantiza que cualquier permiso futuro quede incluido.
+        java.util.EnumSet.allOf(Permiso.class));
     
     private final String nombre;
     private final String descripcion;

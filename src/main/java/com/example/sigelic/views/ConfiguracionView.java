@@ -32,7 +32,7 @@ import java.util.Map;
  */
 @Route(value = "configuracion", layout = MainLayout.class)
 @PageTitle("Configuración | SIGELIC")
-@RolesAllowed({"ADMINISTRADOR"})
+@RolesAllowed({"SUPERADMIN", "ADMINISTRADOR"})
 @Slf4j
 public class ConfiguracionView extends VerticalLayout {
 

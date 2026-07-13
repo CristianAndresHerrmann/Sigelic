@@ -30,27 +30,28 @@ public class VerLicenciaDialog extends Dialog {
     private void initializeDialog() {
         setHeaderTitle("Licencia Nacional de Conducir");
         setWidth("800px");
-        setHeight("500px");
         setModal(true);
         setDraggable(false);
         setResizable(false);
+        getElement().getStyle().set("max-height", "90vh");
     }
 
     private void createLicenciaCard() {
         VerticalLayout mainLayout = new VerticalLayout();
         mainLayout.setPadding(false);
         mainLayout.setSpacing(false);
-        mainLayout.setSizeFull();
 
-        // Crear la tarjeta de licencia
+        // Frente del carnet
         Div licenciaCard = createLicenciaCardLayout();
-        
+
+        // Dorso del carnet (clase y descripción)
+        Div dorsoCard = createDorsoCardLayout();
+
         // Botones de acción
         HorizontalLayout buttonLayout = createButtonLayout();
 
-        mainLayout.add(licenciaCard, buttonLayout);
-        mainLayout.setFlexGrow(1, licenciaCard);
-        
+        mainLayout.add(licenciaCard, dorsoCard, buttonLayout);
+
         add(mainLayout);
     }
 
@@ -278,6 +279,106 @@ public class VerLicenciaDialog extends Dialog {
 
         pattern.add(sun);
         return pattern;
+    }
+
+    /**
+     * Dorso del carnet: clase con su descripción, datos secundarios y leyenda LNC
+     */
+    private Div createDorsoCardLayout() {
+        Div card = new Div();
+        card.getStyle()
+                .set("background", "linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 50%, #90CAF9 100%)")
+                .set("border", "2px solid #1976D2")
+                .set("border-radius", "15px")
+                .set("padding", "20px")
+                .set("margin", "0 20px 20px 20px")
+                .set("box-shadow", "0 8px 32px rgba(0,0,0,0.1)")
+                .set("position", "relative")
+                .set("overflow", "hidden")
+                .set("height", "300px");
+
+        // Fila principal: badge grande de la clase + descripción
+        HorizontalLayout claseRow = new HorizontalLayout();
+        claseRow.setAlignItems(FlexComponent.Alignment.CENTER);
+        claseRow.setSpacing(true);
+        claseRow.getStyle()
+                .set("background", "rgba(255,255,255,0.6)")
+                .set("border", "1px solid #1976D2")
+                .set("border-radius", "8px")
+                .set("padding", "10px 15px")
+                .set("margin-bottom", "12px");
+
+        Span claseBadge = new Span(licencia.getClase().name());
+        claseBadge.getStyle()
+                .set("display", "inline-flex")
+                .set("align-items", "center")
+                .set("justify-content", "center")
+                .set("width", "48px")
+                .set("height", "48px")
+                .set("border", "2px solid #1565C0")
+                .set("border-radius", "8px")
+                .set("background", "#FFFFFF")
+                .set("color", "#1565C0")
+                .set("font-size", "24px")
+                .set("font-weight", "bold");
+
+        Span claseDescripcion = new Span(licencia.getClase().name() + " — " + licencia.getClase().getDescripcion());
+        claseDescripcion.getStyle()
+                .set("font-size", "14px")
+                .set("font-weight", "bold")
+                .set("color", "#333333");
+
+        claseRow.add(claseBadge, claseDescripcion);
+
+        // Datos secundarios
+        VerticalLayout datos = new VerticalLayout();
+        datos.setSpacing(false);
+        datos.setPadding(false);
+        datos.add(
+            createInfoField("EDAD MÍNIMA:", licencia.getClase().getEdadMinima() + " años"),
+            createInfoField("N° LICENCIA:", licencia.getNumeroLicencia())
+        );
+        if (licencia.getObservaciones() != null && !licencia.getObservaciones().isBlank()) {
+            datos.add(createInfoField("OBSERVACIONES:", licencia.getObservaciones()));
+        }
+
+        // Footer del dorso: leyenda LNC + código de barras simulado
+        Div footer = new Div();
+        footer.getStyle()
+                .set("position", "absolute")
+                .set("bottom", "15px")
+                .set("left", "20px")
+                .set("right", "20px");
+
+        HorizontalLayout footerContent = new HorizontalLayout();
+        footerContent.setWidthFull();
+        footerContent.setAlignItems(FlexComponent.Alignment.CENTER);
+        footerContent.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
+
+        Span lnc = new Span("LNC");
+        lnc.getStyle()
+                .set("font-size", "22px")
+                .set("font-weight", "bold")
+                .set("color", "#1565C0")
+                .set("letter-spacing", "2px");
+
+        Div barcode = new Div();
+        barcode.getStyle()
+                .set("width", "260px")
+                .set("height", "36px")
+                .set("background", "repeating-linear-gradient(90deg, #333 0 2px, transparent 2px 5px)")
+                .set("border", "1px solid #999")
+                .set("background-color", "#FFFFFF");
+
+        footerContent.add(lnc, barcode);
+        footer.add(footerContent);
+
+        Div content = new Div();
+        content.getStyle().set("position", "relative").set("z-index", "10");
+        content.add(claseRow, datos);
+
+        card.add(createDecorativePattern(), content, footer);
+        return card;
     }
 
     private HorizontalLayout createButtonLayout() {

@@ -36,7 +36,7 @@ import java.util.List;
  */
 @Route(value = "examenes", layout = MainLayout.class)
 @PageTitle("Exámenes | SIGELIC")
-@RolesAllowed({"ADMINISTRADOR", "SUPERVISOR", "EXAMINADOR"})
+@RolesAllowed({"SUPERADMIN", "ADMINISTRADOR", "SUPERVISOR", "EXAMINADOR"})
 public class ExamenesView extends VerticalLayout {
 
     private final ExamenService examenService;

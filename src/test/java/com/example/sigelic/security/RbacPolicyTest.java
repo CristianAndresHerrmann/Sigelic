@@ -61,6 +61,12 @@ class RbacPolicyTest {
     }
 
     @Test
+    void superadminPoseeTodosLosPermisos() {
+        assertThat(RolSistema.SUPERADMIN.getPermisos())
+                .containsExactlyInAnyOrder(Permiso.values());
+    }
+
+    @Test
     void serviciosSensiblesExigenLaAuthorityCanonica() {
         assertGuard(TramiteService.class, "iniciarTramite", Authorities.TRAMITE_INICIAR);
         assertGuard(TramiteService.class, "validarDocumentacion", Authorities.TRAMITE_VALIDAR_DOCUMENTACION);
