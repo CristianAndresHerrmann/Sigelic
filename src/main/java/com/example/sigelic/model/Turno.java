@@ -3,7 +3,6 @@ package com.example.sigelic.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -15,7 +14,6 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "turnos")
 @Data
-@EqualsAndHashCode(exclude = {"titular", "tramite"})
 @ToString(exclude = {"titular", "tramite"})
 public class Turno {
 
@@ -72,6 +70,27 @@ public class Turno {
 
     @Column(name = "fecha_completion")
     private LocalDateTime fechaCompletion;
+
+    /**
+     * La identidad de una entidad persistida depende solamente de su ID.
+     * Evita que Vaadin inicialice asociaciones LAZY al calcular la clave de
+     * una fila y que campos mutables (por ejemplo, el estado) cambien el hash.
+     */
+    @Override
+    public boolean equals(Object other) {
+        if (this == other) {
+            return true;
+        }
+        if (!(other instanceof Turno turno)) {
+            return false;
+        }
+        return id != null && id.equals(turno.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return id != null ? id.hashCode() : System.identityHashCode(this);
+    }
 
     /**
      * Verifica si el turno está activo (no cancelado ni completado)

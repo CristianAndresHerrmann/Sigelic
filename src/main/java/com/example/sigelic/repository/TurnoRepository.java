@@ -31,7 +31,10 @@ public interface TurnoRepository extends JpaRepository<Turno, Long> {
     
     List<Turno> findByTipoAndEstado(TipoTurno tipo, EstadoTurno estado);
     
-    @Query("SELECT t FROM Turno t WHERE t.inicio BETWEEN :desde AND :hasta ORDER BY t.inicio ASC")
+    @Query("SELECT t FROM Turno t " +
+           "JOIN FETCH t.titular " +
+           "LEFT JOIN FETCH t.recurso " +
+           "WHERE t.inicio BETWEEN :desde AND :hasta ORDER BY t.inicio ASC")
     List<Turno> findTurnosEnPeriodo(@Param("desde") LocalDateTime desde, @Param("hasta") LocalDateTime hasta);
     
     @Query("SELECT t FROM Turno t WHERE t.recurso = :recurso AND t.estado IN ('RESERVADO', 'CONFIRMADO') AND " +
