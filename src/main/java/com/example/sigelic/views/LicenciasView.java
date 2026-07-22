@@ -169,7 +169,7 @@ public class LicenciasView extends VerticalLayout {
                 actions.add(suspenderBtn, inhabilitarBtn);
             }
             return actions;
-        })).setHeader("Acciones").setWidth("320px").setFlexGrow(0);
+        })).setHeader("Acciones").setAutoWidth(true).setFlexGrow(0);
 
         add(grid);
     }

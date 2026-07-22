@@ -129,22 +129,22 @@ public class PagosView extends VerticalLayout {
             .setWidth("200px");
 
         // Columna fecha
-        grid.addColumn(pago -> pago.getFecha() != null ? 
+        grid.addColumn(pago -> pago.getFecha() != null ?
             pago.getFecha().format(DATE_FORMATTER) : "N/A")
             .setHeader("Fecha")
-            .setWidth("150px")
+            .setAutoWidth(true)
             .setFlexGrow(0);
 
         // Columna medio de pago
         grid.addColumn(pago -> pago.getMedio().getDescripcion())
             .setHeader("Medio")
-            .setWidth("120px")
+            .setAutoWidth(true)
             .setFlexGrow(0);
 
         // Columna estado con badge
         grid.addComponentColumn(this::createEstadoBadge)
             .setHeader("Estado")
-            .setWidth("120px")
+            .setAutoWidth(true)
             .setFlexGrow(0);
 
         // Columna número de comprobante
@@ -157,7 +157,7 @@ public class PagosView extends VerticalLayout {
         if (authorityChecker.has(Authorities.PAGO_RECHAZAR)) {
             grid.addComponentColumn(this::createAcciones)
                 .setHeader("Acciones")
-                .setWidth("130px")
+                .setAutoWidth(true)
                 .setFlexGrow(0);
         }
 

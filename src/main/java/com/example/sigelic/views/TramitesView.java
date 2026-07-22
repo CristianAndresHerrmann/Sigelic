@@ -374,7 +374,7 @@ public class TramitesView extends VerticalLayout {
             acciones.add(detalleBtn);
 
             return acciones;
-        })).setHeader("Acciones").setWidth("250px");
+        })).setHeader("Acciones").setAutoWidth(true).setFlexGrow(0);
 
         add(grid);
     }

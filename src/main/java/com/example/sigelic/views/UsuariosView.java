@@ -133,7 +133,7 @@ public class UsuariosView extends VerticalLayout {
 
         // Columna de acciones
         grid.addColumn(new ComponentRenderer<>(this::createActionButtons))
-            .setHeader("Acciones").setFlexGrow(0);
+            .setHeader("Acciones").setAutoWidth(true).setFlexGrow(0);
 
         add(grid);
     }

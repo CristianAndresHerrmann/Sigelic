@@ -189,7 +189,7 @@ public class TitularesView extends VerticalLayout {
         }))
         .setHeader("Estado")
         .setSortable(true)
-        .setWidth("120px")
+        .setAutoWidth(true)
         .setFlexGrow(0);
 
         // Columna Acciones
@@ -220,7 +220,7 @@ public class TitularesView extends VerticalLayout {
             return actions;
         }))
         .setHeader("Acciones")
-        .setWidth("150px")
+        .setAutoWidth(true)
         .setFlexGrow(0);
 
         // Configurar selección

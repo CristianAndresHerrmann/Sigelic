@@ -126,12 +126,12 @@ public class CostosView extends VerticalLayout {
 
         grid.addComponentColumn(this::createEstadoBadge)
             .setHeader("Estado")
-            .setWidth("120px")
+            .setAutoWidth(true)
             .setFlexGrow(0);
 
         grid.addComponentColumn(this::createAcciones)
             .setHeader("Acciones")
-            .setWidth("140px")
+            .setAutoWidth(true)
             .setFlexGrow(0);
 
         add(grid);

@@ -143,7 +143,7 @@ public class ExamenesView extends VerticalLayout {
             }
 
             return acciones;
-        }).setHeader("Acciones").setWidth("150px");
+        }).setHeader("Acciones").setAutoWidth(true).setFlexGrow(0);
 
         // Configurar data provider
         dataProvider = new ListDataProvider<>(new ArrayList<>());

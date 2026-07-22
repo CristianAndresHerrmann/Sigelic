@@ -148,9 +148,9 @@ public class TurnosView extends VerticalLayout {
                     break;
             }
             return badge;
-        })).setHeader("Estado").setSortable(true).setWidth("130px").setFlexGrow(0);
+        })).setHeader("Estado").setSortable(true).setAutoWidth(true).setFlexGrow(0);
 
-        grid.addColumn(new ComponentRenderer<>(this::createActionsColumn)).setHeader("Acciones").setWidth("320px").setFlexGrow(0);
+        grid.addColumn(new ComponentRenderer<>(this::createActionsColumn)).setHeader("Acciones").setAutoWidth(true).setFlexGrow(0);
 
         add(grid);
     }
