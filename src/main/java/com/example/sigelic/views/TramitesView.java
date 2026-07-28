@@ -249,7 +249,13 @@ public class TramitesView extends VerticalLayout {
         
         // Columna de estado con badge
         grid.addColumn(new ComponentRenderer<>(tramite -> {
-            Span badge = new Span(tramite.getEstado().getDescripcion());
+            // Estructura para marquee: contenedor de ancho fijo con overflow + texto interno que se desplaza al pasar el mouse
+            Span badge = new Span();
+            badge.addClassName("estado-badge-scroll");
+            Span texto = new Span(tramite.getEstado().getDescripcion());
+            texto.addClassName("estado-badge-text");
+            badge.add(texto);
+            badge.getElement().setAttribute("title", tramite.getEstado().getDescripcion());
             switch (tramite.getEstado()) {
                 case INICIADO:
                     badge.getElement().getThemeList().add("badge");
@@ -275,7 +281,7 @@ public class TramitesView extends VerticalLayout {
                     badge.getElement().getThemeList().add("badge");
             }
             return badge;
-        })).setHeader("Estado").setSortable(true);
+        })).setHeader("Estado").setSortable(true).setWidth("190px").setFlexGrow(0);
 
         // Columna de acciones
         grid.addColumn(new ComponentRenderer<>(tramite -> {
@@ -317,10 +323,10 @@ public class TramitesView extends VerticalLayout {
 
             // Botón para examen práctico (solo si el teórico está aprobado)
             // O si el práctico fue rechazado (permite reintento del práctico)
-            if (((tramite.getEstado() == EstadoTramite.EX_TEO_OK) || 
-                 (tramite.getEstado() == EstadoTramite.EX_PRA_RECHAZADO)) && 
-                tramite.requiereExamenPractico() && 
-                tramite.getExamenTeoricoAprobado()) { // CLAVE: Solo si teórico está aprobado
+            if (((tramite.getEstado() == EstadoTramite.EX_TEO_OK) ||
+                 (tramite.getEstado() == EstadoTramite.EX_PRA_RECHAZADO)) &&
+                tramite.requiereExamenPractico() &&
+                Boolean.TRUE.equals(tramite.getExamenTeoricoAprobado())) { // CLAVE: Solo si teórico está aprobado
                 Button examenPracticoBtn = new Button("Ex. Práctico", new Icon(VaadinIcon.CAR));
                 examenPracticoBtn.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_SUCCESS);
                 examenPracticoBtn.setTooltipText("Registrar examen práctico");

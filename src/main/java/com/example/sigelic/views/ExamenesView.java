@@ -5,6 +5,7 @@ import com.example.sigelic.model.ExamenPractico;
 import com.example.sigelic.security.Authorities;
 import com.example.sigelic.service.ExamenService;
 import com.example.sigelic.service.TramiteService;
+import com.example.sigelic.views.dialog.NuevoExamenDialog;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
@@ -68,7 +69,8 @@ public class ExamenesView extends VerticalLayout {
         Button addExamenButton = new Button("Nuevo Examen", new Icon(VaadinIcon.PLUS));
         addExamenButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         addExamenButton.addClickListener(e -> {
-            // TODO: Implementar diálogo para nuevo examen
+            NuevoExamenDialog dialog = new NuevoExamenDialog(tramiteService, unused -> loadData());
+            dialog.open();
         });
 
         HorizontalLayout header = new HorizontalLayout(title);

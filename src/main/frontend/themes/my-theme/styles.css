@@ -224,6 +224,34 @@
     color: var(--lumo-contrast-90pct);
 }
 
+/* Badge de estado con texto desplazable (marquee) al pasar el mouse.
+   Mantiene el ancho y la altura fijos: el texto largo se lee desplazándose,
+   sin alterar la altura de las filas del grid. */
+.estado-badge-scroll {
+    display: inline-block !important;
+    max-width: 150px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.estado-badge-scroll .estado-badge-text {
+    display: inline-block;
+    white-space: nowrap;
+    will-change: transform;
+}
+
+.estado-badge-scroll:hover .estado-badge-text {
+    animation: estado-badge-marquee 4.5s linear infinite alternate;
+}
+
+@keyframes estado-badge-marquee {
+    0%   { transform: translateX(0); }
+    18%  { transform: translateX(0); }
+    100% { transform: translateX(min(0px, calc(150px - 100% - 1.5rem))); }
+}
+
 /* Authentication Page Styles */
 .login-view {
     height: 100vh;
