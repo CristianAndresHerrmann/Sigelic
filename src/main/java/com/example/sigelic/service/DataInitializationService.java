@@ -1,5 +1,6 @@
 package com.example.sigelic.service;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
@@ -23,13 +24,43 @@ public class DataInitializationService implements CommandLineRunner {
 
     private final UsuarioService usuarioService;
 
+    /**
+     * Contrasena inicial de las cuentas con permisos totales.
+     * Los defaults valen para desarrollo local; en el perfil 'prod' se exigen
+     * por variable de entorno (SIGELIC_ADMIN_PASSWORD / SIGELIC_SUPERADMIN_PASSWORD)
+     * y la aplicacion no arranca si faltan.
+     */
+    @Value("${sigelic.seed.admin-password:Admin123!}")
+    private String adminPassword;
+
+    @Value("${sigelic.seed.superadmin-password:SuperAdmin123!}")
+    private String superadminPassword;
+
     @Override
     public void run(String... args) throws Exception {
         log.info("Iniciando inicialización de datos del sistema...");
-        
+
+        // Se valida antes de crear nada: crearUsuariosPorDefecto() atrapa sus
+        // excepciones, así que una semilla inválida pasaría inadvertida.
+        validarSemilla(adminPassword, "SIGELIC_ADMIN_PASSWORD");
+        validarSemilla(superadminPassword, "SIGELIC_SUPERADMIN_PASSWORD");
+
         crearUsuariosPorDefecto();
-        
+
         log.info("Inicialización de datos completada.");
+    }
+
+    /**
+     * Evita que una variable de entorno sin definir termine usada como contraseña.
+     * Si el placeholder no se resolvió, el valor llega como el literal "${...}".
+     */
+    private void validarSemilla(String valor, String variableEntorno) {
+        if (valor == null || valor.isBlank() || valor.startsWith("${")) {
+            throw new IllegalStateException(
+                "La variable de entorno " + variableEntorno + " no está definida. "
+                + "Es obligatoria en el perfil 'prod' para fijar la contraseña inicial "
+                + "de las cuentas con permisos totales.");
+        }
     }
 
     /**
@@ -41,7 +72,7 @@ public class DataInitializationService implements CommandLineRunner {
             if (!usuarioService.existsByUsername("admin")) {
                 Usuario admin = new Usuario();
                 admin.setUsername("admin");
-                admin.setPassword("Admin123!");
+                admin.setPassword(adminPassword);
                 admin.setEmail("admin@sigelic.gov.ar");
                 admin.setNombre("Administrador");
                 admin.setApellido("Sistema");
@@ -52,18 +83,15 @@ public class DataInitializationService implements CommandLineRunner {
                 admin.setCreadoPor("SISTEMA");
                 
                 usuarioService.crearUsuario(admin);
-                log.info("Usuario administrador creado: admin/Admin123!");
-            } else {
-                // El usuario admin ya existe, vamos a actualizar su contraseña por si está incorrecta
-                log.info("Usuario admin ya existe, actualizando contraseña a Admin123!");
-                usuarioService.actualizarPassword("admin", "Admin123!");
+                // La contrasena es un secreto de entorno: no debe registrarse en el log
+                log.info("Usuario administrador 'admin' creado.");
             }
             
             // Crear usuario superadministrador por defecto (cuenta técnica con todos los permisos)
             if (!usuarioService.existsByUsername("superadmin")) {
                 Usuario superadmin = new Usuario();
                 superadmin.setUsername("superadmin");
-                superadmin.setPassword("SuperAdmin123!");
+                superadmin.setPassword(superadminPassword);
                 superadmin.setEmail("superadmin@sigelic.gov.ar");
                 superadmin.setNombre("Super");
                 superadmin.setApellido("Administrador");
@@ -74,11 +102,9 @@ public class DataInitializationService implements CommandLineRunner {
                 superadmin.setCreadoPor("SISTEMA");
 
                 usuarioService.crearUsuario(superadmin);
-                log.info("Usuario superadministrador creado: superadmin/SuperAdmin123!");
+                // La contrasena es un secreto de entorno: no debe registrarse en el log
+                log.info("Usuario superadministrador 'superadmin' creado.");
             }
-
-            // Actualizar contraseñas de usuarios de migración si existen
-            actualizarPasswordsUsuariosMigracion();
 
             // Crear usuario supervisor por defecto
             if (!usuarioService.existsByUsername("supervisor")) {
@@ -211,46 +237,6 @@ public class DataInitializationService implements CommandLineRunner {
 
         } catch (Exception e) {
             log.error("Error al crear usuarios por defecto: {}", e.getMessage(), e);
-        }
-    }
-    
-    /**
-     * Actualiza las contraseñas de usuarios de migración que pueden tener BCrypt incorrecto
-     */
-    private void actualizarPasswordsUsuariosMigracion() {
-        try {
-            log.info("Actualizando contraseñas de usuarios de migración...");
-            
-            // Lista de usuarios de migración con sus nuevas contraseñas por defecto
-            String[][] usuariosMigracion = {
-                {"supervisor", "Super123!"},
-                {"agente1", "Agente123!"},
-                {"agente2", "Agente123!"},
-                {"medico1", "Medico123!"},
-                {"medico2", "Medico123!"},
-                {"examinador1", "Examinador123!"},
-                {"examinador2", "Examinador123!"},
-                {"cajero1", "Cajero123!"},
-                {"cajero2", "Cajero123!"},
-                {"auditor", "Auditor123!"}
-            };
-            
-            for (String[] usuario : usuariosMigracion) {
-                String username = usuario[0];
-                String password = usuario[1];
-                
-                if (usuarioService.existsByUsername(username)) {
-                    log.info("Actualizando contraseña para usuario: {} -> {}", username, password);
-                    usuarioService.actualizarPassword(username, password);
-                } else {
-                    log.debug("Usuario {} no existe, se omite actualización", username);
-                }
-            }
-            
-            log.info("Actualización de contraseñas de migración completada");
-            
-        } catch (Exception e) {
-            log.error("Error al actualizar contraseñas de usuarios de migración: {}", e.getMessage(), e);
         }
     }
 }

@@ -23,9 +23,13 @@ public class VencimientosScheduler {
 
     /**
      * Tarea programada diaria para procesar vencimientos de pagos y actualizar licencias vencidas.
-     * Se ejecuta todos los días a las 00:00: cron = "0 0 0 * * ?"
+     * Se ejecuta todos los días a las 00:00 hora de Argentina.
+     *
+     * La zona es explícita porque el contenedor puede correr en UTC mientras la
+     * base de datos usa America/Argentina/Buenos_Aires: sin ella el proceso se
+     * ejecutaría con 3 horas de desfase.
      */
-    @Scheduled(cron = "0 0 0 * * ?")
+    @Scheduled(cron = "0 0 0 * * ?", zone = "America/Argentina/Buenos_Aires")
     public void procesarVencimientosDiarios() {
         log.info("Iniciando proceso automático diario de vencimientos...");
         

@@ -1,0 +1,52 @@
+# =======================================================================
+# Stack PRODUCTIVO para la VM Ampere de OCI. Ver docs/deploy-oci.md
+#
+# No incluye contenedor de base de datos: se conecta a MySQL HeatWave
+# Always Free, que corre gestionado en la subnet privada de la VCN.
+#
+# Uso:  docker compose -f docker-compose.prod.yml up -d --build
+# =======================================================================
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: sigelic:prod
+    container_name: sigelic-app
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SERVER_PORT: 8080
+      DB_URL: ${DB_URL}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      SIGELIC_ADMIN_PASSWORD: ${SIGELIC_ADMIN_PASSWORD}
+      SIGELIC_SUPERADMIN_PASSWORD: ${SIGELIC_SUPERADMIN_PASSWORD}
+      JAVA_OPTS: ${JAVA_OPTS:--XX:+UseG1GC -XX:MaxRAMPercentage=50.0}
+    # Sin 'ports': solo Caddy queda expuesto al exterior
+    expose:
+      - "8080"
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: sigelic-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      SIGELIC_DOMAIN: ${SIGELIC_DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # caddy_data NO es opcional: guarda los certificados emitidos. Sin el,
+      # Caddy los vuelve a pedir en cada 'up' y Let's Encrypt aplica rate limit
+      # (5 certificados por dominio por semana).
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      app:
+        condition: service_healthy
+
+volumes:
+  caddy_data:
+  caddy_config:

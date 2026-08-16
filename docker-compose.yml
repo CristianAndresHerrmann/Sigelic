@@ -1,3 +1,7 @@
+# =======================================================================
+# Stack LOCAL de desarrollo (perfil dev, MySQL en contenedor).
+# Para el despliegue productivo en OCI usar docker-compose.prod.yml
+# =======================================================================
 services:
   # Servicio de Base de Datos MySQL
   db:
@@ -35,7 +39,9 @@ services:
       - DB_USERNAME=root
       - DB_PASSWORD=admin
       - SERVER_PORT=8080
-      - SPRING_PROFILES_ACTIVE=prod
+      # El perfil prod exige DB_URL y las contrasenas de semilla por entorno:
+      # es exclusivo del despliegue en la nube (docker-compose.prod.yml).
+      - SPRING_PROFILES_ACTIVE=dev
     restart: on-failure
 
 volumes:

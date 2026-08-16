@@ -9,8 +9,16 @@ target/
 *.iml
 node/
 node_modules/
-frontend/generated/
 package-lock.json
+
+# Bundle de desarrollo de Vaadin: se regenera en cada build de produccion
+src/main/frontend/generated/
+
+# Archivos de despliegue y documentacion: no forman parte del artefacto
 Dockerfile
-docker-compose.yml
+docker-compose*.yml
+Caddyfile
+docs/
+tests/
+diagramas-reportes/
 .env

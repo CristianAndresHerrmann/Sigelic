@@ -1,0 +1,12 @@
+# Proxy inverso con HTTPS automatico (Let's Encrypt) para SIGELIC.
+# El dominio se toma de la variable SIGELIC_DOMAIN del .env de la VM.
+#
+# Caddy resuelve por si solo la emision y renovacion del certificado, y agrega
+# los headers X-Forwarded-* que Spring necesita (server.forward-headers-strategy
+# esta en native dentro de application-prod.properties) para que los redirects
+# de login salgan en https:// y no choquen con el HSTS de SecurityConfig.
+
+{$SIGELIC_DOMAIN} {
+	reverse_proxy app:8080
+	encode gzip
+}

@@ -48,6 +48,9 @@ public class SecurityConfig extends VaadinWebSecurity {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(authz -> authz
+            // Health check anonimo: lo consultan el HEALTHCHECK del contenedor
+            // y los probes del proveedor. El resto de /actuator sigue protegido.
+            .requestMatchers("/actuator/health/**").permitAll()
             .requestMatchers("/api/auth/**").permitAll()
             .requestMatchers("/api/public/**").permitAll()
             .requestMatchers("/api/usuarios/perfil", "/api/usuarios/cambiar-password").authenticated()

@@ -1,6 +1,11 @@
 package com.example.sigelic.views.dialog;
 
-import com.example.sigelic.model.*;
+import java.time.format.DateTimeFormatter;
+
+import com.example.sigelic.model.EstadoTramite;
+import com.example.sigelic.model.Licencia;
+import com.example.sigelic.model.Titular;
+import com.example.sigelic.model.Tramite;
 import com.example.sigelic.service.TramiteService;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -17,9 +22,8 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextArea;
-import lombok.extern.slf4j.Slf4j;
 
-import java.time.format.DateTimeFormatter;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Dialog para emitir una licencia de conducir
@@ -54,7 +58,7 @@ public class EmitirLicenciaDialog extends Dialog {
     private void initializeDialog() {
         setHeaderTitle("Emisión de Licencia de Conducir");
         setWidth("500px");
-        setHeight("600px");
+        setMaxHeight("90vh");
         setModal(true);
         setDraggable(false);
         setResizable(false);
@@ -62,7 +66,7 @@ public class EmitirLicenciaDialog extends Dialog {
 
     private void createLayout() {
         VerticalLayout mainLayout = new VerticalLayout();
-        mainLayout.setPadding(true);
+        mainLayout.setPadding(false);
         mainLayout.setSpacing(true);
 
         // Información del trámite
@@ -74,11 +78,11 @@ public class EmitirLicenciaDialog extends Dialog {
         // Formulario
         FormLayout formLayout = createFormSection();
         
-        // Botones
-        HorizontalLayout buttonLayout = createButtonLayout();
-
-        mainLayout.add(infoSection, requisitosSection, formLayout, buttonLayout);
+        mainLayout.add(infoSection, requisitosSection, formLayout);
         add(mainLayout);
+
+        // Botones en el footer del dialog (no scrollean con el contenido)
+        getFooter().add(createButtonLayout());
     }
 
     private Div createInfoSection() {
